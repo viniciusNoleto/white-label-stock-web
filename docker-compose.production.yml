@@ -1,27 +1,28 @@
 services:
   white-label-inventory-system-front:
-    container_name: white-label-inventory-system-front
-    user: node
-    restart: unless-stopped
-    tty: true
     build:
-      dockerfile: ./configs/docker/node/Dockerfile.deploy
+      context: .
+      dockerfile: configs/docker/node/Dockerfile.deploy
+    container_name: white-label-inventory-system-front
     ports:
-      - 80:3000
+      - '${APP_PORT}:3000'
+    env_file:
+      - .env
     networks:
       - white-label-inventory-system-network
     depends_on:
       white-label-inventory-system-postgres:
         condition: service_healthy
+    restart: always
 
   white-label-inventory-system-postgres:
-    container_name: white-label-inventory-system-postgres
     image: postgres:16-alpine
-    restart: unless-stopped
+    container_name: white-label-inventory-system-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGPORT: ${POSTGRES_PORT}
     volumes:
       - white-label-inventory-system-postgres-data:/var/lib/postgresql/data
     networks:
@@ -31,6 +32,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: always
 
 networks:
   white-label-inventory-system-network:

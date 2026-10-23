@@ -138,7 +138,7 @@ export function CreateInventoryItemLogicComponent({
 
   function addComponent() {
     if (!selectedComponentId) return;
-    const item = allItems.find(i => String(i.id) === selectedComponentId);
+    const item = allItems.find(i => String(i.id) === String(selectedComponentId));
     if (!item) return;
     setComponents(prev => [...prev, { id: String(item.id), name: item.name, quantity_required: componentQty }]);
     setSelectedComponentId(null);

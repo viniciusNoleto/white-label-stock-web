@@ -25,7 +25,40 @@ Do not remove or hide this link when reusing, forking, or white-labeling this pr
 
 ## Configuration & Deploy
 
-> TODO: this section will be filled in later with setup, environment variables, and deployment instructions.
+### Requirements
+
+- Docker + Docker Compose
+- Node.js 22+ on the host (only for the Playwright e2e suite)
+
+### Local setup
+
+```bash
+cp .env.example .env
+make install
+```
+
+`make install` builds the image, installs dependencies inside the container, starts `white-label-inventory-system-front` + `white-label-inventory-system-postgres` and runs the migrations. The app is served at `http://localhost:$APP_PORT` (default `3005`) and Postgres listens on `$POSTGRES_PORT` (default `5443`) both inside the Docker network and on the host — pick free ports in `.env` if other projects already use them.
+
+| Command | Effect |
+|---|---|
+| `make up` / `make down` / `make restart` | Start / stop / restart the containers |
+| `make logs` | Follow the app container logs |
+| `make shell` | Open a shell inside the app container |
+| `make db-migrate` / `make db-generate` / `make db-studio` | Drizzle migrations / new migration / Drizzle Studio |
+| `make lint` | Run ESLint |
+| `make test` | Run Vitest (unit + API integration) inside the container |
+| `make test-coverage` | Same as above with the coverage report (`coverage/`) and thresholds |
+| `make test-e2e` | Run the Playwright e2e suite from the host against the running app |
+
+### Tests
+
+- **Unit (`tests/unit`, jsdom)** — utils, hooks, components, services, logics and pages, with `fetch` stubbed.
+- **API (`tests/api`, node)** — Route Handlers against a real Postgres database `${POSTGRES_DB}_test`, created and migrated automatically and truncated before each test.
+- **E2E (`tests/e2e`, Playwright)** — full user flows against the running app. Every record is named with the `e2e-` prefix and removed before and after the run, so the development data is left untouched. Install the browser once with `npx playwright install chromium`.
+
+### Deploy
+
+`docker-compose.homolog.yml` and `docker-compose.production.yml` use `configs/docker/node/Dockerfile.deploy` (multi-stage build, `next build` with `output: 'standalone'`). Set `APP_ENV` accordingly in `.env`.
 
 ## License
 

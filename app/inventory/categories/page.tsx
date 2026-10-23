@@ -115,13 +115,13 @@ export default function CategoriesPage() {
           actions={[
             {
               icon: 'lucide:pencil',
-              tooltip: t('categories.actions.edit'),
+              label: t('categories.actions.edit'),
               variant: 'subtle',
               onClick: ({ item }) => openUpdate(item),
             },
             {
               icon: 'lucide:trash-2',
-              tooltip: t('categories.actions.delete'),
+              label: t('categories.actions.delete'),
               variant: 'subtle',
               color: 'red',
               onClick: ({ item }) => openDelete(item),

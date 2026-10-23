@@ -1,7 +1,7 @@
 import { db } from "@/libs/db";
 import { inventoryItems } from "@/db/schema";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export async function PATCH(
   request: Request,
@@ -12,10 +12,12 @@ export async function PATCH(
     const body = await request.json();
 
     const hasQuantity = body.quantity !== undefined && body.quantity !== null;
+    const hasQuantityAdd = body.quantity_add !== undefined && body.quantity_add !== null;
+    const hasQuantitySubtract = body.quantity_subtract !== undefined && body.quantity_subtract !== null;
     const hasName = body.name !== undefined && body.name !== null;
     const hasStorageId = 'storage_id' in body;
 
-    if (!hasQuantity && !hasName && !hasStorageId) {
+    if (!hasQuantity && !hasQuantityAdd && !hasQuantitySubtract && !hasName && !hasStorageId) {
       return NextResponse.json(
         {
           success: false,
@@ -33,6 +35,8 @@ export async function PATCH(
     const setValues: Record<string, unknown> = { updated_at: new Date() };
 
     if (hasQuantity) setValues.quantity = String(body.quantity);
+    if (hasQuantityAdd) setValues.quantity = sql`${inventoryItems.quantity} + ${Number(body.quantity_add)}`;
+    if (hasQuantitySubtract) setValues.quantity = sql`${inventoryItems.quantity} - ${Number(body.quantity_subtract)}`;
     if (hasName) {
       if (!body.name.trim()) {
         return NextResponse.json(

@@ -105,13 +105,13 @@ export default function StoragesPage() {
           actions={[
             {
               icon: 'lucide:pencil',
-              tooltip: t('storages.actions.edit'),
+              label: t('storages.actions.edit'),
               variant: 'subtle',
               onClick: ({ item }) => openUpdate(item),
             },
             {
               icon: 'lucide:trash-2',
-              tooltip: t('storages.actions.delete'),
+              label: t('storages.actions.delete'),
               variant: 'subtle',
               color: 'red',
               onClick: ({ item }) => openDelete(item),

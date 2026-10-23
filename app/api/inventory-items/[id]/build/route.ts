@@ -1,7 +1,7 @@
 import { db } from '@/libs/db';
 import { inventoryItems, inventoryItemHasComponent } from '@/db/schema';
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export async function POST(
   request: Request,
@@ -25,7 +25,7 @@ export async function POST(
       })
       .from(inventoryItemHasComponent)
       .innerJoin(inventoryItems, eq(inventoryItemHasComponent.component_inventory_item_id, inventoryItems.id))
-      .where(eq(inventoryItemHasComponent.inventory_item_id, BigInt(id)));
+      .where(eq(inventoryItemHasComponent.inventory_item_id, Number(id)));
 
     if (!components.length) {
       return NextResponse.json({ success: false, message: { 'pt-br': 'Este item não possui componentes cadastrados.', 'es-mx': 'Este artículo no tiene componentes registrados.', 'en-us': 'This item has no registered components.' }, data: null }, { status: 422 });
@@ -50,23 +50,20 @@ export async function POST(
 
     const now = new Date();
 
-    // Deduct components
+    // Deduct components atomically
     for (const comp of components) {
       const deduct = Number(comp.quantity_required) * quantity;
-      const newQty = Number(comp.current_quantity) - deduct;
       await db
         .update(inventoryItems)
-        .set({ quantity: String(newQty), updated_at: now })
+        .set({ quantity: sql`${inventoryItems.quantity} - ${deduct}`, updated_at: now })
         .where(eq(inventoryItems.id, comp.component_id));
     }
 
-    // Increment the built item
-    const [target] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, BigInt(id)));
-    const newQty = Number(target.quantity) + quantity;
+    // Increment the built item atomically
     const [updated] = await db
       .update(inventoryItems)
-      .set({ quantity: String(newQty), updated_at: now })
-      .where(eq(inventoryItems.id, BigInt(id)))
+      .set({ quantity: sql`${inventoryItems.quantity} + ${quantity}`, updated_at: now })
+      .where(eq(inventoryItems.id, Number(id)))
       .returning();
 
     return NextResponse.json({
