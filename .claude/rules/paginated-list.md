@@ -1,107 +1,52 @@
-# Listas Paginadas — useImmediateState + refetch manual
+# Listas paginadas — createQuery + refetch manual
 
 ## Regras
 
-- `page` usa `useImmediateState` — garante atualização síncrona antes do `refetch()`.
-- Filtros usam `useRecordState` normal.
-- `queryKey` **nunca** inclui `page` nem filtros — o refetch usa o closure atual.
-- `setPage` passado ao `UtilsTable` **sempre** deve chamar `refetch()` em seguida.
-- `useDebouncedEffect` recebe o objeto inteiro de `filters` como dep — não campos individuais.
-- Delay padrão do `useDebouncedEffect`: `500` ms.
+- `page` é um `signal(1)`; filtros num único `signal<{Lista}Filters>({ … })`.
+- O `queryFn` lê `page()` e `filters()` no momento da busca; a query **não** reage sozinha a eles — a lista só busca de novo via `refetch()`.
+- Trocar de página: `page.set(n)` **e** `refetch()`.
+- Filtros: `debouncedEffect(this.filters, () => { page.set(1); refetch(); }, 500)` — passe o signal inteiro de filtros, não campos.
 - `per_page` padrão: `15`.
 
----
+## Estrutura
 
-## Estrutura completa
+```ts
+type ItemsFilters = { search: string };
 
-```tsx
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { LayoutInternal } from '@/src/components/layout/Internal';
-import { UtilsCard } from '@/src/components/utils/Card';
-import { UtilsTable } from '@/src/components/utils/Table';
-import { FormTextInput } from '@/src/components/form/TextInput';
-import { FormSelect } from '@/src/components/form/Select';
-import { Icon } from '@iconify/react';
-import { useImmediateState, useRecordState } from '@/src/utils/state';
-import { useDebouncedEffect } from '@/src/utils/hooks';
-import { getCharges, GET_CHARGES_KEY } from '@/src/resources/charge/services/getCharges';
-import type { PaginatedMeta } from '@/src/shared/types/api';
+export class ItemsPage {
+  protected readonly page = signal(1);
+  protected readonly filters = signal<ItemsFilters>({ search: '' });
 
-export default function ChargesPage() {
-  const [page, setPage] = useImmediateState(1);
-
-  const { state: filters, field: filterField, setValue: setFilterValue } = useRecordState({
-    search: '',
-    status: '' as string,
+  protected readonly itemsQuery = createQuery({
+    queryFn: () => getInventoryItemsService({
+      query: { search: this.filters().search || undefined, page: this.page(), per_page: 15 },
+    }),
   });
 
-  const {
-    data: chargesData,
-    isFetching: chargesIsFetching,
-    refetch: chargesRefetch,
-  } = useQuery({
-    queryKey: GET_CHARGES_KEY,
-    queryFn: ({ signal }) =>
-      getCharges({
-        signal,
-        query: {
-          search: filters.search || undefined,
-          status: filters.status || undefined,
-          page,
-          per_page: 15,
-        },
-      }),
-  });
+  protected readonly items = computed(() => this.itemsQuery.data()?.data.items ?? []);
+  protected readonly meta = computed<Partial<PaginatedMeta>>(() => this.itemsQuery.data()?.data.meta ?? {});
 
-  useDebouncedEffect(() => {
-    setPage(1);
-    chargesRefetch();
-  }, [filters], 500);
+  constructor() {
+    debouncedEffect(this.filters, () => {
+      this.page.set(1);
+      this.itemsQuery.refetch();
+    }, 500);
+  }
 
-  const charges = useMemo(() => chargesData?.data.items ?? [], [chargesData]);
-  const chargesMeta = useMemo<Partial<PaginatedMeta>>(() => chargesData?.data.meta ?? {}, [chargesData]);
+  protected setFilter<K extends keyof ItemsFilters>(key: K, value: ItemsFilters[K]) {
+    this.filters.update((filters) => ({ ...filters, [key]: value }));
+  }
 
-  return (
-    <LayoutInternal title="Cobranças" description="...">
-      <UtilsCard className="flex flex-col gap-8">
-        <div className="flex items-center gap-4">
-          <FormTextInput
-            placeholder="Buscar..."
-            {...filterField('search')}
-            leftSection={<Icon icon="lucide:search" className="text-gray-500" />}
-            className="max-w-xs w-full"
-          />
-
-          <FormSelect
-            placeholder="Status"
-            data={STATUS_OPTIONS}
-            {...filterField('status')}
-            onChange={(v) => {
-              setFilterValue('status', v ?? '');
-              setPage(1);
-            }}
-            clearable
-            className="w-44"
-          />
-        </div>
-
-        <UtilsTable
-          rows={charges}
-          rowKey={({ item }) => item.id}
-          loading={chargesIsFetching}
-          lastPage={chargesMeta.last_page!}
-          page={page}
-          setPage={(newPage) => {
-            setPage(newPage);
-            chargesRefetch();
-          }}
-          emptyText="Nenhum item encontrado."
-          columns={{ /* ... */ }}
-          renderCells={{ /* ... */ }}
-        />
-      </UtilsCard>
-    </LayoutInternal>
-  );
+  protected changePage(page: number) {
+    this.page.set(page);
+    this.itemsQuery.refetch();
+  }
 }
 ```
+
+## `createQuery`
+
+- Busca uma vez ao ser criada (só no browser) e depois apenas via `refetch()`.
+- `refetch()` cancela a busca anterior em andamento (desinscreve o Observable → aborta o HTTP).
+- Expõe signals `data`, `error`, `isFetching`.
+- Chame em contexto de injeção (inicializador de campo ou `inject…LogicData`).

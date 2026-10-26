@@ -1,62 +1,57 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# White Label Inventory System — instruções para agentes
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+Angular **22** (standalone, zoneless, signals, Signal Forms, OnPush padrão) com SSR via `@angular/ssr` + Express, que também serve a API (`/api/**`, Drizzle + PostgreSQL). UI com **Spartan UI** (helm em `src/libs/ui`, brain em `@spartan-ng/brain`) + Tailwind 4. As boas práticas oficiais do Angular estão em `node_modules/@angular/core/resources/best-practices.md` — siga-as.
 
 # Regras do projeto (`.claude/rules/`)
 
-Cada arquivo em `.claude/rules/` documenta a interface exata, o comportamento interno e os padrões corretos de um componente ou convenção do projeto. **Não infira a API pelo nome do componente** — os wrappers divergem do Mantine/React puro (ex: `onChange` recebe o valor já extraído, não o evento). Consulte a regra correspondente antes de escrever ou revisar código que toque nesses pontos.
+Cada arquivo documenta a interface exata, o comportamento e os padrões de um componente ou convenção. **Não infira a API pelo nome** — os wrappers divergem do Spartan/Mantine puros (ex.: inputs ligam por `[formField]`, `appButton` é `type="button"` por padrão). Leia a regra antes de escrever ou revisar código que toque nesses pontos.
 
-## Formatação JSX/TSX
+## Templates
 
-- Qualquer arquivo `.tsx` → `tsx-patterns.md` (atributos em linha própria, texto em linha própria, linha em branco entre elementos irmãos).
+- Qualquer `template:` de componente → `angular-templates.md` (atributos em linha própria, texto em linha própria, linha em branco entre irmãos, `@if`/`@for` no lugar de `UtilsIf`/`UtilsFor`).
+- Texto visível / idioma → `i18n.md`.
 
 ## Componentes de formulário
 
 | Ao usar... | Leia |
 |---|---|
-| `<form>` / submit | `components-form.md` |
-| `FormTextInput`, `FormPassword`, `FormTextarea`, `FormNumberInput` | `components-form-inputs.md` |
-| `FormSelect` | `components-form-select.md` |
-| `FormSwitch` (campo booleano) | `components-form-switch.md` |
-| `FormDatePicker` (single / multiple / range) | `components-form-date.md` |
-| `FormButton` (com tooltip/ícone) | `components-form-button.md` |
-| `FormAutocomplete` (busca remota com debounce) | `components-form-autocomplete.md` |
-| Qualquer formulário com validação Yup + `useMutation` | `validated-form.md` |
+| `<form appForm>` / submit | `components-form.md` |
+| `FormTextInput`, `FormPassword`, `FormTextarea`, `FormNumberInput`, `FormColorInput`, `FormSegmentedControl` | `components-form-inputs.md` |
+| `FormSelect`, `FormMultiSelect` | `components-form-select.md` |
+| `appButton` (ícones, loading, tooltip) | `components-form-button.md` |
+| Grid de campos | `form-grid.md` |
+| Formulário com validação Yup + mutação | `validated-form.md` |
 
 ## Componentes utilitários
 
 | Ao usar... | Leia |
 |---|---|
-| Renderização condicional (substitui `&&` / ternário) | `components-utils-if.md` |
-| Iteração de array em JSX (substitui `.map()`) | `components-utils-for.md` |
-| Painel branco com borda/sombra | `components-utils-card.md` |
-| Aba/seção que deve ser montada uma única vez | `components-utils-loader.md` |
+| Painel branco com borda/sombra (`appCard`) | `components-utils-card.md` |
 | Tabela de dados (com ou sem paginação) | `components-utils-table.md` |
+| Modal | `components-utils-modal.md` |
 
 ## Páginas e listas
 
 - Lista paginada com filtros e refetch manual → `paginated-list.md`.
+- Estrutura de pastas, páginas e rotas → `file-organization.md`.
 
-## Resources (módulos de API em `src/resources/{recurso}/`)
-
-| Ao criar/editar... | Leia |
-|---|---|
-| Estrutura de pastas de um módulo novo ou existente | `file-organization.md` |
-| `models/{Recurso}.ts` (interface `I{Recurso}` / classe opcional) | `resources-models.md` |
-| `enums/{Recurso}.ts` (slugs vindos/enviados para a API) | `resources-enums.md` |
-| `services/{verbo}{Recurso}.ts` (chamada HTTP) | `resources-services.md` |
-| `logics/{Acao}.tsx` (hook + UI de create/update/disable/etc.) | `resources-logic.md` |
-| `mocks/` (handlers MSW) | `resources-mocks.md` |
-
-## API (Route Handlers e models)
+## Resources (`src/resources/{recurso}/`)
 
 | Ao criar/editar... | Leia |
 |---|---|
-| Route Handlers (`app/api/**`) ou schemas Drizzle (`db/schema/`) | `api-response-format.md` |
-| Interfaces de model (`resources/*/models/*.ts`) | `api-response-format.md` |
+| `models/{Recurso}.ts` | `resources-models.md` |
+| `enums/{Nome}.ts` | `resources-enums.md` |
+| `services/{verbo}{Recurso}.ts` | `resources-services.md` |
+| `logics/{Acao}.ts` | `resources-logic.md` |
 
-## Regra geral
+## API e sessão
 
-Se a tarefa envolve qualquer componente ou padrão listado acima, leia a regra **antes** de escrever código — ela define nomes de função obrigatórios, convenções de nomenclatura e erros comuns que não são óbvios a partir do código já existente.
+| Ao criar/editar... | Leia |
+|---|---|
+| Rotas (`src/server/api/**`) ou schemas Drizzle (`db/schema/`) | `api-response-format.md` |
+| Login, cookies, refresh, guards, rotas protegidas | `auth-session.md` |
+
+## Verificação
+
+- `npm run build` sem erros/avisos.
+- `npm test` (unitários Angular), `npm run test:api` (API contra `${POSTGRES_DB}_test`), `npm run test:e2e` (Playwright contra o app rodando).

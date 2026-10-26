@@ -1,47 +1,43 @@
-# Componente Form
+# Diretiva Form
 
-`import { Form } from '@/src/components/form/Form';`
+`import { Form } from '@/components/form/Form';`
 
 ## Interface
 
 ```ts
-type FormProps = React.ComponentPropsWithoutRef<'form'> & {
-  children: React.ReactNode;
-  onSubmit?: () => void;   // sem evento — o preventDefault já está aplicado internamente
-};
+// <form appForm (submitted)="…">
+readonly submitted = output<void>(); // sem evento — preventDefault já aplicado
 ```
 
 ## Quando usar
 
-Use `Form` em **todo formulário** do projeto. Ele previne o `submit` nativo do browser e chama `onSubmit` sem precisar passar o evento ou chamar `e.preventDefault()` manualmente.
+Em **todo** formulário. Previne o submit nativo e emite `submitted` (Enter ou botão `type="submit"`). Também aplica `novalidate` — a validação é do schema Yup.
 
 ## Padrão correto
 
-```tsx
-<Form
-  onSubmit={login}
-  className="flex flex-col gap-6"
+```html
+<form
+  appForm
+  class="flex flex-col gap-6"
+  (submitted)="createUnit()"
 >
-  <FormTextInput
-    label="E-mail"
-    {...loginField('email')}
-    required
+  <app-form-text-input
+    [label]="'forms.unit.name.label' | t"
+    [formField]="form.field.name"
+    withAsterisk
   />
 
-  <FormPassword
-    label="Senha"
-    {...loginField('password')}
-    required
-  />
-
-  <Button type="submit">
-    Entrar
-  </Button>
-</Form>
+  <button
+    appButton
+    type="submit"
+    [loading]="isPending"
+  >
+    {{ 'common.actions.save' | t }}
+  </button>
+</form>
 ```
 
 ## Notas
 
-- `onSubmit` é uma função sem parâmetros — não recebe o `FormEvent`.
-- Aceita todos os atributos HTML de `<form>` via spread (ex: `className`, `id`, `noValidate`).
-- O botão de submit deve ter `type="submit"` para acionar o `onSubmit` ao pressionar Enter.
+- O handler não recebe evento: `(submitted)="createUnit()"`.
+- O botão de envio precisa de `type="submit"` (o `appButton` é `type="button"` por padrão).

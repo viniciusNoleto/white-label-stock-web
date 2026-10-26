@@ -1,79 +1,70 @@
 # Inputs de formulário
 
 ```ts
-import { FormTextInput } from '@/src/components/form/TextInput';
-import { FormPassword } from '@/src/components/form/Password';
-import { FormTextarea } from '@/src/components/form/Textarea';
-import { FormNumberInput } from '@/src/components/form/Number';
+import { FormTextInput } from '@/components/form/TextInput';          // app-form-text-input
+import { FormPassword } from '@/components/form/Password';            // app-form-password
+import { FormTextarea } from '@/components/form/Textarea';            // app-form-textarea
+import { FormNumberInput } from '@/components/form/Number';           // app-form-number-input
+import { FormColorInput } from '@/components/form/ColorInput';        // app-form-color-input
+import { FormSegmentedControl } from '@/components/form/SegmentedControl'; // app-form-segmented-control
+import { FormField } from '@angular/forms/signals';                   // diretiva [formField]
 ```
 
-## O que fazem
+## O que são
 
-Todos são wrappers finos sobre os componentes equivalentes do Mantine. Diferenças em relação ao Mantine puro:
+Componentes sobre o Spartan UI (`hlmInput`, `hlmTextarea`, `hlm-toggle-group`…) que implementam o contrato `FormValueControl` do **Signal Forms** (base `FormControlBase` em `components/form/types.ts`). Diferente do Mantine:
 
-- `onChange` recebe o **valor já extraído** (string ou number), não o evento.
-- Chamam `onValidate()` automaticamente no `onChange` e no `onBlur` — dispara a validação individual no `useValidatedFormState`.
+- Ligação com formulário: `[formField]="logicData().xValidatedFormState.field.campo"` — o Angular sincroniza sozinho `value`, `errors`, `touched` e `disabled`. **Substitui o spread `{...field('campo')}` do React.**
+- Fora de formulário (filtros): `[(value)]="sinal"` ou `[value]` + `(valueChange)`.
+- O erro aparece só depois do blur ou de `validate()`.
 
-## Interfaces
+## Inputs comuns (todos)
 
-```ts
-// FormTextInput — valor string
-type FormTextInputProps = TextInputProps & {
-  onChange?: (value: string) => void;
-  onValidate?: () => void;
-};
+| Input | Tipo | Observação |
+|---|---|---|
+| `label` | `string` | |
+| `placeholder` | `string` | |
+| `description` | `string` | texto de ajuda abaixo do campo |
+| `withAsterisk` | `boolean` | **asterisco visual**; a obrigatoriedade vem do schema Yup (equivale ao `required` do Mantine) |
+| `inputId` | `string` | gerado automaticamente; o `<label for>` aponta para ele |
 
-// FormPassword — valor string
-type FormPasswordProps = PasswordInputProps & {
-  onChange?: (value: string) => void;
-  onValidate?: () => void;
-};
+> Nunca use `[min]`, `[max]`, `[disabled]`, `[required]` junto com `[formField]`: são reservados pelo Signal Forms (erro NG8022). No número use `[minValue]`/`[maxValue]`.
 
-// FormTextarea — valor string
-type FormTextareaProps = TextareaProps & {
-  onChange?: (value: string) => void;
-  onValidate?: () => void;
-};
+## Específicos
 
-// FormNumberInput — valor number
-type FormNumberInputProps = NumberInputProps & {
-  onChange?: (value: number) => void;
-  onValidate?: () => void;
-};
-```
+| Componente | `value` | Extras |
+|---|---|---|
+| `FormTextInput` | `string` | `type` (`text`/`email`/`search`…), `autocomplete`, `leftIcon` (ex.: `lucideSearch`) |
+| `FormPassword` | `string` | botão mostrar/ocultar, `autocomplete` |
+| `FormTextarea` | `string` | `rows` |
+| `FormNumberInput` | `number \| null` | vazio = `null`; `minValue`, `maxValue`, `step`, `ariaLabel` |
+| `FormColorInput` | `string` (`#RRGGBB`) | `swatches` |
+| `FormSegmentedControl` | `string \| number` | `data: { value, label }[]`, nunca fica vazio |
 
-## Uso com `useValidatedFormState`
+## Padrões corretos
 
-Spread direto do `field(path)` — ele já fornece `value`, `onChange`, `error` e `onValidate`.
-Passe `required` separado (atributo visual do Mantine, não vem do yup).
-
-```tsx
-<FormTextInput
-  label="E-mail"
-  placeholder="seu@email.com"
-  {...loginField('email')}
-  required
+```html
+<app-form-text-input
+  type="email"
+  [label]="'auth.login.email.label' | t"
+  [formField]="form.field.email"
+  withAsterisk
 />
 
-<FormPassword
-  label="Senha"
-  placeholder="••••••••"
-  {...loginField('password')}
-  required
+<app-form-number-input
+  [minValue]="0"
+  [label]="'forms.inventoryItem.quantity.label' | t"
+  [formField]="form.field.quantity"
 />
 
-<FormTextarea
-  label="Observações"
-  placeholder="Descreva o problema..."
-  {...requestField('description')}
-  rows={4}
-/>
-
-<FormNumberInput
-  label="Carga horária"
-  placeholder="0"
-  {...subjectField('hours')}
-  min={0}
-  required
+<!-- filtro fora de formulário -->
+<app-form-text-input
+  type="search"
+  leftIcon="lucideSearch"
+  [placeholder]="'inventory.search.placeholder' | t"
+  [value]="filters().search"
+  (valueChange)="setFilter('search', $event)"
 />
 ```
+
+No schema Yup, campos numéricos opcionais são `yup.number().nullable()`.

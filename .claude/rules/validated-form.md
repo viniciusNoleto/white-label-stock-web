@@ -1,94 +1,59 @@
-# Formulário Validado — useValidatedFormState + useMutation
+# Formulário validado — validatedFormState + createMutation
 
-Use este padrão em todo formulário com validação e envio para a API.
+Equivalente Angular do `useValidatedFormState` + `useMutation` do React. Signal Forms (`@angular/forms/signals`) por baixo, schema **Yup** por cima.
+
+```ts
+import { validatedFormState } from '@/utils/form';
+import { createMutation } from '@/utils/query';
+import { injectNotify } from '@/utils/notify';
+```
 
 ## Regras
 
-- Schema Yup declarado fora do componente, nome `{ação}Schema` em camelCase.
-- Todos os retornos de `useValidatedFormState` prefixados com o nome da ação — nunca use `state`, `field`, `validate` genéricos.
-- Validação ocorre na função de submit do componente, **antes** de `mutate()` — nunca dentro do `mutationFn`.
-- `setValue(path, '')` para limpar campos de texto — nunca `undefined` (quebra o input controlado).
+- Schema Yup **reativo ao idioma**: `computed(() => yup.object({ … i18n.t('…') }))`, nome `{ação}Schema`. Schema compartilhado entre create/update → `schemas/{recurso}.ts` como função `inject{Recurso}Schema()`.
+- Todo campo tem `.default(…)` (é o estado inicial e o `reset()`). Campos opcionais numéricos: `.nullable().default(null)`.
+- Retornos prefixados pela ação: `createUnitValidatedFormState`, `createUnitMutation`, `createUnitReset` — nunca `form`, `mutation` genéricos.
+- Validação na função de submit do componente, **antes** de `mutate()` — nunca dentro do `mutationFn`.
+- `onSuccess`/`onError` sempre na `inject…LogicData`; mensagens via `injectNotify()`.
 
-## Desestruturação de `useValidatedFormState`
+## API de `validatedFormState(schema)`
+
+| Membro | Uso |
+|---|---|
+| `state` | `WritableSignal` com o objeto do form — é o que vai para o service (`state()`) |
+| `field` | árvore do Signal Forms: `[formField]="form.field.name"` |
+| `setValue(key, value)` / `setState(value)` | escrita imperativa |
+| `reset(value?)` | volta ao default do schema (ou ao `value`) e limpa touched/erros |
+| `validate()` | marca tudo como tocado (mostra erros) e retorna `boolean` **síncrono** |
+
+O Standard Schema nativo do Yup é assíncrono; o projeto usa `toSyncStandardSchema` (`validateSync`) para os erros aparecerem na hora. Não use testes assíncronos (`.test(async …)`) nos schemas.
+
+## `createMutation`
 
 ```ts
-const {
-  state: loginState,       // objeto do formulário — passa para o service
-  field: loginField,       // spread direto no input: value, onChange, error, onValidate
-  setValue: loginSetValue, // setar campo imperativamente
-  validate: loginValidate, // dispara validação; retorna Promise<boolean>
-} = useValidatedFormState(loginSchema);
-```
+const createUnitMutation = createMutation({
+  mutationFn: () => createUnitService({ body: createUnitValidatedFormState.state() }),
+  onSuccess: (res) => {
+    notify.success(res);          // sempre a mensagem i18n da API (res.message)
 
-## Estrutura completa
-
-```tsx
-const loginSchema = yup.object().shape({
-  email: yup.string().required().email(),
-  password: yup.string().required().min(8),
+    onSuccess();
+  },
+  onError: (err) => notify.error(err, 'notifications.errors.createUnit'), // mensagem da API ou fallback
 });
 
-export default function LoginPage() {
-  const {
-    state: loginState,
-    field: loginField,
-    setValue: loginSetValue,
-    validate: loginValidate,
-  } = useValidatedFormState(loginSchema);
+createUnitMutation.mutate();       // isPending() é signal
+```
 
-  const {
-    isPending: loginIsPending,
-    mutate: loginMutate,
-  } = useMutation({
-    mutationFn: () => loginService({ body: loginState }),
-    onSuccess: (data) => {
-      // navegação ou efeito pós-sucesso
-    },
-    onError: (err: any) => {
-      if (err?.message) {
-        notifications.show({ title: 'Erro', message: err.message, color: 'red' });
-      }
-    },
-  });
+## Submit no componente
 
-  async function login() {
-    if (!await loginValidate()) return;
-    loginMutate();
-  }
+```ts
+protected createUnit() {
+  const { createUnitValidatedFormState, createUnitMutation } = this.logicData();
 
-  return (
-    <Form
-      onSubmit={login}
-      className="flex flex-col gap-6"
-    >
-      <FormTextInput
-        label="E-mail"
-        placeholder="seu@email.com"
-        {...loginField('email')}
-        required
-      />
+  if (!createUnitValidatedFormState.validate()) return;
 
-      <FormPassword
-        label="Senha"
-        placeholder="••••••••"
-        {...loginField('password')}
-        required
-      />
-
-      <Button
-        type="submit"
-        loading={loginIsPending}
-        disabled={loginIsPending}
-      >
-        Entrar
-      </Button>
-    </Form>
-  );
+  createUnitMutation.mutate();
 }
 ```
 
-## Notas
-
-- `field(path)` retorna `{ value, onChange, error, onValidate }`. O `required` é separado — é atributo visual do Mantine, não vem do Yup.
-- `onValidate` é chamado automaticamente pelos inputs no `onBlur`.
-- Para limpar campo após erro: `loginSetValue('password', '')` — nunca `undefined`.
+Para limpar campo após erro: `setValue('password', '')` — nunca `undefined`.

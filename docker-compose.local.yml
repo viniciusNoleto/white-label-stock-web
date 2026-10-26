@@ -4,6 +4,7 @@ services:
     user: node
     restart: unless-stopped
     tty: true
+    env_file: .env
     build:
       dockerfile: ./configs/docker/node/Dockerfile.local
     volumes:

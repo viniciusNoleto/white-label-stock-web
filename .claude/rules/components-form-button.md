@@ -1,58 +1,54 @@
-# Componente FormButton
+# FormButton (`appButton`)
 
-`import { FormButton } from '@/src/components/form/Button';`
+`import { FormButton } from '@/components/form/Button';`
 
 ## Interface
 
 ```ts
-type FormButtonProps = ButtonProps & {
-  label?: string;       // texto do botão (alternativa a children)
-  tooltip?: string;     // texto do Tooltip que envolve o botão
-  icon?: string;        // ícone central (iconify string) — usado quando não há label/children
-  leftIcon?: string;    // ícone à esquerda (iconify string)
-  rightIcon?: string;   // ícone à direita (iconify string)
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-};
+// <button appButton> ou <a appButton>
+variant = input<'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link'>('default');
+size = input<'default' | 'xs' | 'sm' | 'lg' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg'>('default');
+type = input<'button' | 'submit' | 'reset'>('button');
+label = input<string>();       // alternativa ao conteúdo projetado
+icon = input<string>();        // ícone central (botão só de ícone: use size="icon…")
+leftIcon = input<string>();
+rightIcon = input<string>();
+loading = input(false);        // mostra spinner e desabilita
+disabled = input(false);
 ```
 
-Ícones usam a biblioteca `@iconify/react` — o valor é uma string no formato `"prefixo:nome"` (ex: `"lucide:plus"`, `"lucide:trash-2"`).
+Ícones são nomes registrados em `src/libs/icons.ts` (`lucidePlus`, `lucideTrash2`…). Ícone novo → importe e registre lá.
 
-## Quando usar
+## Equivalências com o Mantine
 
-Use `FormButton` quando precisar de tooltip, ícone via string iconify, ou label como prop. Para botões simples sem essas necessidades, use o `Button` do Mantine diretamente.
+| Mantine (antes) | Agora |
+|---|---|
+| `color="primary"` (filled) | `variant="default"` (padrão) |
+| `variant="subtle" color="gray"` | `variant="ghost"` |
+| `color="red"` | `variant="destructive"` |
+| `variant="default"`/`outline` | `variant="outline"` |
+| `tooltip="…"` | `hlmTooltip="…"` no mesmo elemento (`HlmTooltip` de `@spartan-ng/helm/tooltip`) |
 
 ## Padrões corretos
 
-```tsx
-{/* Botão com label e ícone à direita */}
-<FormButton
-  color="primary"
-  label="Novo Curso"
-  rightIcon="lucide:plus"
-  onClick={handleCreate}
-/>
-
-{/* Botão só com ícone e tooltip (ex: ação em linha de tabela) */}
-<FormButton
-  variant="subtle"
-  icon="lucide:trash-2"
-  tooltip="Excluir disciplina"
-  color="red"
-  onClick={() => handleDelete(item.id)}
-/>
-
-{/* Botão com tooltip e children */}
-<FormButton
-  tooltip="Exportar para o MEC"
-  leftIcon="lucide:download"
-  onClick={handleExport}
+```html
+<button
+  appButton
+  leftIcon="lucidePlus"
+  (click)="openCreateUnitModal()"
 >
-  Exportar SISTEC
-</FormButton>
+  {{ 'inventory.actions.newUnit' | t }}
+</button>
+
+<button
+  appButton
+  variant="ghost"
+  size="icon-sm"
+  icon="lucideX"
+  [attr.aria-label]="'forms.inventoryItem.components.remove' | t"
+  [hlmTooltip]="'forms.inventoryItem.components.remove' | t"
+  (click)="removeComponent(component.id)"
+></button>
 ```
 
-## Notas
-
-- `children` tem prioridade sobre `label`. Se nenhum dos dois for passado e `icon` for fornecido, renderiza apenas o ícone.
-- O `Tooltip` é sempre renderizado, mas fica invisível quando `tooltip` é `undefined`.
-- Ícones `leftIcon`/`rightIcon` são renderizados com `w-4 h-4` fixo.
+Botão só de ícone **sempre** com `aria-label`.

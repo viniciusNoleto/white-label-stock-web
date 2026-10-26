@@ -6,4 +6,5 @@ WORKDIR /app
 
 EXPOSE 3000
 
+# ng serve com SSR: o server.ts (Express) atende /api e renderiza as páginas.
 CMD ["npm", "run", "dev"]

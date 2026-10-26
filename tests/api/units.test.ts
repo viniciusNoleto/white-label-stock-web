@@ -1,26 +1,25 @@
-import { describe, expect, it, vi } from 'vitest';
-import { GET, POST } from '@/app/api/units/route';
-import { PUT, DELETE } from '@/app/api/units/[id]/route';
-import { factories, failNextDbCall, jsonRequest, params, readJson } from '../support/api';
+import { describe, expect, it } from 'vitest';
+import { factories } from './support/factories';
+import { api, failNextDbCall } from './support/http';
 
 describe('GET /api/units', () => {
-  it('lists units ordered by name', async () => {
+  it('lists units ordered by name in the API envelope', async () => {
     await factories.unit({ name: 'Metro', abbreviation: 'm' });
     await factories.unit({ name: 'Grama', abbreviation: 'g' });
 
-    const { status, body } = await readJson(await GET());
+    const { status, body } = await api('GET', '/api/units');
 
     expect(status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.message['pt-br']).toBe('Operação realizada com sucesso.');
-    expect(body.data.map((u: { name: string }) => u.name)).toEqual(['Grama', 'Metro']);
+    expect(body.data.map((unit: { name: string }) => unit.name)).toEqual(['Grama', 'Metro']);
     expect(Object.keys(body.data[0])).toEqual(['id', 'name', 'abbreviation', 'created_at', 'updated_at']);
   });
 
   it('returns 500 when the database fails', async () => {
     failNextDbCall('select');
 
-    const { status, body } = await readJson(await GET());
+    const { status, body } = await api('GET', '/api/units');
 
     expect(status).toBe(500);
     expect(body).toMatchObject({ success: false, data: null, message: { 'en-us': 'Error fetching units.' } });
@@ -28,8 +27,8 @@ describe('GET /api/units', () => {
 });
 
 describe('POST /api/units', () => {
-  it('creates a unit', async () => {
-    const { status, body } = await readJson(await POST(jsonRequest('/api/units', 'POST', { name: 'Litro', abbreviation: 'L' })));
+  it('creates a unit trimming the fields', async () => {
+    const { status, body } = await api('POST', '/api/units', { name: '  Litro ', abbreviation: 'L' });
 
     expect(status).toBe(201);
     expect(body.data).toMatchObject({ id: 1, name: 'Litro', abbreviation: 'L' });
@@ -40,18 +39,26 @@ describe('POST /api/units', () => {
   it.each([
     [{ abbreviation: 'L' }],
     [{ name: 'Litro' }],
-    [{ name: '', abbreviation: '' }],
+    [{ name: '  ', abbreviation: '' }],
+    [{ name: 1, abbreviation: 2 }],
   ])('rejects invalid payload %j with 422', async (payload) => {
-    const { status, body } = await readJson(await POST(jsonRequest('/api/units', 'POST', payload)));
+    const { status, body } = await api('POST', '/api/units', payload);
 
     expect(status).toBe(422);
     expect(body.message['pt-br']).toBe('Nome e abreviação são obrigatórios.');
   });
 
-  it('returns 500 on malformed JSON', async () => {
-    const req = new Request('http://localhost/api/units', { method: 'POST', body: '{oops' });
+  it('rejects malformed JSON with 400', async () => {
+    const { status, body } = await api('POST', '/api/units', undefined, { rawBody: '{oops' });
 
-    const { status, body } = await readJson(await POST(req));
+    expect(status).toBe(400);
+    expect(body).toMatchObject({ success: false, message: { 'en-us': 'Invalid data.' } });
+  });
+
+  it('returns 500 when the database fails', async () => {
+    failNextDbCall('insert');
+
+    const { status, body } = await api('POST', '/api/units', { name: 'Litro', abbreviation: 'L' });
 
     expect(status).toBe(500);
     expect(body.message['en-us']).toBe('Error creating unit.');
@@ -62,10 +69,7 @@ describe('PUT /api/units/:id', () => {
   it('updates an existing unit', async () => {
     const unit = await factories.unit();
 
-    const { status, body } = await readJson(await PUT(
-      jsonRequest(`/api/units/${unit.id}`, 'PUT', { name: 'Tonelada', abbreviation: 't' }),
-      params({ id: String(unit.id) }),
-    ));
+    const { status, body } = await api('PUT', `/api/units/${unit.id}`, { name: 'Tonelada', abbreviation: 't' });
 
     expect(status).toBe(200);
     expect(body.data).toMatchObject({ id: unit.id, name: 'Tonelada', abbreviation: 't' });
@@ -73,17 +77,16 @@ describe('PUT /api/units/:id', () => {
   });
 
   it('validates required fields', async () => {
-    const { status, body } = await readJson(await PUT(jsonRequest('/api/units/1', 'PUT', { name: 'x' }), params({ id: '1' })));
+    const unit = await factories.unit();
+
+    const { status, body } = await api('PUT', `/api/units/${unit.id}`, { name: 'x' });
 
     expect(status).toBe(422);
     expect(body.success).toBe(false);
   });
 
-  it('returns 404 for an unknown unit', async () => {
-    const { status, body } = await readJson(await PUT(
-      jsonRequest('/api/units/999', 'PUT', { name: 'a', abbreviation: 'b' }),
-      params({ id: '999' }),
-    ));
+  it.each(['999', 'abc', '-1'])('returns 404 for unknown id %s', async (id) => {
+    const { status, body } = await api('PUT', `/api/units/${id}`, { name: 'a', abbreviation: 'b' });
 
     expect(status).toBe(404);
     expect(body.message['pt-br']).toBe('Unidade não encontrada.');
@@ -92,7 +95,7 @@ describe('PUT /api/units/:id', () => {
   it('returns 500 when the database fails', async () => {
     failNextDbCall('update');
 
-    const { status } = await readJson(await PUT(jsonRequest('/api/units/1', 'PUT', { name: 'a', abbreviation: 'b' }), params({ id: '1' })));
+    const { status } = await api('PUT', '/api/units/1', { name: 'a', abbreviation: 'b' });
 
     expect(status).toBe(500);
   });
@@ -102,35 +105,35 @@ describe('DELETE /api/units/:id', () => {
   it('deletes an existing unit', async () => {
     const unit = await factories.unit();
 
-    const { status, body } = await readJson(await DELETE(jsonRequest(`/api/units/${unit.id}`, 'DELETE'), params({ id: String(unit.id) })));
+    const { status, body } = await api('DELETE', `/api/units/${unit.id}`);
 
     expect(status).toBe(200);
     expect(body).toMatchObject({ success: true, data: null });
-    expect((await readJson(await GET())).body.data).toHaveLength(0);
+    expect((await api('GET', '/api/units')).body.data).toHaveLength(0);
   });
 
   it('returns 404 for an unknown unit', async () => {
-    const { status } = await readJson(await DELETE(jsonRequest('/api/units/5', 'DELETE'), params({ id: '5' })));
+    const { status } = await api('DELETE', '/api/units/5');
 
     expect(status).toBe(404);
   });
 
-  it('returns 500 when the lookup fails', async () => {
-    failNextDbCall('select');
+  it('returns 409 while the unit is used by an item', async () => {
+    const unit = await factories.unit();
+    await factories.item({ unit_id: unit.id });
 
-    const { status, body } = await readJson(await DELETE(jsonRequest('/api/units/1', 'DELETE'), params({ id: '1' })));
+    const { status, body } = await api('DELETE', `/api/units/${unit.id}`);
+
+    expect(status).toBe(409);
+    expect(body.message['en-us']).toBe('This unit is in use by inventory items.');
+  });
+
+  it('returns 500 when the database fails', async () => {
+    failNextDbCall('delete');
+
+    const { status, body } = await api('DELETE', '/api/units/1');
 
     expect(status).toBe(500);
     expect(body.message['en-us']).toBe('Error deleting unit.');
-  });
-
-  it('returns 500 when the unit is still referenced by an item (FK violation)', async () => {
-    const unit = await factories.unit();
-    await factories.item({ unit_id: unit.id });
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const { status } = await readJson(await DELETE(jsonRequest(`/api/units/${unit.id}`, 'DELETE'), params({ id: String(unit.id) })));
-
-    expect(status).toBe(500);
   });
 });

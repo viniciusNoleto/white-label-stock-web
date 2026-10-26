@@ -1,9 +1,11 @@
 node_modules
-.next
+dist
+.angular
 .git
-*.md
 .env
 .env.local
 coverage
 playwright-report
 test-results
+tests/e2e/.auth
+*.md

@@ -1,107 +1,72 @@
-# Componente UtilsTable
+# UtilsTable
 
-`import { UtilsTable } from '@/src/components/utils/Table';`
+```ts
+import { UtilsTable, UtilsTableCell, type TableAction } from '@/components/utils/Table';
+```
 
 ## Interface
 
 ```ts
-type TableProps<T extends object, U extends Record<string, string>> = {
-  rows: T[];           // dados da tabela
-  columns: U;          // mapeamento campo → label da coluna
-  title?: string;      // título acima da tabela (opcional)
-  alias?: ReactNode;   // slot direito do título (botões de ação)
-  loading?: boolean;   // exibe LoadingOverlay com blur sobre a tabela
-  emptyText?: string;  // texto quando rows está vazio (padrão: 'Nenhum dado encontrado')
-  rowKey?: (ctx: { item: T; index: number }) => React.Key;
-  actions?: TableAction<T>[] | ((ctx: { item: T; index: number }) => TableAction<T>[]);
-  renderCells?: Partial<Record<keyof U, (ctx: { item: T; index: number }) => ReactNode>>;
-} & (
-  { lastPage: number; page: number; setPage: (page: number) => void }  // com paginação
-  | { lastPage?: never; page?: never; setPage?: never }                 // sem paginação
-);
+rows = input.required<readonly T[]>();
+columns = input.required<Record<string, string>>();  // campo → título; define a ordem
+loading = input(false);                               // overlay com blur + spinner
+emptyText = input<string>();                          // padrão: common.table.emptyDefault
+rowKey = input<(ctx: { item: T; index: number }) => PropertyKey>();
+actions = input<TableAction<T>[] | ((ctx) => TableAction<T>[])>();
+page = input(1);
+lastPage = input(1);                                  // paginação só aparece se > 1
+pageChange = output<number>();
 
-type TableAction<T> = FormButtonProps & {
-  label?: string;
-  icon?: string;       // ícone Iconify (ex: 'lucide:trash-2')
-  onClick?: (ctx: { item: T; index: number }) => void;
+type TableAction<T> = {
+  label: string;      // tooltip + aria-label (e texto, se não houver icon)
+  icon?: string;      // ex.: 'lucidePencil'
+  variant?: ButtonVariants['variant'];  // padrão 'outline'; 'destructive' para excluir
+  onClick: (ctx: { item: T; index: number }) => void;
 };
 ```
 
-## Quando usar
+## Células customizadas — substitui `renderCells`
 
-Para listas de dados tabulares com loading automático, estado vazio e ações por linha com tooltip. Substitui tabelas HTML manuais.
+`<ng-template appTableCell="campo" [appTableCellOf]="rows()" let-item>` dentro da tabela. O `appTableCellOf` recebe as mesmas `rows` só para tipar o `let-item`. Campos sem template mostram o valor bruto.
 
-## Padrões corretos
+## Padrão correto
 
-```tsx
-{/* Tabela básica sem paginação */}
-<UtilsTable
-  rows={students}
-  rowKey={({ item }) => item.id}
-  columns={{
-    name: 'Nome',
-    registration: 'Matrícula',
-    status: 'Status',
-  }}
-  emptyText="Nenhum aluno cadastrado."
-/>
-
-{/* Com paginação */}
-<UtilsTable
-  rows={charges}
-  rowKey={({ item }) => item.id}
-  loading={chargesIsFetching}
-  lastPage={chargesMeta.last_page!}
-  page={page}
-  setPage={(newPage) => {
-    setPage(newPage);
-    chargesRefetch();
-  }}
-  columns={{ description: 'Descrição', amount: 'Valor', status: 'Status' }}
-  emptyText="Nenhum item encontrado."
-/>
-
-{/* Com renderCells customizados */}
-<UtilsTable
-  rows={subjects}
-  rowKey={({ item }) => item.id}
-  columns={{
-    name: 'Disciplina',
-    courseName: 'Curso',
-    hours: 'C/H',
-  }}
-  loading={isLoading}
-  emptyText="Nenhuma disciplina encontrada."
-  renderCells={{
-    courseName: ({ item }) => (
-      <span className="font-semibold uppercase">{item.courseName}</span>
-    ),
-    hours: ({ item }) => (
-      <span className="font-bold text-gray-500">{item.hours}h</span>
-    ),
-  }}
-/>
-
-{/* Com ações dinâmicas por linha */}
-<UtilsTable
-  rows={payments}
-  rowKey={({ item }) => item.id}
-  columns={{ description: 'Descrição', amount: 'Valor', status: 'Status' }}
-  actions={({ item }) => [
-    {
-      icon: item.status === 'pago' ? 'lucide:eye' : 'lucide:check-circle-2',
-      label: item.status === 'pago' ? 'Ver comprovante' : 'Marcar como pago',
-      onClick: ({ item }) => handleAction(item),
-    },
-  ]}
-/>
+```html
+<app-utils-table
+  [rows]="items()"
+  [rowKey]="rowKey"
+  [loading]="itemsQuery.isFetching()"
+  [emptyText]="'inventory.table.empty' | t"
+  [columns]="{
+    name: 'inventory.table.columns.name' | t,
+    quantity: 'inventory.table.columns.quantity' | t,
+  }"
+  [actions]="actions()"
+  [page]="page()"
+  [lastPage]="meta().last_page ?? 1"
+  (pageChange)="changePage($event)"
+>
+  <ng-template
+    appTableCell="quantity"
+    [appTableCellOf]="items()"
+    let-item
+  >
+    <span class="tabular-nums">
+      {{ +item.quantity }}
+    </span>
+  </ng-template>
+</app-utils-table>
 ```
 
-## Notas
+```ts
+protected readonly rowKey = ({ item }: { item: IUnit }) => item.id;
 
-- `columns` define a ordem das colunas. Campos não listados não aparecem.
-- `renderCells` sobrescreve apenas as células listadas; as demais exibem o valor bruto.
-- `loading={true}` exibe `LoadingOverlay` com blur — não precisa de `UtilsIf` externo.
-- Ações usam `label` como tooltip automático e como texto do botão quando não há `icon`.
-- `lastPage`, `page` e `setPage` são todos obrigatórios ou todos ausentes (union discriminada).
-- `setPage` deve sempre chamar `refetch()` em seguida — veja `paginated-list.md`.
+// labels traduzidos → computed (acompanha o idioma)
+protected readonly actions = computed<TableAction<IUnit>[]>(() => [
+  { icon: 'lucidePencil', label: this.i18n.t('common.actions.edit'), onClick: ({ item }) => this.openUpdateUnitModal(item) },
+  { icon: 'lucideTrash2', label: this.i18n.t('common.actions.delete'), variant: 'destructive', onClick: ({ item }) => this.openDeleteUnitModal(item) },
+]);
+```
+
+- Ações condicionais por linha: passe uma função `({ item }) => TableAction[]`.
+- Ao trocar de página, `page.set(n)` + `refetch()` — ver `paginated-list.md`.

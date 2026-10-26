@@ -1,0 +1,250 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
+
+@import '@spartan-ng/brain/hlm-tailwind-preset.css';
+
+/*
+ * Paleta da marca — para fazer o white-label, troque as escalas abaixo.
+ * Cada escala segue o mesmo padrão (500 = cor base, clareando até 50 e
+ * escurecendo até 950).
+ */
+@theme {
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-primary-50: #c7a7fd;
+  --color-primary-100: #b58cfc;
+  --color-primary-200: #a471fb;
+  --color-primary-300: #9256fa;
+  --color-primary-400: #813afa;
+  --color-primary-500: #6f1ff9;
+  --color-primary-600: #5e07f5;
+  --color-primary-700: #5406da;
+  --color-primary-800: #4905bf;
+  --color-primary-900: #3f04a4;
+  --color-primary-950: #340488;
+
+  --color-secondary-50: #d0a7fd;
+  --color-secondary-100: #c28cfc;
+  --color-secondary-200: #b371fb;
+  --color-secondary-300: #a556fa;
+  --color-secondary-400: #963afa;
+  --color-secondary-500: #881ff9;
+  --color-secondary-600: #7a07f5;
+  --color-secondary-700: #6c06da;
+  --color-secondary-800: #5f05bf;
+  --color-secondary-900: #5104a4;
+  --color-secondary-950: #440488;
+
+  --color-tertiary-50: #a2caf7;
+  --color-tertiary-100: #89bcf5;
+  --color-tertiary-200: #70adf3;
+  --color-tertiary-300: #569ff1;
+  --color-tertiary-400: #3d90ef;
+  --color-tertiary-500: #2482ed;
+  --color-tertiary-600: #1374e3;
+  --color-tertiary-700: #1167ca;
+  --color-tertiary-800: #0f5ab1;
+  --color-tertiary-900: #0c4d97;
+  --color-tertiary-950: #0a417e;
+}
+
+/* Tokens do Spartan (tema stone) com a cor primária apontando para a marca. */
+:root {
+  color-scheme: light;
+
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.001 106.423);
+  --foreground: oklch(0.147 0.004 49.25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.147 0.004 49.25);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.147 0.004 49.25);
+  --primary: var(--color-primary-500);
+  --primary-foreground: oklch(0.985 0.001 106.423);
+  --secondary: oklch(0.97 0.001 106.424);
+  --secondary-foreground: oklch(0.216 0.006 56.043);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.553 0.013 58.071);
+  --accent: oklch(0.97 0.001 106.424);
+  --accent-foreground: oklch(0.216 0.006 56.043);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717);
+  --ring: var(--color-primary-300);
+}
+
+:root.dark {
+  color-scheme: dark;
+
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0.001 106.423);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0.001 106.423);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0.001 106.423);
+  --primary: var(--color-primary-500);
+  --primary-foreground: oklch(0.985 0.001 106.423);
+  --secondary: oklch(0.268 0.007 34.298);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.709 0.01 56.259);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0.001 106.423);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: var(--color-primary-700);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply bg-stone-50 dark:bg-neutral-950 text-[14.5px];
+  }
+
+  body {
+    @apply bg-stone-50 dark:bg-neutral-950 text-foreground font-sans antialiased;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 dark:bg-neutral-700 rounded-full hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors;
+}
+
+.center-flex {
+  @apply flex items-center justify-center;
+}
+
+.responsive-flex {
+  @apply flex flex-wrap;
+}
+
+.responsive-flex > * {
+  @apply grow;
+}
+
+.form-grid {
+  @apply grid grid-cols-12 gap-6;
+}
+
+.merge-children {
+  @apply grid grid-cols-1 grid-rows-1;
+  grid-template-areas: 'merge';
+}
+
+.merge-children > * {
+  grid-area: merge;
+}
+
+/* Telas públicas — grade de planta baixa, esteira e faixas de sinalização. */
+.bg-blueprint {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-primary-500) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-primary-500) 6%, transparent) 1px, transparent 1px);
+  background-size:
+    120px 120px,
+    120px 120px,
+    24px 24px,
+    24px 24px;
+}
+
+.bg-conveyor-belt {
+  background-color: var(--color-stone-300);
+  background-image: repeating-linear-gradient(to right, transparent 0 10px, rgb(0 0 0 / 0.12) 10px 12px);
+}
+
+:root.dark .bg-conveyor-belt {
+  background-color: var(--color-neutral-800);
+  background-image: repeating-linear-gradient(to right, transparent 0 10px, rgb(255 255 255 / 0.08) 10px 12px);
+}
+
+.bg-hazard-stripes {
+  background-image: repeating-linear-gradient(-45deg, var(--color-primary-500) 0 8px, transparent 8px 16px);
+}
+
+.bg-flow-dash {
+  background-image: repeating-linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 45%, transparent) 0 6px, transparent 6px 10px);
+}
+
+@keyframes conveyor {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes conveyor-belt {
+  to {
+    background-position-x: 12px;
+  }
+}
+
+@keyframes flow-dash {
+  to {
+    background-position-x: 10px;
+  }
+}
+
+@keyframes flow-packet {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+
+  15%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    left: calc(100% - 0.5rem);
+    opacity: 0;
+  }
+}
+
+.animate-conveyor {
+  animation: conveyor 60s linear infinite;
+}
+
+.animate-conveyor-belt {
+  animation: conveyor-belt 0.4s linear infinite;
+}
+
+.animate-flow-dash {
+  animation: flow-dash 0.6s linear infinite;
+}
+
+.animate-flow-packet {
+  animation: flow-packet 2.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-conveyor,
+  .animate-conveyor-belt,
+  .animate-flow-dash {
+    animation: none;
+  }
+
+  .animate-flow-packet {
+    display: none;
+  }
+}

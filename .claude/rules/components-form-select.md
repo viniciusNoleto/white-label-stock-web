@@ -1,82 +1,59 @@
-# Componente FormSelect
+# FormSelect e FormMultiSelect
 
-`import { FormSelect } from '@/src/components/form/Select';`
+```ts
+import { FormSelect } from '@/components/form/Select';           // app-form-select (hlm-select)
+import { FormMultiSelect } from '@/components/form/MultiSelect'; // app-form-multi-select (hlm-combobox-multiple)
+```
 
 ## Interface
 
 ```ts
-type FormSelectProps<T> = Omit<SelectProps, 'data'> & {
-  onChange?: (value: string | null) => void;
-  onValidate?: () => void;
-
-  // Modo objeto — transforma array de objetos em options do Mantine
-  data?: T[];
-  valueField?: keyof T | string;   // campo que vira value
-  labelField?: keyof T | string;   // campo que vira label
-
-  // Modo direto — passa data no formato Mantine (string[] ou { value, label }[])
-  // data?: SelectProps['data']
-};
+data = input<readonly unknown[]>([]);
+valueField = input<string>();   // modo objeto
+labelField = input<string>();   // modo objeto
+clearable = input(false);       // só FormSelect
+// FormSelect.value:      string | number | null
+// FormMultiSelect.value: (string | number)[]  (nunca null)
 ```
 
-## Dois modos de uso
+Os mesmos inputs comuns dos demais (`label`, `placeholder`, `description`, `withAsterisk`) e ligação por `[formField]` ou `[(value)]`.
 
-### Modo objeto — array de entidades
+## Dois modos de `data`
 
-Use `valueField` + `labelField` quando `data` é um array de objetos do domínio. O componente faz a transformação internamente.
+### Modo objeto — entidades da API
 
-```tsx
-<FormSelect
-  label="Curso"
-  placeholder="Selecione o curso"
-  data={courses}
+```html
+<app-form-select
   valueField="id"
   labelField="name"
-  {...subjectField('courseId')}
-  required
+  [label]="'forms.inventoryItem.unit.label' | t"
+  [data]="units()"
+  [formField]="form.field.unit_id"
+  withAsterisk
 />
 ```
 
-### Modo direto — dados já no formato Mantine
+O valor guardado é o **id como veio da API** (`number`) — no schema: `yup.number().nullable().default(null)`.
 
-Omita `valueField`/`labelField` e passe `data` no formato nativo do Mantine.
+### Modo direto — `string[]` ou `{ value, label }[]`
 
-```tsx
-<FormSelect
-  label="Status"
-  placeholder="Selecione"
-  data={['Ativo', 'Inativo', 'Trancado']}
-  {...studentField('status')}
-/>
-
-<FormSelect
-  label="Modalidade"
-  data={[
-    { value: 'EAD', label: 'EAD' },
-    { value: 'Presencial', label: 'Presencial' },
-    { value: 'Semipresencial', label: 'Semipresencial' },
-  ]}
-  {...courseField('modality')}
-  required
+```html
+<app-form-select
+  [data]="[{ value: 'set', label: 'forms.updateQuantity.mode.set' | t }]"
+  [(value)]="mode"
 />
 ```
 
-## Uso com `useValidatedFormState`
+## Seleção múltipla
 
-Spread direto do `field(path)`. O `onValidate` também é chamado no `onDropdownClose`.
-
-```tsx
-const {
-  field: subjectField,
-} = useValidatedFormState(subjectSchema);
-
-<FormSelect
-  label="Curso"
-  placeholder="Selecione o curso"
-  data={courses}
+```html
+<app-form-multi-select
   valueField="id"
   labelField="name"
-  {...subjectField('courseId')}
-  required
+  [label]="'forms.inventoryItem.categories.label' | t"
+  [data]="categories()"
+  [formField]="form.field.category_ids"
 />
 ```
+
+Tem busca embutida (filtra pelo label) e mostra os selecionados como chips. Schema: `yup.array(yup.number().required()).default([])`.
