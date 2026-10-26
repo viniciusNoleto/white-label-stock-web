@@ -6,8 +6,8 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
-import { createApiRouter } from './server/api';
-import { pageSession } from './server/auth/middleware';
+import { createApiProxy } from './server/api-proxy';
+import { pageSession } from './server/page-session';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -20,10 +20,10 @@ app.disable('x-powered-by');
 app.set('trust proxy', 'loopback, uniquelocal');
 
 /**
- * API (Route Handlers) — mesmo processo e mesma origem do app, como era no
- * Next.js. Os cookies de sessão httpOnly chegam aqui sozinhos.
+ * API — proxy para o white-label-stock-api (Laravel, `API_URL`). O browser só
+ * fala com esta origem: os cookies de sessão httpOnly vão e voltam sem CORS.
  */
-app.use('/api', createApiRouter());
+app.use('/api', createApiProxy());
 
 /**
  * Serve static files from /browser

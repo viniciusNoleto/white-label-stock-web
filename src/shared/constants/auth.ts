@@ -1,8 +1,7 @@
-// Nomes dos cookies de sessão. Ambos são httpOnly, gravados e apagados só pelas
-// rotas de /api/auth/** (via src/server/auth/session.ts) — nenhum código do
-// browser lê ou escreve esses cookies. Ficam fora de src/server/ porque o
-// middleware de páginas (src/server/auth/page-session.ts) e os testes também
-// precisam deles.
+// Nomes dos cookies de sessão. Ambos são httpOnly, gravados e apagados só pela
+// API (white-label-stock-api, rotas /api/auth/**) — nenhum código do browser lê
+// ou escreve esses cookies. O middleware de páginas (src/server/page-session.ts)
+// e os testes precisam dos nomes.
 export const ACCESS_TOKEN_COOKIE = 'access_token';
 export const REFRESH_TOKEN_COOKIE = 'refresh_token';
 

@@ -1,6 +1,6 @@
 # White Label Inventory System — instruções para agentes
 
-Angular **22** (standalone, zoneless, signals, Signal Forms, OnPush padrão) com SSR via `@angular/ssr` + Express, que também serve a API (`/api/**`, Drizzle + PostgreSQL). UI com **Spartan UI** (helm em `src/libs/ui`, brain em `@spartan-ng/brain`) + Tailwind 4. As boas práticas oficiais do Angular estão em `node_modules/@angular/core/resources/best-practices.md` — siga-as.
+Angular **22** (standalone, zoneless, signals, Signal Forms, OnPush padrão) com SSR via `@angular/ssr` + Express. **Só o web**: a API é o projeto separado `white-label-stock-api` (Laravel + PostgreSQL, pasta irmã); o Express faz proxy de `/api/**` para `API_URL` e não acessa banco. UI com **Spartan UI** (helm em `src/libs/ui`, brain em `@spartan-ng/brain`) + Tailwind 4. As boas práticas oficiais do Angular estão em `node_modules/@angular/core/resources/best-practices.md` — siga-as.
 
 # Regras do projeto (`.claude/rules/`)
 
@@ -48,10 +48,11 @@ Cada arquivo documenta a interface exata, o comportamento e os padrões de um co
 
 | Ao criar/editar... | Leia |
 |---|---|
-| Rotas (`src/server/api/**`) ou schemas Drizzle (`db/schema/`) | `api-response-format.md` |
+| Contrato da API, endpoint novo, proxy (`src/server/api-proxy.ts`) | `api-response-format.md` |
 | Login, cookies, refresh, guards, rotas protegidas | `auth-session.md` |
 
 ## Verificação
 
 - `npm run build` sem erros/avisos.
-- `npm test` (unitários Angular), `npm run test:api` (API contra `${POSTGRES_DB}_test`), `npm run test:e2e` (Playwright contra o app rodando).
+- `npm test` (unitários Angular), `npm run test:server` (proxy e page-session contra API falsa), `npm run test:e2e` (Playwright contra web + API rodando).
+- Mudou algo na API? Os testes dela (`make test`, Pest) ficam no `white-label-stock-api`.

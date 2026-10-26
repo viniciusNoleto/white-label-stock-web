@@ -7,11 +7,12 @@ services:
     env_file: .env
     build:
       dockerfile: ./configs/docker/node/Dockerfile.deploy
+    # API_URL (.env) aponta para o white-label-stock-api. Se ela roda no mesmo host, use
+    # http://host.docker.internal:<NGINX_PORT da API>.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - white-label-inventory-system-network
-    depends_on:
-      white-label-inventory-system-postgres:
-        condition: service_healthy
 
   white-label-inventory-system-server:
     container_name: white-label-inventory-system-server
@@ -32,29 +33,7 @@ services:
     depends_on:
       - white-label-inventory-system-front
 
-  white-label-inventory-system-postgres:
-    container_name: white-label-inventory-system-postgres
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - white-label-inventory-system-postgres-data:/var/lib/postgresql/data
-    networks:
-      - white-label-inventory-system-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-white_label_inventory}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 networks:
   white-label-inventory-system-network:
     name: white-label-inventory-system-network
     driver: bridge
-
-volumes:
-  white-label-inventory-system-postgres-data:
-    name: white-label-inventory-system-postgres-data

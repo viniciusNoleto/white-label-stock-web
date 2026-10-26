@@ -1,10 +1,11 @@
 import { Component, input, model } from '@angular/core';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR } from '@/shared/constants/colors';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { FormFieldWrapper } from './FieldWrapper';
 import { FormControlBase } from './types';
 
-export const DEFAULT_COLOR_SWATCHES = ['#6F1FF9', '#881FF9', '#2482ED', '#E31E24', '#2ECC71', '#F39C12', '#E74C3C', '#1ABC9C'];
+export const DEFAULT_COLOR_SWATCHES = [PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR, '#E31E24', '#2ECC71', '#F39C12', '#E74C3C', '#1ABC9C'];
 
 /**
  * Cor em hexadecimal (`#RRGGBB`): seletor nativo + campo de texto + amostras.

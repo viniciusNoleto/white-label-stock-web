@@ -5,56 +5,15 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
-/*
- * Paleta da marca — para fazer o white-label, troque as escalas abaixo.
- * Cada escala segue o mesmo padrão (500 = cor base, clareando até 50 e
- * escurecendo até 950).
- */
-@theme {
-  --font-sans: 'Outfit', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-
-  --color-primary-50: #c7a7fd;
-  --color-primary-100: #b58cfc;
-  --color-primary-200: #a471fb;
-  --color-primary-300: #9256fa;
-  --color-primary-400: #813afa;
-  --color-primary-500: #6f1ff9;
-  --color-primary-600: #5e07f5;
-  --color-primary-700: #5406da;
-  --color-primary-800: #4905bf;
-  --color-primary-900: #3f04a4;
-  --color-primary-950: #340488;
-
-  --color-secondary-50: #d0a7fd;
-  --color-secondary-100: #c28cfc;
-  --color-secondary-200: #b371fb;
-  --color-secondary-300: #a556fa;
-  --color-secondary-400: #963afa;
-  --color-secondary-500: #881ff9;
-  --color-secondary-600: #7a07f5;
-  --color-secondary-700: #6c06da;
-  --color-secondary-800: #5f05bf;
-  --color-secondary-900: #5104a4;
-  --color-secondary-950: #440488;
-
-  --color-tertiary-50: #a2caf7;
-  --color-tertiary-100: #89bcf5;
-  --color-tertiary-200: #70adf3;
-  --color-tertiary-300: #569ff1;
-  --color-tertiary-400: #3d90ef;
-  --color-tertiary-500: #2482ed;
-  --color-tertiary-600: #1374e3;
-  --color-tertiary-700: #1167ca;
-  --color-tertiary-800: #0f5ab1;
-  --color-tertiary-900: #0c4d97;
-  --color-tertiary-950: #0a417e;
-}
+/* Paleta da marca: tailwind.config.mts (cores base em src/shared/constants/colors.ts). */
+@config "../tailwind.config.mts";
 
 /* Tokens do Spartan (tema stone) com a cor primária apontando para a marca. */
 :root {
   color-scheme: light;
 
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --radius: 0.625rem;
   --background: oklch(0.985 0.001 106.423);
   --foreground: oklch(0.147 0.004 49.25);
@@ -62,7 +21,7 @@
   --card-foreground: oklch(0.147 0.004 49.25);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: var(--color-primary-500);
+  --primary: theme(colors.primary.500);
   --primary-foreground: oklch(0.985 0.001 106.423);
   --secondary: oklch(0.97 0.001 106.424);
   --secondary-foreground: oklch(0.216 0.006 56.043);
@@ -73,7 +32,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
-  --ring: var(--color-primary-300);
+  --ring: theme(colors.primary.300);
 }
 
 :root.dark {
@@ -85,7 +44,7 @@
   --card-foreground: oklch(0.985 0.001 106.423);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: var(--color-primary-500);
+  --primary: theme(colors.primary.500);
   --primary-foreground: oklch(0.985 0.001 106.423);
   --secondary: oklch(0.268 0.007 34.298);
   --secondary-foreground: oklch(0.985 0.001 106.423);
@@ -96,7 +55,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: var(--color-primary-700);
+  --ring: theme(colors.primary.700);
 }
 
 @layer base {
@@ -153,10 +112,10 @@
 /* Telas públicas — grade de planta baixa, esteira e faixas de sinalização. */
 .bg-blueprint {
   background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 14%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--color-primary-500) 14%, transparent) 1px, transparent 1px),
-    linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--color-primary-500) 6%, transparent) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in oklab, theme(colors.primary.500) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, theme(colors.primary.500) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to right, color-mix(in oklab, theme(colors.primary.500) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, theme(colors.primary.500) 6%, transparent) 1px, transparent 1px);
   background-size:
     120px 120px,
     120px 120px,
@@ -175,11 +134,11 @@
 }
 
 .bg-hazard-stripes {
-  background-image: repeating-linear-gradient(-45deg, var(--color-primary-500) 0 8px, transparent 8px 16px);
+  background-image: repeating-linear-gradient(-45deg, theme(colors.primary.500) 0 8px, transparent 8px 16px);
 }
 
 .bg-flow-dash {
-  background-image: repeating-linear-gradient(to right, color-mix(in oklab, var(--color-primary-500) 45%, transparent) 0 6px, transparent 6px 10px);
+  background-image: repeating-linear-gradient(to right, color-mix(in oklab, theme(colors.primary.500) 45%, transparent) 0 6px, transparent 6px 10px);
 }
 
 @keyframes conveyor {

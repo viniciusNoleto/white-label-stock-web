@@ -1,8 +1,9 @@
 import { computed, inject } from '@angular/core';
 import * as yup from 'yup';
 import { I18n } from '@/libs/i18n';
+import { PRIMARY_COLOR } from '@/shared/constants/colors';
 
-export const DEFAULT_CATEGORY_COLOR = '#6F1FF9';
+export const DEFAULT_CATEGORY_COLOR = PRIMARY_COLOR;
 
 /** Schema compartilhado entre CreateItemCategory e UpdateItemCategory. Reativo ao idioma. */
 export function injectItemCategorySchema() {

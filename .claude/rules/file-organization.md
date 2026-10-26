@@ -2,8 +2,8 @@
 
 ```
 src/
-├── main.ts / main.server.ts / server.ts   ← bootstrap browser / SSR / servidor Express (API + SSR)
-├── index.html / styles.css                ← tokens de tema (paleta da marca) e utilitários CSS
+├── main.ts / main.server.ts / server.ts   ← bootstrap browser / SSR / servidor Express (SSR + proxy /api)
+├── index.html / styles.css                ← tokens do Spartan e utilitários CSS
 ├── app/                                   ← rotas (espelha o app/ do Next)
 │   ├── app.ts, app.config.ts, app.routes.ts, app.routes.server.ts
 │   ├── page.ts                            ← /
@@ -17,17 +17,15 @@ src/
 │   └── utils/     ← UtilsCard, UtilsTable, UtilsModal, UtilsPagination
 ├── resources/{recurso}/   ← módulo de domínio (singular, kebab-case)
 │   ├── enums/  guards/  logics/  models/  schemas/  services/  stores/
-├── server/                ← backend (Express + Drizzle) — nunca importado pelo browser
-│   ├── api/               ← um router por recurso (`/api/{recurso}`)
-│   ├── auth/              ← tokens, sessão (cookies), middlewares
-│   ├── utils/api.ts       ← envelope `{ success, message, data }`
-│   └── db.ts
+├── server/                ← Express do SSR (BFF) — nunca importado pelo browser; sem banco
+│   ├── api-proxy.ts       ← `/api/**` → white-label-stock-api (`API_URL`), cookies e Set-Cookie intactos
+│   ├── page-session.ts    ← renova a sessão (refresh na API) antes de servir páginas
+│   └── utils/             ← `apiUrl()`, envelope de erro do proxy, parse de cookies
 ├── libs/                  ← i18n, ícones, yup locales, `ui/` (componentes helm do Spartan)
 ├── locales/               ← pt-br, es-mx, en-us
-├── shared/                ← constantes e tipos usados por front e back
+├── shared/                ← constantes e tipos usados por front e back (`constants/colors.ts` = paleta da marca)
 └── utils/                 ← AppClient, createQuery/createMutation, validatedFormState, notify…
-db/                        ← schema Drizzle, migrations, seed
-tests/api/                 ← integração da API (Vitest + Postgres `_test`)
+tests/server/              ← proxy e page-session contra uma API falsa (Vitest)
 tests/e2e/                 ← Playwright
 src/**/*.spec.ts           ← unitários do Angular (`ng test`)
 ```
@@ -37,5 +35,5 @@ src/**/*.spec.ts           ← unitários do Angular (`ng test`)
 - Página = `src/app/{rota}/page.ts`, classe `{Nome}Page`, carregada com `loadComponent` em `app.routes.ts` com `title` = chave de tradução.
 - Nome do módulo de resource no **singular**; subpastas no **plural**.
 - Componentes helm (`src/libs/ui`) são gerados pelo Spartan CLI (`npx ng g @spartan-ng/cli:ui <nome>`) — não edite à mão sem necessidade; use os wrappers de `components/`.
-- Código de `src/server/**` usa imports relativos (roda também via `tsx`/Vitest fora do Angular); o front usa o alias `@/` (= `src/`).
-- Frontend nunca acessa o banco; tudo passa pela API.
+- Código de `src/server/**` usa imports relativos (roda também via Vitest fora do Angular); o front usa o alias `@/` (= `src/`).
+- O web nunca acessa o banco; tudo passa pela API (projeto separado `white-label-stock-api`, Laravel). Rotas, schema e regras de negócio ficam lá.

@@ -1,6 +1,6 @@
 # Formato das respostas da API
 
-Rotas em `src/server/api/*.ts` (Express), montadas em `/api` por `createApiRouter()`.
+A API é o projeto **white-label-stock-api** (Laravel, pasta irmã `../white-label-stock-api`). Rotas, migrations, validação e regras de negócio vivem lá — este repositório só consome. O servidor Express do web faz proxy de `/api/**` para `API_URL` (`src/server/api-proxy.ts`), então o browser continua chamando `/api/...` na própria origem.
 
 ## Envelope (sempre)
 
@@ -8,26 +8,19 @@ Rotas em `src/server/api/*.ts` (Express), montadas em `/api` por `createApiRoute
 { "success": true, "message": { "pt-br": "…", "es-mx": "…", "en-us": "…" }, "data": { … } }
 ```
 
-- Use `jsonOk(res, data, message?, status?)` e `jsonError(res, message, status)` de `src/server/utils/api.ts`.
-- `message` é **sempre** o objeto i18n (`msg(pt, es, en)`) — nunca string. Sucesso sem mensagem específica usa `MESSAGES.success`.
-- Erro: `data: null`. 401 = sem sessão; 404 = não encontrado (inclui id inválido via `parseId`); 409 = conflito (ex.: registro em uso, FK `23503` ao excluir); 422 = payload inválido; 500 = inesperado (logar com `console.error`).
-- Toda rota em `try/catch`; JSON malformado é tratado pelo handler do router (400).
-- Escritas em várias tabelas ou que dependem de leitura (ex.: construir item) rodam em `db.transaction`, com `.for('update')` quando houver disputa por estoque.
+- `message` é **sempre** o objeto i18n (`ApiMessage`) — resolvido no front por `resolveApiMessage` (já feito por `injectNotify`).
+- Erro: `success: false`, `data: null`. 400 = JSON malformado; 401 = sem sessão; 404 = não encontrado (inclui id inválido); 409 = conflito (registro em uso); 422 = payload inválido ou regra de negócio (ex.: estoque insuficiente); 500 = inesperado; **502 = API fora do ar** (respondido pelo próprio proxy do web, mesmo envelope).
+- Listagem paginada: `data = { items, meta: { page, per_page, total, last_page } }` (`PaginatedResponse<T>` em `src/shared/types/api.ts`).
 
 ## snake_case em todo o JSON
 
-As propriedades JS do schema Drizzle são idênticas às colunas (snake_case) — senão o JSON vaza camelCase:
+Propriedades, ids `number`, decimais como `string` (`"2.5000"`). Os models do front (`I{Recurso}`) espelham o JSON exatamente — ver `resources-models.md`.
 
-```ts
-export const itemCategories = pgTable('item_categories', {
-  id: serial('id').primaryKey(),
-  color_hex: varchar('color_hex', { length: 7 }).notNull(),
-  created_at: timestamp('created_at'),
-});
-```
+## Endpoint novo
 
-O teste `tests/api/schema.test.ts` garante isso. Os models do front (`I{Recurso}`) espelham o JSON (ids `number`).
+1. Crie na API (rota, FormRequest, DTO, Service, Repository, Resource, teste Pest).
+2. No web, só o service em `src/resources/{recurso}/services/` (`resources-services.md`). O proxy repassa qualquer caminho de `/api/**` — não há nada a registrar no Express.
 
 ## Rotas protegidas
 
-Tudo em `/api` exige sessão (middleware `requireUser`), exceto `/api/auth/**`. O usuário fica em `res.locals.user`.
+Tudo em `/api` exige sessão (middleware `auth` da API), exceto `/api/auth/**`.

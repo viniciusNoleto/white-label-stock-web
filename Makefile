@@ -26,18 +26,6 @@ build-cache:
 install-deps:
 	@$(COMPOSE) run --rm --no-deps $(APP_NAME) npm install
 
-db-migrate:
-	@$(COMPOSE) exec $(APP_NAME) npm run db:migrate
-
-db-generate:
-	@$(COMPOSE) exec $(APP_NAME) npm run db:generate
-
-db-studio:
-	@$(COMPOSE) exec $(APP_NAME) npm run db:studio
-
-db-seed:
-	@$(COMPOSE) exec $(APP_NAME) npm run db:seed
-
 logs:
 	@docker logs -f $(APP_NAME)
 
@@ -84,11 +72,11 @@ npm-install:
 test:
 	@make exec c="npm run test"
 
-test-api:
-	@make exec c="npm run test:api"
+test-server:
+	@make exec c="npm run test:server"
 
-test-api-coverage:
-	@make exec c="npm run test:api:coverage"
+test-server-coverage:
+	@make exec c="npm run test:server:coverage"
 
 test-e2e:
 	@APP_URL=http://localhost:$(APP_PORT) npm run test:e2e
@@ -121,17 +109,19 @@ last-step:
 	@echo "\033[38;2;170;0;255m🞉\033[0m LinkedIn: \033[38;2;88;166;255mhttps://www.linkedin.com/in/vin%C3%ADcius-nol%C3%AAto-de-ara%C3%BAjo\033[0m"
 	@echo
 
+check-api:
+	@curl -fsS -o /dev/null $(subst host.docker.internal,localhost,$(API_URL))/up \
+		&& echo "API online em $(API_URL)" \
+		|| echo "\033[38;2;255;196;12mAviso:\033[0m API fora do ar em $(API_URL) — suba o white-label-stock-api (make install / make up lá)."
+
 install:
 	@make echo-system
-	@make step s=1 t=6 m="Building the Docker image..."
+	@make step s=1 t=4 m="Building the Docker image..."
 	@make build
-	@make step s=2 t=6 m="Installing dependencies (npm install)..."
+	@make step s=2 t=4 m="Installing dependencies (npm install)..."
 	@make install-deps
-	@make step s=3 t=6 m="Starting the containers..."
+	@make step s=3 t=4 m="Starting the containers..."
 	@make clear-up
-	@make step s=4 t=6 m="Running database migrations..."
-	@make db-migrate
-	@make step s=5 t=6 m="Running database seeds..."
-	@make db-seed
-	@make step s=6 t=6 m="Finishing installation..."
+	@make step s=4 t=4 m="Checking the API..."
+	@make check-api
 	@make last-step

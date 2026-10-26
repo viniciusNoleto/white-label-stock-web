@@ -18,13 +18,8 @@ ENV PORT=3000
 COPY --chown=node:node package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
-# app (browser + servidor SSR/API)
+# app (browser + servidor SSR, que faz proxy de /api para a API_URL)
 COPY --from=builder --chown=node:node /app/dist ./dist
-
-# migrations e seed (`make db-migrate` / `make db-seed` rodam dentro deste container)
-COPY --from=builder --chown=node:node /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder --chown=node:node /app/db ./db
-COPY --from=builder --chown=node:node /app/src/server/auth/password.ts ./src/server/auth/password.ts
 
 USER node
 

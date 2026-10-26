@@ -1,4 +1,6 @@
-FROM node:lts-alpine
+# Debian (glibc), não Alpine: o node_modules é compartilhado com o host pelo bind mount,
+# e os binários nativos (oxc, esbuild, rollup, lightningcss…) precisam servir aos dois.
+FROM node:lts-slim
 
 USER node
 
@@ -6,5 +8,5 @@ WORKDIR /app
 
 EXPOSE 3000
 
-# ng serve com SSR: o server.ts (Express) atende /api e renderiza as páginas.
+# ng serve com SSR: o server.ts (Express) renderiza as páginas e faz proxy de /api para a API_URL.
 CMD ["npm", "run", "dev"]
