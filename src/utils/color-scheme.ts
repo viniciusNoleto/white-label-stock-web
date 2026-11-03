@@ -3,7 +3,7 @@ import { computed, DestroyRef, effect, inject, PLATFORM_ID, Service, signal } fr
 
 export type ColorScheme = 'light' | 'dark' | 'auto';
 
-export const COLOR_SCHEME_STORAGE_KEY = 'white-label-inventory-system:color-scheme';
+export const COLOR_SCHEME_STORAGE_KEY = 'white-label-stock-web:color-scheme';
 
 /**
  * Aparência claro/escuro/sistema (o `useMantineColorScheme` do React). A

@@ -4,7 +4,6 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { UtilsCard } from '@/components/utils/Card';
 import { UtilsModal } from '@/components/utils/Modal';
 import { type TableAction, UtilsTable, UtilsTableCell } from '@/components/utils/Table';
-import { HlmBadge } from '@spartan-ng/helm/badge';
 import { CreateItemCategoryLogicComponent, injectCreateItemCategoryLogicData } from '@/resources/item-category/logics/CreateItemCategory';
 import { DeleteItemCategoryLogicComponent, injectDeleteItemCategoryLogicData } from '@/resources/item-category/logics/DeleteItemCategory';
 import { injectUpdateItemCategoryLogicData, UpdateItemCategoryLogicComponent } from '@/resources/item-category/logics/UpdateItemCategory';
@@ -25,17 +24,18 @@ type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategor
     UtilsModal,
     UtilsTable,
     UtilsTableCell,
-    HlmBadge,
     TranslatePipe,
     CreateItemCategoryLogicComponent,
     UpdateItemCategoryLogicComponent,
     DeleteItemCategoryLogicComponent,
   ],
-  host: { class: 'flex flex-col flex-1 gap-6 p-4 sm:p-6' },
+  host: { class: 'flex flex-col flex-1' },
   template: `
     <app-page-header
+      icon="lucideTag"
       [title]="'categories.page.title' | t"
       [subtitle]="'categories.page.subtitle' | t"
+      [running]="categoriesQuery.isFetching()"
     >
       <button
         appButton
@@ -46,7 +46,19 @@ type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategor
       </button>
     </app-page-header>
 
-    <section appCard>
+    <section
+      appCard
+      noPadding
+      class="m-4 flex flex-col sm:m-8"
+    >
+      @if (categories().length; as total) {
+        <div class="flex items-center justify-end border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-neutral-800">
+          <p class="text-sm tabular-nums text-gray-600 dark:text-gray-400">
+            {{ 'categories.table.count' | t: { count: total } }}
+          </p>
+        </div>
+      }
+
       <app-utils-table
         [rows]="categories()"
         [rowKey]="rowKey"
@@ -63,12 +75,16 @@ type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategor
           [appTableCellOf]="categories()"
           let-category
         >
-          <span
-            hlmBadge
-            class="text-white font-mono"
-            [style.background-color]="category.color_hex"
-          >
-            {{ category.color_hex }}
+          <span class="inline-flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              class="size-5 border border-black/10 dark:border-white/15"
+              [style.background-color]="category.color_hex"
+            ></span>
+
+            <span class="font-mono text-xs uppercase text-gray-700 dark:text-gray-300">
+              {{ category.color_hex }}
+            </span>
           </span>
         </ng-template>
       </app-utils-table>

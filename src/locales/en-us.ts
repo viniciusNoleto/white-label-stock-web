@@ -121,6 +121,11 @@ export default {
     categories: 'Categories',
     units: 'Units',
     storages: 'Storages',
+    deliveries: 'Deliveries',
+    groups: {
+      operation: 'Operations',
+      registry: 'Catalog',
+    },
   },
 
   units: {
@@ -129,6 +134,8 @@ export default {
       subtitle: 'Manage measurement units',
     },
     table: {
+      count_one: '{{count}} unit',
+      count_other: '{{count}} units',
       columns: {
         name: 'Name',
         abbreviation: 'Abbreviation',
@@ -146,6 +153,8 @@ export default {
       subtitle: 'Manage item categories',
     },
     table: {
+      count_one: '{{count}} category',
+      count_other: '{{count}} categories',
       columns: {
         name: 'Name',
         color: 'Color',
@@ -167,6 +176,8 @@ export default {
       subtitle: 'Manage storage locations',
     },
     table: {
+      count_one: '{{count}} location',
+      count_other: '{{count}} locations',
       columns: {
         name: 'Name',
         description: 'Description',
@@ -202,18 +213,23 @@ export default {
       placeholder: 'Search by name...',
     },
     table: {
+      count_one: '{{count}} item',
+      count_other: '{{count}} items',
       columns: {
         name: 'Name',
         categories: 'Categories',
         quantity: 'Quantity',
         unit: 'Unit',
         storage: 'Storage',
+        packaged: 'Packaged',
       },
       empty: 'No items found. Create the first one by clicking \'New Item\'.',
+      packagedHint: 'Quantity set aside in pending delivery packages',
     },
     rowActions: {
       editQuantity: 'Edit quantity',
-      editName: 'Edit name',
+      adjustStock: 'Adjust stock',
+      editItem: 'Edit item',
       editStorage: 'Edit storage',
       build: 'Build',
     },
@@ -226,9 +242,61 @@ export default {
       deleteCategory: 'Delete Category',
       createItem: 'New Inventory Item',
       updateQuantity: 'Edit Quantity',
-      updateName: 'Edit Name',
+      updateItem: 'Edit Item',
       updateStorage: 'Edit Storage',
       build: 'Build: {{name}}',
+    },
+  },
+
+  deliveries: {
+    page: {
+      title: 'Deliveries',
+      subtitle: 'Build packages with stock items and record deliveries',
+    },
+    actions: {
+      new: 'New Package',
+    },
+    filters: {
+      pending: 'Pending',
+      delivered: 'Delivered',
+      all: 'All',
+    },
+    table: {
+      count_one: '{{count}} package',
+      count_other: '{{count}} packages',
+      columns: {
+        package: 'Package',
+        items: 'Items',
+        notes: 'Notes',
+        status: 'Status',
+      },
+      packageNumber: 'Package #{{id}}',
+      empty: 'No packages found. Create the first one by clicking \'New Package\'.',
+    },
+    status: {
+      pending: 'Pending',
+      delivered: 'Delivered',
+    },
+    rowActions: {
+      deliver: 'Mark as delivered',
+      edit: 'Edit package',
+      delete: 'Delete package',
+    },
+    modals: {
+      create: 'New Delivery Package',
+      update: 'Edit Package #{{id}}',
+      deliver: 'Deliver Package #{{id}}',
+      delete: 'Delete Package',
+    },
+    deliver: {
+      confirm: 'When you confirm, these items will be subtracted from the stock:',
+      inStock: 'In stock: {{count}}',
+      shortage: 'There is not enough stock for some item. Adjust the stock or edit the package before delivering.',
+      submit: 'Confirm delivery',
+    },
+    delete: {
+      confirmPending: 'Are you sure you want to delete package #{{id}}? The items are no longer set aside and stay in the stock.',
+      confirmDelivered: 'Are you sure you want to delete package #{{id}} from the history? Delivered items do not go back to the stock.',
     },
   },
 
@@ -327,7 +395,12 @@ export default {
     },
 
     updateQuantity: {
-      description: 'Set the new quantity for "{{name}}".',
+      description: {
+        set: 'Set the new quantity of "{{name}}".',
+        add: 'Enter how much came into stock for "{{name}}".',
+        subtract: 'Enter how much left stock for "{{name}}".',
+      },
+      current: 'Current quantity: {{count}}',
       mode: {
         set: 'Set value',
         add: 'Add',
@@ -345,6 +418,8 @@ export default {
       validation: {
         required: 'Quantity is required',
         min: 'Quantity cannot be negative',
+        positive: 'Amount must be greater than zero',
+        max: 'Cannot subtract more than the current stock ({{count}})',
       },
     },
 
@@ -364,6 +439,28 @@ export default {
         min: 'Minimum of 1 unit',
       },
     },
+
+    deliveryPackage: {
+      items: {
+        label: 'Package items',
+        selectPlaceholder: 'Select an item',
+        qtyPlaceholder: 'Quantity',
+        add: 'Add item',
+        remove: 'Remove item',
+        empty: 'No items added.',
+        free: 'Free: {{count}} {{unit}}',
+        quantityOf: 'Quantity of {{name}}',
+      },
+      notes: {
+        label: 'Notes',
+        placeholder: 'Address, customer, time, payment method...',
+      },
+      validation: {
+        itemsRequired: 'Add at least one item to the package',
+        quantityPositive: 'Each item needs a quantity greater than zero',
+        notesMax: 'Notes can have at most {{count}} characters',
+      },
+    },
   },
 
   notifications: {
@@ -376,12 +473,16 @@ export default {
       deleteCategory: 'Could not delete the category. Please try again.',
       createItem: 'Could not create the item. Please try again.',
       updateQuantity: 'Could not update the quantity.',
-      updateItemName: 'Could not update the name. Please try again.',
+      updateItem: 'Could not update the item. Please try again.',
       updateItemStorage: 'Could not update the storage. Please try again.',
       build: 'Could not build the item.',
       createStorage: 'Could not create the storage. Please try again.',
       updateStorage: 'Could not update the storage. Please try again.',
       deleteStorage: 'Could not delete the storage. Please try again.',
+      createDeliveryPackage: 'Could not create the package. Please try again.',
+      updateDeliveryPackage: 'Could not update the package. Please try again.',
+      deleteDeliveryPackage: 'Could not delete the package. Please try again.',
+      deliverDeliveryPackage: 'Could not deliver the package.',
     },
   },
 };

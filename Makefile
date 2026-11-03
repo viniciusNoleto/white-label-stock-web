@@ -3,8 +3,8 @@ include .env
 MAKEFLAGS += --no-print-directory
 
 COMPOSE := docker compose -f docker-compose.${APP_ENV}.yml
-APP_NAME := white-label-inventory-system-front
-SERVER_NAME := white-label-inventory-system-server
+APP_NAME := white-label-stock-web
+SERVER_NAME := white-label-stock-web-server
 
 f :=
 art:
@@ -101,7 +101,7 @@ step:
 
 last-step:
 	@echo
-	@echo "░▒▓█ \033[38;2;22;198;12mWhite Label Inventory System\033[0m working on http://localhost:$(APP_PORT)"
+	@echo "░▒▓█ \033[38;2;22;198;12mWhite Label Stock\033[0m working on http://localhost:$(APP_PORT)"
 	@echo
 	@make echo-buda
 	@echo "\033[38;2;170;0;255m🞮\033[0m Vinícius Nolêto de Araújo"

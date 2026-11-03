@@ -1,10 +1,10 @@
 {
-  "name": "white-label-inventory-system",
+  "name": "white-label-stock-web",
   "version": "0.1.0",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
-    "start": "node dist/white-label-inventory-system/server/server.mjs",
+    "start": "node dist/white-label-stock-web/server/server.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",

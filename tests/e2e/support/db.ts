@@ -35,6 +35,12 @@ export async function cleanupE2EData() {
     await client.query('BEGIN');
 
     try {
+      // Pacotes que contêm itens e2e (os itens do pacote saem em cascata).
+      await client.query(`
+        DELETE FROM delivery_packages
+        WHERE id IN (
+          SELECT delivery_package_id FROM delivery_package_has_item
+          WHERE inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1))`, [like]);
       await client.query(`
         DELETE FROM inventory_item_has_component
         WHERE inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1)

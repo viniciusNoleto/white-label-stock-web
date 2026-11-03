@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "white-label-inventory-system": {
+    "white-label-stock-web": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -76,10 +76,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "white-label-inventory-system:build:production"
+              "buildTarget": "white-label-stock-web:build:production"
             },
             "development": {
-              "buildTarget": "white-label-inventory-system:build:development"
+              "buildTarget": "white-label-stock-web:build:development"
             }
           },
           "defaultConfiguration": "development",

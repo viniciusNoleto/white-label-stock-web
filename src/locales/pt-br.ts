@@ -123,6 +123,11 @@ export default {
     categories: 'Categorias',
     units: 'Unidades',
     storages: 'Armazenamentos',
+    deliveries: 'Entregas',
+    groups: {
+      operation: 'Operação',
+      registry: 'Cadastros',
+    },
   },
 
   units: {
@@ -131,6 +136,8 @@ export default {
       subtitle: 'Gerencie as unidades de medida',
     },
     table: {
+      count_one: '{{count}} unidade',
+      count_other: '{{count}} unidades',
       columns: {
         name: 'Nome',
         abbreviation: 'Abreviação',
@@ -148,6 +155,8 @@ export default {
       subtitle: 'Gerencie as categorias de itens',
     },
     table: {
+      count_one: '{{count}} categoria',
+      count_other: '{{count}} categorias',
       columns: {
         name: 'Nome',
         color: 'Cor',
@@ -169,6 +178,8 @@ export default {
       subtitle: 'Gerencie os locais de armazenamento',
     },
     table: {
+      count_one: '{{count}} local',
+      count_other: '{{count}} locais',
       columns: {
         name: 'Nome',
         description: 'Descrição',
@@ -204,18 +215,23 @@ export default {
       placeholder: 'Buscar por nome...',
     },
     table: {
+      count_one: '{{count}} item',
+      count_other: '{{count}} itens',
       columns: {
         name: 'Nome',
         categories: 'Categorias',
         quantity: 'Quantidade',
         unit: 'Unidade',
         storage: 'Armazenamento',
+        packaged: 'Empacotado',
       },
       empty: 'Nenhum item encontrado. Crie o primeiro item clicando em \'Novo Item\'.',
+      packagedHint: 'Quantidade separada em pacotes de entrega pendentes',
     },
     rowActions: {
       editQuantity: 'Editar quantidade',
-      editName: 'Editar nome',
+      adjustStock: 'Ajustar estoque',
+      editItem: 'Editar item',
       editStorage: 'Editar armazenamento',
       build: 'Construir',
     },
@@ -228,9 +244,61 @@ export default {
       deleteCategory: 'Excluir Categoria',
       createItem: 'Novo Item de Inventário',
       updateQuantity: 'Editar Quantidade',
-      updateName: 'Editar Nome',
+      updateItem: 'Editar Item',
       updateStorage: 'Editar Armazenamento',
       build: 'Construir: {{name}}',
+    },
+  },
+
+  deliveries: {
+    page: {
+      title: 'Entregas',
+      subtitle: 'Monte pacotes com itens do estoque e registre as entregas',
+    },
+    actions: {
+      new: 'Novo Pacote',
+    },
+    filters: {
+      pending: 'Pendentes',
+      delivered: 'Entregues',
+      all: 'Todos',
+    },
+    table: {
+      count_one: '{{count}} pacote',
+      count_other: '{{count}} pacotes',
+      columns: {
+        package: 'Pacote',
+        items: 'Itens',
+        notes: 'Anotações',
+        status: 'Situação',
+      },
+      packageNumber: 'Pacote #{{id}}',
+      empty: 'Nenhum pacote encontrado. Crie o primeiro clicando em \'Novo Pacote\'.',
+    },
+    status: {
+      pending: 'Pendente',
+      delivered: 'Entregue',
+    },
+    rowActions: {
+      deliver: 'Marcar como entregue',
+      edit: 'Editar pacote',
+      delete: 'Excluir pacote',
+    },
+    modals: {
+      create: 'Novo Pacote de Entrega',
+      update: 'Editar Pacote #{{id}}',
+      deliver: 'Entregar Pacote #{{id}}',
+      delete: 'Excluir Pacote',
+    },
+    deliver: {
+      confirm: 'Ao confirmar, estes itens serão subtraídos do estoque:',
+      inStock: 'Em estoque: {{count}}',
+      shortage: 'Não há estoque suficiente para algum item. Ajuste o estoque ou edite o pacote antes de entregar.',
+      submit: 'Confirmar entrega',
+    },
+    delete: {
+      confirmPending: 'Tem certeza que deseja excluir o pacote #{{id}}? Os itens deixam de ficar separados e continuam no estoque.',
+      confirmDelivered: 'Tem certeza que deseja excluir o pacote #{{id}} do histórico? Os itens entregues não voltam para o estoque.',
     },
   },
 
@@ -329,7 +397,12 @@ export default {
     },
 
     updateQuantity: {
-      description: 'Defina a nova quantidade para "{{name}}".',
+      description: {
+        set: 'Defina a nova quantidade de "{{name}}".',
+        add: 'Informe quanto entrou no estoque de "{{name}}".',
+        subtract: 'Informe quanto saiu do estoque de "{{name}}".',
+      },
+      current: 'Quantidade atual: {{count}}',
       mode: {
         set: 'Definir valor',
         add: 'Somar',
@@ -347,6 +420,8 @@ export default {
       validation: {
         required: 'Quantidade é obrigatória',
         min: 'Quantidade não pode ser negativa',
+        positive: 'Valor deve ser maior que zero',
+        max: 'Não é possível subtrair mais que o estoque atual ({{count}})',
       },
     },
 
@@ -366,6 +441,28 @@ export default {
         min: 'Mínimo de 1 unidade',
       },
     },
+
+    deliveryPackage: {
+      items: {
+        label: 'Itens do pacote',
+        selectPlaceholder: 'Selecione um item',
+        qtyPlaceholder: 'Quantidade',
+        add: 'Adicionar item',
+        remove: 'Remover item',
+        empty: 'Nenhum item adicionado.',
+        free: 'Livre: {{count}} {{unit}}',
+        quantityOf: 'Quantidade de {{name}}',
+      },
+      notes: {
+        label: 'Anotações',
+        placeholder: 'Endereço, cliente, horário, forma de pagamento...',
+      },
+      validation: {
+        itemsRequired: 'Adicione ao menos um item ao pacote',
+        quantityPositive: 'Cada item precisa de uma quantidade maior que zero',
+        notesMax: 'As anotações podem ter no máximo {{count}} caracteres',
+      },
+    },
   },
 
   notifications: {
@@ -378,12 +475,16 @@ export default {
       deleteCategory: 'Não foi possível excluir a categoria. Tente novamente.',
       createItem: 'Não foi possível criar o item. Tente novamente.',
       updateQuantity: 'Não foi possível atualizar a quantidade.',
-      updateItemName: 'Não foi possível atualizar o nome. Tente novamente.',
+      updateItem: 'Não foi possível atualizar o item. Tente novamente.',
       updateItemStorage: 'Não foi possível atualizar o armazenamento. Tente novamente.',
       build: 'Não foi possível construir o item.',
       createStorage: 'Não foi possível criar o armazenamento. Tente novamente.',
       updateStorage: 'Não foi possível atualizar o armazenamento. Tente novamente.',
       deleteStorage: 'Não foi possível excluir o armazenamento. Tente novamente.',
+      createDeliveryPackage: 'Não foi possível criar o pacote. Tente novamente.',
+      updateDeliveryPackage: 'Não foi possível atualizar o pacote. Tente novamente.',
+      deleteDeliveryPackage: 'Não foi possível excluir o pacote. Tente novamente.',
+      deliverDeliveryPackage: 'Não foi possível entregar o pacote.',
     },
   },
 } as typeof enUs;

@@ -26,6 +26,8 @@ export interface IInventoryItem {
   id: number;
   name: string;
   quantity: string;
+  /** Soma do item em pacotes de entrega pendentes (ainda no estoque, mas já separado). */
+  packaged_quantity: string;
   created_at: string | null;
   updated_at: string | null;
   unit: IInventoryItemUnit;

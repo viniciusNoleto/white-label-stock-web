@@ -11,7 +11,7 @@ import { BRAND_NAME } from '@/shared/constants/brand';
       alt=""
       width="32"
       height="32"
-      class="size-8 shrink-0 rounded-lg shadow-sm shadow-primary-200 dark:shadow-none"
+      class="size-8 shrink-0"
     />
 
     @if (showName()) {

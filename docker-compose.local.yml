@@ -1,6 +1,6 @@
 services:
-  white-label-inventory-system-front:
-    container_name: white-label-inventory-system-front
+  white-label-stock-web:
+    container_name: white-label-stock-web
     user: node
     restart: unless-stopped
     tty: true
@@ -15,9 +15,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - white-label-inventory-system-network
+      - white-label-stock-web-network
 
 networks:
-  white-label-inventory-system-network:
-    name: white-label-inventory-system-network
+  white-label-stock-web-network:
+    name: white-label-stock-web-network
     driver: bridge

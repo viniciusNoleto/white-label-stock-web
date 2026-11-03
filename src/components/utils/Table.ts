@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, contentChildren, Directive, inject, input, output, TemplateRef } from '@angular/core';
 import type { ButtonVariants } from '@spartan-ng/helm/button';
+import { NgIcon } from '@ng-icons/core';
 import { HlmSpinner } from '@spartan-ng/helm/spinner';
 import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormButton } from '@/components/form/Button';
@@ -46,27 +47,31 @@ export class UtilsTableCell<T> {
 
 @Component({
   selector: 'app-utils-table',
-  imports: [NgTemplateOutlet, FormButton, HlmSpinner, HlmTooltip, TranslatePipe, UtilsPagination],
-  host: { class: 'flex flex-col gap-2' },
+  imports: [NgTemplateOutlet, NgIcon, FormButton, HlmSpinner, HlmTooltip, TranslatePipe, UtilsPagination],
+  host: { class: 'flex flex-col' },
   template: `
     <section
       class="relative flex flex-col"
       [attr.aria-busy]="loading()"
     >
       @if (loading()) {
-        <div class="absolute inset-0 z-10 center-flex rounded-lg bg-white/60 dark:bg-neutral-900/60 backdrop-blur-[2px]">
-          <hlm-spinner class="text-primary-500 text-2xl" />
-        </div>
+        <div
+          aria-hidden="true"
+          class="absolute inset-x-0 top-0 z-10 h-1 bg-line-running animate-line-running"
+        ></div>
       }
 
       <div class="overflow-x-auto">
-        <table class="w-max min-w-full text-left border-separate border-spacing-0">
+        <table
+          class="w-max min-w-full border-separate border-spacing-0 text-left transition-opacity"
+          [class.opacity-50]="loading() && rows().length > 0"
+        >
           <thead>
             <tr>
               @for (column of columnList(); track column.field) {
                 <th
                   scope="col"
-                  class="px-6 py-3 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 dark:bg-[#1d1d1d] first:rounded-l-lg last:rounded-r-lg"
+                  class="whitespace-nowrap border-b border-gray-300 bg-stone-50 px-6 py-3 text-[13px] font-medium text-gray-600 dark:border-neutral-700 dark:bg-neutral-950/40 dark:text-gray-400"
                 >
                   {{ column.label }}
                 </th>
@@ -75,7 +80,7 @@ export class UtilsTableCell<T> {
               @if (hasActions()) {
                 <th
                   scope="col"
-                  class="px-6 py-3 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider text-center sticky right-0 z-1 bg-gray-50 dark:bg-[#1d1d1d] rounded-r-lg"
+                  class="sticky right-0 z-1 whitespace-nowrap border-b border-l border-gray-300 bg-stone-50 px-6 py-3 text-right text-[13px] font-medium text-gray-600 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-400"
                 >
                   {{ 'common.table.actionsColumn' | t }}
                 </th>
@@ -87,7 +92,8 @@ export class UtilsTableCell<T> {
             @for (row of rows(); track rowKeyOf(row, $index); let index = $index) {
               <tr class="group">
                 @for (column of columnList(); track column.field) {
-                  <td class="px-6 py-4 text-sm whitespace-nowrap border-b border-gray-100 dark:border-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-neutral-800">
+                  <!-- Linha em foco: fundo levemente roxo + filete à esquerda (marca de posição na esteira). -->
+                  <td class="whitespace-nowrap border-b border-gray-100 px-6 py-3.5 text-sm text-gray-900 transition-colors group-hover:bg-(--row-hover-solid) first:group-hover:shadow-[inset_3px_0_0_var(--line-accent)] dark:border-neutral-800 dark:text-gray-100 dark:group-hover:bg-(--row-hover-solid)">
                     @if (cellTemplates().get(column.field); as template) {
                       <ng-container *ngTemplateOutlet="template; context: { $implicit: row, index }" />
                     } @else {
@@ -97,8 +103,8 @@ export class UtilsTableCell<T> {
                 }
 
                 @if (hasActions()) {
-                  <td class="px-6 py-4 text-center sticky right-0 z-1 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-neutral-800">
-                    <div class="flex items-center justify-center gap-2">
+                  <td class="sticky right-0 z-1 border-b border-l border-gray-100 bg-white px-4 py-2.5 transition-colors group-hover:bg-(--row-hover-solid) dark:border-neutral-800 dark:bg-neutral-900 dark:group-hover:bg-(--row-hover-solid)">
+                    <div class="flex items-center justify-end gap-1.5">
                       @for (action of actionsOf(row, index); track action.label) {
                         <button
                           appButton
@@ -118,10 +124,28 @@ export class UtilsTableCell<T> {
             } @empty {
               <tr>
                 <td
-                  class="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
+                  class="px-6 py-14"
                   [attr.colspan]="colCount()"
                 >
-                  {{ emptyText() ?? ('common.table.emptyDefault' | t) }}
+                  <div class="flex flex-col items-center gap-3 text-center">
+                    @if (loading()) {
+                      <hlm-spinner class="text-2xl text-primary-500" />
+                    } @else {
+                      <span
+                        aria-hidden="true"
+                        class="center-flex size-12 border border-dashed border-gray-300 text-gray-400 dark:border-neutral-700 dark:text-gray-500"
+                      >
+                        <ng-icon
+                          name="lucidePackageOpen"
+                          size="22"
+                        />
+                      </span>
+
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ emptyText() ?? ('common.table.emptyDefault' | t) }}
+                      </p>
+                    }
+                  </div>
                 </td>
               </tr>
             }
@@ -130,7 +154,7 @@ export class UtilsTableCell<T> {
       </div>
 
       @if (lastPage() > 1) {
-        <div class="pt-4 mt-2 border-t border-gray-100 dark:border-gray-800">
+        <div class="border-t border-gray-200 px-4 py-3 dark:border-neutral-800">
           <app-utils-pagination
             [page]="page()"
             [lastPage]="lastPage()"

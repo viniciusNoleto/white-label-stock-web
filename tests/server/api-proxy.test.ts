@@ -27,12 +27,12 @@ beforeEach(() => {
 });
 
 describe('api proxy', () => {
-  it('forwards method, path, query, body, cookies and language to the API', async () => {
+  it('forwards method, path, query, body, the Bearer token and language to the API', async () => {
     api.respond((_req, res) => res.status(201).json({ success: true, data: { id: 1 } }));
 
     const response = await fetch(`${web.url}/api/units?search=a%20b`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', cookie: 'access_token=abc', 'accept-language': 'es-MX' },
+      headers: { 'content-type': 'application/json', authorization: 'Bearer abc', cookie: 'access_token=abc; language=es-mx', 'accept-language': 'es-MX' },
       body: JSON.stringify({ name: 'Litro' }),
     });
 
@@ -41,23 +41,21 @@ describe('api proxy', () => {
 
     const [received] = api.received;
     expect(received).toMatchObject({ method: 'POST', url: '/api/units?search=a%20b', body: '{"name":"Litro"}' });
-    expect(received.headers).toMatchObject({ cookie: 'access_token=abc', 'content-type': 'application/json', 'accept-language': 'es-MX' });
+    expect(received.headers).toMatchObject({ authorization: 'Bearer abc', 'content-type': 'application/json', 'accept-language': 'es-MX' });
     expect(received.headers['x-forwarded-for']).toBeTruthy();
+    // os cookies do web (tokens, idioma) não vão para a API
+    expect(received.headers['cookie']).toBeUndefined();
   });
 
-  it('keeps every Set-Cookie header from the API', async () => {
+  it('never passes cookies set by the API to the browser', async () => {
     api.respond((_req, res) => {
-      res.cookie('access_token', 'new-access', { httpOnly: true, sameSite: 'lax' });
-      res.cookie('refresh_token', 'new-refresh', { httpOnly: true, sameSite: 'lax' });
+      res.cookie('laravel_session', 'x');
       res.json({ success: true });
     });
 
     const response = await fetch(`${web.url}/api/auth/login`, { method: 'POST' });
-    const cookies = response.headers.getSetCookie();
 
-    expect(cookies).toHaveLength(2);
-    expect(cookies[0]).toMatch(/^access_token=new-access;.*HttpOnly/);
-    expect(cookies[1]).toMatch(/^refresh_token=new-refresh;.*HttpOnly/);
+    expect(response.headers.getSetCookie()).toHaveLength(0);
   });
 
   it('passes error statuses through untouched', async () => {

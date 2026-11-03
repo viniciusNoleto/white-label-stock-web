@@ -37,6 +37,50 @@ test('creates an item with a component, builds it and adjusts quantities', async
   await expect(dialog(page)).toContainText('Nova quantidade: 12');
   await dialog(page).getByRole('button', { name: 'Salvar' }).click();
   await expect(row(page, flour.name)).toContainText('12');
+
+  await row(page, flour.name).getByRole('button', { name: 'Ajustar estoque' }).click();
+  await expect(dialog(page)).toContainText('Quantidade atual: 12');
+  await dialog(page).getByRole('button', { name: 'Subtrair' }).click();
+  await dialog(page).getByLabel(/Valor/).fill('20');
+  await dialog(page).getByRole('button', { name: 'Salvar' }).click();
+  await expect(dialog(page)).toContainText('Não é possível subtrair mais que o estoque atual (12)');
+  await dialog(page).getByLabel(/Valor/).fill('4.5');
+  await expect(dialog(page)).toContainText('Nova quantidade: 7.5');
+  await dialog(page).getByRole('button', { name: 'Salvar' }).click();
+  await expectToast(page, 'Quantidade atualizada com sucesso.');
+  await expect(row(page, flour.name)).toContainText('7.5');
+});
+
+test('edits name, unit and categories in one modal, and the storage in another', async ({ page, request }) => {
+  const unit = await api.unit(request);
+  const otherUnit = await api.unit(request, uniqueName('unit'), 'cx');
+  const category = await api.category(request);
+  const storage = await api.storage(request);
+  const item = await api.item(request, { name: uniqueName('cable'), unit_id: unit.id, quantity: 4 });
+  const renamed = uniqueName('cable-renamed');
+
+  await page.goto('/inventory/items');
+  await page.getByPlaceholder('Buscar por nome...').fill(item.name);
+  await row(page, item.name).getByRole('button', { name: 'Editar item' }).click();
+
+  const modal = dialog(page);
+  await expect(modal.getByLabel(/^\s*Nome/)).toHaveValue(item.name);
+  await modal.getByLabel(/^\s*Nome/).fill(renamed);
+  await selectOption(page, modal.getByRole('combobox', { name: /Unidade/ }), otherUnit.name);
+  await selectOption(page, modal.getByRole('combobox', { name: /Categorias/ }), category.name);
+  await modal.getByRole('heading', { name: 'Editar Item' }).click(); // a seleção múltipla fica aberta
+  await modal.getByRole('button', { name: 'Salvar' }).click();
+  await expectToast(page, 'Item atualizado com sucesso.');
+
+  await page.getByPlaceholder('Buscar por nome...').fill(renamed);
+  await expect(row(page, renamed)).toContainText(category.name);
+  await expect(row(page, renamed)).toContainText('cx');
+
+  await row(page, renamed).getByRole('button', { name: 'Editar armazenamento' }).click();
+  await selectOption(page, dialog(page).getByRole('combobox'), storage.name);
+  await dialog(page).getByRole('button', { name: 'Salvar' }).click();
+  await expectToast(page, 'Armazenamento atualizado com sucesso.');
+  await expect(row(page, renamed)).toContainText(storage.name);
 });
 
 test('switches language and appearance', async ({ page }) => {

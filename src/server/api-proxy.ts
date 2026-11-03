@@ -1,10 +1,11 @@
 import express, { type ErrorRequestHandler, type Request, Router } from 'express';
 import { MESSAGES, apiUrl, jsonError } from './utils/api';
 
-// Repassados para a API: sessão (cookies httpOnly), idioma e formato do corpo.
-const FORWARDED_REQUEST_HEADERS = ['accept', 'accept-language', 'content-type', 'cookie', 'user-agent'];
+// Repassados para a API: sessão (`Authorization: Bearer`), idioma e formato do corpo.
+// Os cookies do web (tokens, idioma) ficam aqui: a API não usa cookies.
+const FORWARDED_REQUEST_HEADERS = ['accept', 'accept-language', 'authorization', 'content-type', 'user-agent'];
 
-// Recalculados pelo Express (o fetch já descomprime o corpo) — ou tratados à parte (Set-Cookie).
+// Recalculados pelo Express (o fetch já descomprime o corpo). A API não grava cookies na origem do web.
 const SKIPPED_RESPONSE_HEADERS = new Set(['connection', 'content-encoding', 'content-length', 'keep-alive', 'set-cookie', 'transfer-encoding']);
 
 const REQUEST_TIMEOUT_MS = 60_000;
@@ -37,8 +38,7 @@ const handleProxyErrors: ErrorRequestHandler = (error, _req, res, next) => {
 
 /**
  * `/api/**` → white-label-stock-api (Laravel), mesmo caminho. O browser continua falando só
- * com a origem do web: os cookies httpOnly de sessão chegam aqui sozinhos e os `Set-Cookie`
- * da API voltam intactos, sem CORS.
+ * com a origem do web (sem CORS); o access token vai no header `Authorization` e passa direto.
  */
 export function createApiProxy() {
   const router = Router();
@@ -66,8 +66,6 @@ export function createApiProxy() {
     response.headers.forEach((value, name) => {
       if (!SKIPPED_RESPONSE_HEADERS.has(name)) res.setHeader(name, value);
     });
-
-    for (const cookie of response.headers.getSetCookie()) res.append('Set-Cookie', cookie);
 
     return res.send(Buffer.from(await response.arrayBuffer()));
   });

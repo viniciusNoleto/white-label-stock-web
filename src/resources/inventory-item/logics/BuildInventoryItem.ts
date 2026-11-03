@@ -120,7 +120,7 @@ export function injectBuildInventoryItemLogicData({ editingItemId, onSuccess }: 
             withAsterisk
           />
 
-          <p class="text-xs text-gray-500 dark:text-gray-400">
+          <p class="text-sm text-gray-600 dark:text-gray-300">
             {{ 'forms.build.maxPossibleLabel' | t: { count: maxBuildable() } }}
           </p>
         </div>

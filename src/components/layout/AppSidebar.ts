@@ -5,11 +5,23 @@ import { NgIcon } from '@ng-icons/core';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { BrandMark } from './BrandMark';
 
-const NAV_ITEMS = [
-  { href: '/inventory/items', icon: 'lucidePackage', labelKey: 'sidebar.items' },
-  { href: '/inventory/categories', icon: 'lucideTag', labelKey: 'sidebar.categories' },
-  { href: '/inventory/units', icon: 'lucideRuler', labelKey: 'sidebar.units' },
-  { href: '/inventory/storages', icon: 'lucideWarehouse', labelKey: 'sidebar.storages' },
+/** Operação do dia a dia (estoque e expedição) separada dos cadastros de apoio. */
+const NAV_GROUPS = [
+  {
+    labelKey: 'sidebar.groups.operation',
+    items: [
+      { href: '/inventory/items', icon: 'lucidePackage', labelKey: 'sidebar.items' },
+      { href: '/inventory/deliveries', icon: 'lucideTruck', labelKey: 'sidebar.deliveries' },
+    ],
+  },
+  {
+    labelKey: 'sidebar.groups.registry',
+    items: [
+      { href: '/inventory/categories', icon: 'lucideTag', labelKey: 'sidebar.categories' },
+      { href: '/inventory/units', icon: 'lucideRuler', labelKey: 'sidebar.units' },
+      { href: '/inventory/storages', icon: 'lucideWarehouse', labelKey: 'sidebar.storages' },
+    ],
+  },
 ] as const;
 
 /** Mesmo breakpoint do `lg:` do Tailwind. */
@@ -39,16 +51,16 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
 
     <aside
       id="app-sidebar"
-      class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 shrink-0 overflow-y-auto bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 dark:border-neutral-800 dark:bg-neutral-900"
       [class.translate-x-0]="open()"
       [class.-translate-x-full]="!open()"
       [attr.inert]="hidden() ? '' : null"
       [attr.aria-label]="'sidebar.section' | t"
     >
-      <div class="flex items-center justify-between gap-2 h-16 shrink-0 px-5 border-b border-gray-200 dark:border-gray-800">
+      <div class="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-5 dark:border-neutral-800">
         <a
           routerLink="/"
-          class="rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          class="outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           (click)="closed.emit()"
         >
           <app-brand-mark />
@@ -56,7 +68,7 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
 
         <button
           type="button"
-          class="flex items-center justify-center size-8 rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 lg:hidden"
+          class="flex size-8 items-center justify-center text-gray-500 hover:bg-gray-100 lg:hidden dark:hover:bg-neutral-800"
           [attr.aria-label]="'common.actions.close' | t"
           (click)="closed.emit()"
         >
@@ -64,31 +76,52 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
         </button>
       </div>
 
-      <nav class="flex flex-col gap-1 px-3 pt-5">
-        <p class="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.08em] text-gray-500 dark:text-gray-400">
-          {{ 'sidebar.section' | t }}
-        </p>
+      <nav class="flex flex-1 flex-col gap-7 pt-6">
+        @for (group of navGroups; track group.labelKey) {
+          <div class="flex flex-col gap-1">
+            <p class="px-5 pb-1.5 text-[13px] text-gray-500 dark:text-gray-400">
+              {{ group.labelKey | t }}
+            </p>
 
-        @for (item of navItems; track item.href) {
-          <a
-            class="group flex items-center gap-3 h-9 px-3 rounded-lg text-[14.5px] transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100/70 dark:hover:bg-neutral-800"
-            routerLinkActive="bg-primary-500/10! font-medium text-primary-700! dark:text-primary-300!"
-            ariaCurrentWhenActive="page"
-            [routerLink]="item.href"
-            (click)="closed.emit()"
-          >
-            <ng-icon
-              size="18"
-              class="shrink-0 text-gray-500 dark:text-gray-400 group-aria-[current=page]:text-primary-600 dark:group-aria-[current=page]:text-primary-300"
-              [name]="item.icon"
-            />
+            @for (item of group.items; track item.href) {
+              <a
+                class="group relative flex h-10 items-center gap-3 px-5 text-[15px] text-gray-700 outline-none transition-colors hover:bg-stone-50 hover:text-gray-950 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 dark:text-gray-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
+                routerLinkActive="bg-primary-500/8! font-medium text-primary-700! dark:bg-primary-500/15! dark:text-primary-200!"
+                ariaCurrentWhenActive="page"
+                [routerLink]="item.href"
+                (click)="closed.emit()"
+              >
+                <!-- Filete reto marcando a estação ativa. -->
+                <span
+                  aria-hidden="true"
+                  class="absolute inset-y-0 left-0 w-[3px] bg-transparent group-aria-[current=page]:bg-primary-500"
+                ></span>
 
-            <span class="flex-1 truncate">
-              {{ item.labelKey | t }}
-            </span>
-          </a>
+                <ng-icon
+                  size="18"
+                  class="shrink-0 text-gray-500 group-aria-[current=page]:text-primary-600 dark:text-gray-400 dark:group-aria-[current=page]:text-primary-300"
+                  [name]="item.icon"
+                />
+
+                <!-- No hover só o texto se move; ícone e fundo ficam parados. -->
+                <span class="flex-1 truncate transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
+                  {{ item.labelKey | t }}
+                </span>
+              </a>
+            }
+          </div>
         }
       </nav>
+
+      <!-- Fim da linha: a mesma esteira e faixa de sinalização do login. -->
+      <div
+        aria-hidden="true"
+        class="mt-8 flex shrink-0 flex-col"
+      >
+        <div class="h-3 border-y border-stone-400/60 bg-conveyor-belt dark:border-neutral-700"></div>
+
+        <div class="h-2 bg-hazard-stripes opacity-60"></div>
+      </div>
     </aside>
   `,
 })
@@ -98,7 +131,7 @@ export class AppSidebar {
   readonly open = input(false);
   readonly closed = output<void>();
 
-  protected readonly navItems = NAV_ITEMS;
+  protected readonly navGroups = NAV_GROUPS;
 
   private readonly isDesktop = signal(false);
 

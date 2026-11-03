@@ -22,14 +22,20 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
 
   const updateQuantitySchema = computed(() => yup.object({
     mode: yup.mixed<EQuantityMode>().oneOf(Object.values(EQuantityMode)).default(EQuantityMode.SET).required(),
+    // Definir aceita 0; somar/subtrair precisam de valor positivo, e a subtração
+    // não passa do estoque atual (a API também recusa e devolve 422).
     amount: yup.number()
       .nullable()
       .default(0)
       .required(i18n.t('forms.updateQuantity.validation.required'))
       .min(0, i18n.t('forms.updateQuantity.validation.min'))
       .when('mode', {
+        is: (mode: EQuantityMode) => mode !== EQuantityMode.SET,
+        then: (schema) => schema.moreThan(0, i18n.t('forms.updateQuantity.validation.positive')),
+      })
+      .when('mode', {
         is: EQuantityMode.SUBTRACT,
-        then: (schema) => schema.max(currentQuantity(), i18n.t('forms.updateQuantity.validation.min')),
+        then: (schema) => schema.max(currentQuantity(), i18n.t('forms.updateQuantity.validation.max', { count: currentQuantity() })),
       }),
   }));
 
@@ -37,7 +43,7 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
 
   function computeQuantity(mode: EQuantityMode, amount: number) {
     if (mode === EQuantityMode.ADD) return currentQuantity() + amount;
-    if (mode === EQuantityMode.SUBTRACT) return Math.max(0, currentQuantity() - amount);
+    if (mode === EQuantityMode.SUBTRACT) return currentQuantity() - amount;
     return amount;
   }
 
@@ -87,9 +93,15 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
       class="flex flex-col gap-6"
       (submitted)="updateQuantity()"
     >
-      <p class="text-sm text-gray-600 dark:text-gray-400">
-        {{ 'forms.updateQuantity.description' | t: { name: itemName() } }}
-      </p>
+      <div class="flex flex-col gap-1">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          {{ 'forms.updateQuantity.description.' + mode | t: { name: itemName() } }}
+        </p>
+
+        <p class="text-sm font-medium tabular-nums">
+          {{ 'forms.updateQuantity.current' | t: { count: logicData().currentQuantity() } }}
+        </p>
+      </div>
 
       <app-form-segmented-control
         [data]="[
@@ -110,7 +122,7 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
       />
 
       <p
-        class="text-xs text-gray-500 dark:text-gray-400"
+        class="text-sm text-gray-600 dark:text-gray-300"
         aria-live="polite"
       >
         {{ 'forms.updateQuantity.preview' | t: { count: logicData().computeQuantity(mode, form.state().amount || 0) } }}

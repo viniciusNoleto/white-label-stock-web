@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { createMutation } from '@/utils/query';
 import { logoutUserService } from '../services/logoutUser';
 import { AuthStore } from '../stores/AuthStore';
+import { AuthTokens } from '../stores/AuthTokens';
 
 /**
  * Logout sem UI própria (o botão fica no header). Mesmo se a API falhar, a
@@ -9,6 +10,7 @@ import { AuthStore } from '../stores/AuthStore';
  */
 export function injectLogoutLogicData({ onSuccess }: { onSuccess?: () => void } = {}) {
   const authStore = inject(AuthStore);
+  const authTokens = inject(AuthTokens);
 
   function logout() {
     authStore.clear();
@@ -17,7 +19,7 @@ export function injectLogoutLogicData({ onSuccess }: { onSuccess?: () => void } 
   }
 
   const logoutMutation = createMutation({
-    mutationFn: () => logoutUserService(),
+    mutationFn: () => logoutUserService({ body: { refresh_token: authTokens.refreshToken() ?? undefined } }),
     onSuccess: logout,
     onError: logout,
   });

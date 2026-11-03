@@ -21,7 +21,7 @@ app.set('trust proxy', 'loopback, uniquelocal');
 
 /**
  * API — proxy para o white-label-stock-api (Laravel, `API_URL`). O browser só
- * fala com esta origem: os cookies de sessão httpOnly vão e voltam sem CORS.
+ * fala com esta origem (sem CORS); o access token vai em `Authorization: Bearer`.
  */
 app.use('/api', createApiProxy());
 

@@ -25,6 +25,11 @@ export const routes: Routes = [
         loadComponent: () => import('./inventory/items/page').then((m) => m.ItemsPage),
       },
       {
+        path: 'deliveries',
+        title: 'deliveries.page.title',
+        loadComponent: () => import('./inventory/deliveries/page').then((m) => m.DeliveriesPage),
+      },
+      {
         path: 'categories',
         title: 'categories.page.title',
         loadComponent: () => import('./inventory/categories/page').then((m) => m.CategoriesPage),

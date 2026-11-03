@@ -105,4 +105,4 @@ protected readonly createUnitLogicData = injectCreateUnitLogicData({
 - O componente nunca re-tipa a logic: sempre `ReturnType<typeof inject…LogicData>`.
 - A função de dados não conhece o componente; o componente não tem mutação própria (pode ter queries de apoio, ex.: opções de um select).
 - `onSuccess`/`onError` sempre na função de dados; sucesso usa `res.message` (via `notify.success(res)`).
-- Nomes internos com prefixo da ação (`createUnitMutation`, `updateItemNameInit`) — evitam colisão quando a página usa várias logics.
+- Nomes internos com prefixo da ação (`createUnitMutation`, `updateItemInit`) — evitam colisão quando a página usa várias logics.

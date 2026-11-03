@@ -7,7 +7,7 @@
 ```ts
 opened = input(false);
 title = input('');
-size = input<'sm' | 'md' | 'lg' | 'xl'>('md');   // 24rem / 32rem / 42rem / 56rem
+size = input<'sm' | 'md' | 'lg' | 'xl'>('md');   // 32rem / 40rem / 52rem / 64rem (texto base `text-base`)
 closed = output<void>();                          // Esc, clique fora ou botão X
 ```
 

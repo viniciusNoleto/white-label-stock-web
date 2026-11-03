@@ -1,6 +1,6 @@
-# White Label Inventory System
+# White Label Stock
 
-White Label Inventory System is an open, white-label inventory management application built with [Angular](https://angular.dev). It is designed to be generic and reusable: items, categories and units of measurement are modeled so that anyone — companies, agencies, or individual developers — can fork, rebrand, and deploy their own inventory system on top of it without rebuilding the core from scratch.
+White Label Stock is an open, white-label inventory management application built with [Angular](https://angular.dev). It is designed to be generic and reusable: items, categories and units of measurement are modeled so that anyone — companies, agencies, or individual developers — can fork, rebrand, and deploy their own inventory system on top of it without rebuilding the core from scratch.
 
 ## Concept
 
@@ -28,16 +28,16 @@ Do not remove or hide this link when reusing, forking, or white-labeling this pr
 This repository is **only the web app**. Everything that touches the database (routes, validation, business rules, sessions) lives in the API project `white-label-stock-api`.
 
 ```
-browser ──(same origin, httpOnly cookies)──▶ web: Express + Angular SSR ──(API_URL)──▶ white-label-stock-api (Laravel) ──▶ PostgreSQL
+browser ──(same origin, Authorization: Bearer)──▶ web: Express + Angular SSR ──(API_URL)──▶ white-label-stock-api (Laravel) ──▶ PostgreSQL
                                              · /api/** → proxy (src/server/api-proxy.ts)
                                              · pages  → session refresh (src/server/page-session.ts) + SSR
 ```
 
-The browser never talks to the API directly: the Express server forwards `/api/**` with the session cookies and passes every `Set-Cookie` back, so cookies stay first-party and no CORS is needed.
+The browser never talks to the API directly: the Express server forwards `/api/**` (with the `Authorization` header) to the API, so no CORS is needed.
 
 ## Authentication
 
-Sign-in uses **opaque access/refresh tokens** stored only as `httpOnly` cookies (only their SHA-256 hash is persisted). Access tokens last 15 minutes; refresh tokens last 30 days and are **rotated on every use**, with reuse detection that revokes the whole token family. The browser client renews the session transparently on `401` (a single shared refresh per tab), and page navigations are renewed server-side (by calling the API) before rendering. Tokens are issued and stored by the API. There is no public sign-up: create accounts with the API seed (`SEED_ADMIN_*` in the API `.env`, then `make db-seed` there).
+Sign-in uses **opaque access/refresh tokens** (only their SHA-256 hash is persisted by the API). The API returns them in the body of the login/refresh responses and reads the access token from `Authorization: Bearer`. The web keeps both in regular first-party cookies (`access_token` / `refresh_token`, `SameSite=Lax`, expiring with each token) so the browser client can build the header and the Express server can renew the session before rendering a page. Access tokens last 15 minutes; refresh tokens last 30 days and are **rotated on every use**, with reuse detection that revokes the whole token family. The browser client renews the session transparently on `401` (a single shared refresh per tab), and page navigations are renewed server-side (by calling the API) before rendering. There is no public sign-up: create accounts with the API seed (`SEED_ADMIN_*` in the API `.env`, then `make db-seed` there).
 
 ## Configuration & Deploy
 
@@ -54,12 +54,12 @@ Sign-in uses **opaque access/refresh tokens** stored only as `httpOnly` cookies 
 cd ../white-label-stock-api && cp .env.example .env && make install   # http://localhost:8005
 
 # 2. Web
-cd ../white-label-inventory-system
+cd ../white-label-stock-web
 cp .env.example .env   # API_URL and E2E_DB_* already point to the local API
 make install
 ```
 
-`make install` builds the image, installs dependencies inside the container, starts `white-label-inventory-system-front` (Angular dev server with SSR) and checks that the API answers. The app is served at `http://localhost:$APP_PORT` (default `3005`). The container reaches the API through `API_URL` (default `http://host.docker.internal:8005`, the port the API publishes on the host).
+`make install` builds the image, installs dependencies inside the container, starts `white-label-stock-web` (Angular dev server with SSR) and checks that the API answers. The app is served at `http://localhost:$APP_PORT` (default `3005`). The container reaches the API through `API_URL` (default `http://host.docker.internal:8005`, the port the API publishes on the host).
 
 | Command | Effect |
 |---|---|
@@ -74,7 +74,7 @@ make install
 ### Tests
 
 - **Unit (`src/**/*.spec.ts`)** — form/query helpers, the HTTP client and its refresh flow, form and table components.
-- **Server (`tests/server`)** — the `/api` proxy (method, body, cookies, every `Set-Cookie`, 502 when the API is down, 413) and the page session middleware (refresh before rendering, redirects), against a fake API.
+- **Server (`tests/server`)** — the `/api` proxy (method, body, `Authorization`, no cookies in either direction, 502 when the API is down, 413) and the page session middleware (refresh before rendering, redirects), against a fake API.
 - **E2E (`tests/e2e`)** — full user flows against the web **and** the real API. The setup creates the e2e user directly in the API database (`E2E_DB_*` in `.env`, the Postgres port the API publishes on the host); every record is named with the `e2e-` prefix and removed before and after the run. Install the browser once with `npx playwright install chromium`.
 - **API** — route, auth and business rule tests live in `white-label-stock-api` (Pest, `make test` there).
 

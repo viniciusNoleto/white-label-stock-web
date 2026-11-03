@@ -7,7 +7,9 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { catchError, filter, finalize, map, type Observable, of, shareReplay, Subject, switchMap, take, throwError } from 'rxjs';
+import { catchError, filter, finalize, map, type Observable, of, shareReplay, Subject, switchMap, take, tap, throwError } from 'rxjs';
+import type { IAuthSession } from '@/resources/auth/models/AuthUser';
+import { AuthTokens } from '@/resources/auth/stores/AuthTokens';
 import type { ApiResponse } from '@/shared/types/api';
 
 export type AppApiResponse<T> = ApiResponse<T>;
@@ -28,26 +30,41 @@ export class AppEvents {
 
 const AUTH_NO_REFRESH_PREFIXES = ['/api/auth/login', '/api/auth/logout', '/api/auth/token/refresh'];
 
+// Rotas que não levam o Bearer (não precisam de sessão).
+const AUTH_NO_BEARER_PREFIXES = ['/api/auth/login', '/api/auth/token/refresh'];
+
 function isAuthNoRefreshUrl(url: string) {
   return AUTH_NO_REFRESH_PREFIXES.some((prefix) => url.startsWith(prefix));
 }
 
+function needsBearer(url: string) {
+  return url.startsWith('/api/') && !AUTH_NO_BEARER_PREFIXES.some((prefix) => url.startsWith(prefix));
+}
+
 /**
- * Renova a sessão via refresh_token (cookie httpOnly). Chamadas paralelas que
- * recebem 401 compartilham um único refresh nesta aba; entre abas/processos, a
- * própria rota de refresh deduplica pelo token.
+ * Renova a sessão enviando o refresh_token no corpo e grava o par novo
+ * (`AuthTokens`). Chamadas paralelas que recebem 401 compartilham um único
+ * refresh nesta aba; entre abas/processos, a própria rota de refresh da API
+ * deduplica pelo token.
  */
 @Service()
 export class SessionRefresher {
   // HttpBackend pula os interceptors: o refresh nunca dispara outro refresh.
   private readonly http = new HttpClient(inject(HttpBackend));
+  private readonly tokens = inject(AuthTokens);
 
   private refreshInFlight$: Observable<boolean> | null = null;
 
   refresh(): Observable<boolean> {
-    this.refreshInFlight$ ??= this.http
-      .post<AppApiResponse<unknown>>('/api/auth/token/refresh', null)
+    if (this.refreshInFlight$) return this.refreshInFlight$;
+
+    const refreshToken = this.tokens.refreshToken();
+    if (!refreshToken) return of(false);
+
+    this.refreshInFlight$ = this.http
+      .post<AppApiResponse<IAuthSession>>('/api/auth/token/refresh', { refresh_token: refreshToken })
       .pipe(
+        tap((response) => this.tokens.set(response.data)),
         map(() => true),
         catchError(() => of(false)),
         finalize(() => {
@@ -61,15 +78,24 @@ export class SessionRefresher {
 }
 
 /**
- * Os tokens vivem só em cookies httpOnly, gravados pelas rotas de /api/auth/**.
- * O browser os envia sozinho (mesma origem). Ao receber 401, renova a sessão e
- * repete a chamada uma única vez; se o refresh falhar, emite sessionExpired$.
+ * Envia o access token (`AuthTokens`) em `Authorization: Bearer` para a API.
+ * Ao receber 401, renova a sessão e repete a chamada uma única vez, já com o
+ * token novo; se o refresh falhar, emite sessionExpired$.
  */
 export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const refresher = inject(SessionRefresher);
   const events = inject(AppEvents);
+  const tokens = inject(AuthTokens);
 
-  return next(req).pipe(
+  const withBearer = (request: HttpRequest<unknown>) => {
+    const accessToken = tokens.accessToken();
+
+    return accessToken && needsBearer(request.url) && !request.headers.has('Authorization')
+      ? request.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } })
+      : request;
+  };
+
+  return next(withBearer(req)).pipe(
     catchError((error: unknown) => {
       if (!(error instanceof HttpErrorResponse) || error.status !== 401 || isAuthNoRefreshUrl(req.url)) {
         return throwError(() => error);
@@ -83,7 +109,7 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
           }
 
-          return next(req.clone() as HttpRequest<unknown>);
+          return next(withBearer(req));
         }),
       );
     }),

@@ -23,4 +23,4 @@ Propriedades, ids `number`, decimais como `string` (`"2.5000"`). Os models do fr
 
 ## Rotas protegidas
 
-Tudo em `/api` exige sessão (middleware `auth` da API), exceto `/api/auth/**`.
+Tudo em `/api` exige sessão (`Authorization: Bearer`, middleware `auth` da API), exceto `/api/auth/login`, `/api/auth/logout` e `/api/auth/token/refresh`. O `authRefreshInterceptor` põe o header sozinho — services não montam headers.

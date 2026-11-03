@@ -2,7 +2,7 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
-import { HlmHoverCardImports } from '@spartan-ng/helm/hover-card';
+import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { filter, map } from 'rxjs';
 import { FormButton } from '@/components/form/Button';
@@ -26,9 +26,9 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
 
 @Component({
   selector: 'app-header',
-  imports: [FormButton, HlmTooltip, HlmHoverCardImports, NgIcon, RouterLink, TranslatePipe, ColorSchemeSwitcher, LanguageSwitcher],
+  imports: [FormButton, HlmTooltip, HlmPopoverImports, NgIcon, RouterLink, TranslatePipe, ColorSchemeSwitcher, LanguageSwitcher],
   template: `
-    <header class="flex items-center justify-between gap-4 h-16 shrink-0 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-neutral-900">
+    <header class="flex items-center justify-between gap-4 h-16 shrink-0 px-4 sm:px-8 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
       <div class="flex items-center gap-3 min-w-0">
         <button
           appButton
@@ -81,14 +81,17 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
 
         <app-color-scheme-switcher />
 
-        <hlm-hover-card>
+        <hlm-popover
+          align="end"
+          sideOffset="8"
+        >
           <button
-            hlmHoverCardTrigger
+            hlmPopoverTrigger
             type="button"
-            class="flex items-center gap-2.5 h-9 pl-1 pr-1 sm:pr-3 rounded-full outline-none hover:bg-gray-100/70 dark:hover:bg-neutral-800 focus-visible:ring-3 focus-visible:ring-ring/50 transition-colors"
+            class="flex items-center gap-2.5 h-9 pl-1 pr-1 sm:pr-3 border border-gray-200 dark:border-gray-700 outline-none hover:bg-gray-100/70 dark:hover:bg-neutral-800 aria-expanded:bg-gray-100/70 dark:aria-expanded:bg-neutral-800 focus-visible:ring-3 focus-visible:ring-ring/50 transition-colors"
             [attr.aria-label]="'header.userMenu' | t"
           >
-            <span class="center-flex shrink-0 size-7 rounded-full bg-primary-500/10 text-xs font-semibold text-primary-700 dark:text-primary-300">
+            <span class="center-flex shrink-0 size-7 bg-primary-500 text-xs font-semibold text-white">
               {{ initial() }}
             </span>
 
@@ -97,8 +100,8 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
             </span>
           </button>
 
-          <hlm-hover-card-content
-            *hlmHoverCardPortal
+          <hlm-popover-content
+            *hlmPopoverPortal="let ctx"
             class="flex flex-col gap-3 w-60 p-3"
           >
             <div class="min-w-0 px-1">
@@ -114,15 +117,15 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
             <button
               appButton
               variant="outline"
-              class="w-full rounded-lg"
+              class="w-full"
               leftIcon="lucideLogOut"
               [loading]="logoutLogicData.logoutMutation.isPending()"
               (click)="logoutLogicData.logoutMutation.mutate()"
             >
               {{ 'header.logout' | t }}
             </button>
-          </hlm-hover-card-content>
-        </hlm-hover-card>
+          </hlm-popover-content>
+        </hlm-popover>
       </div>
     </header>
   `,

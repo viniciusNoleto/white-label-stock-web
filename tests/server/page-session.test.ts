@@ -46,32 +46,46 @@ describe('page session middleware', () => {
 
   it('refreshes the session on the API before rendering when only the refresh token is left', async () => {
     api.respond((_req, res) => {
-      res.cookie('access_token', 'new-access', { httpOnly: true });
-      res.cookie('refresh_token', 'new-refresh', { httpOnly: true });
-      res.json({ success: true, data: { user: { id: 1 } } });
+      res.json({
+        success: true,
+        data: { user: { id: 1 }, access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 900, refresh_expires_in: 2592000 },
+      });
     });
 
     const result = await page('/inventory/items', 'language=pt-br; refresh_token=old-refresh');
 
     expect(api.received[0]).toMatchObject({ method: 'POST', url: '/api/auth/token/refresh' });
-    expect(api.received[0].headers['cookie']).toBe('refresh_token=old-refresh');
+    expect(JSON.parse(api.received[0].body)).toEqual({ refresh_token: 'old-refresh' });
+    expect(api.received[0].headers['content-type']).toBe('application/json');
+    expect(api.received[0].headers['cookie']).toBeUndefined();
     expect(result.status).toBe(200);
-    expect(result.setCookies.map((cookie) => cookie.split('=')[0])).toEqual(['access_token', 'refresh_token']);
+    expect(result.setCookies).toEqual([
+      'access_token=new-access; Path=/; Max-Age=900; SameSite=Lax',
+      'refresh_token=new-refresh; Path=/; Max-Age=2592000; SameSite=Lax',
+    ]);
     // o render desta mesma requisição já enxerga os tokens novos
     expect(result.body.cookie).toBe('language=pt-br; refresh_token=new-refresh; access_token=new-access');
   });
 
-  it('sends the visitor to the login when the refresh token is rejected', async () => {
-    api.respond((_req, res) => {
-      res.clearCookie('access_token');
-      res.clearCookie('refresh_token');
-      res.status(401).json({ success: false, data: null });
-    });
+  it('sends the visitor to the login and clears the cookies when the refresh token is rejected', async () => {
+    api.respond((_req, res) => res.status(401).json({ success: false, data: null }));
 
     const result = await page('/inventory/items', 'refresh_token=stolen');
 
     expect(result).toMatchObject({ status: 302, location: '/auth/login' });
-    expect(result.setCookies).toHaveLength(2);
+    expect(result.setCookies).toEqual([
+      'access_token=; Path=/; Max-Age=0; SameSite=Lax',
+      'refresh_token=; Path=/; Max-Age=0; SameSite=Lax',
+    ]);
+  });
+
+  it('keeps the session when the refresh fails for another reason', async () => {
+    api.respond((_req, res) => res.status(500).json({ success: false, data: null }));
+
+    const result = await page('/inventory/items', 'refresh_token=x');
+
+    expect(result.status).toBe(200);
+    expect(result.setCookies).toHaveLength(0);
   });
 
   it('keeps serving public pages (without the dead refresh token) when the refresh is rejected', async () => {
@@ -88,10 +102,11 @@ describe('page session middleware', () => {
 
     expect(await page('/auth/login', 'access_token=valid')).toMatchObject({ status: 302, location: '/inventory' });
     expect(api.received[0]).toMatchObject({ method: 'GET', url: '/api/auth/me' });
+    expect(api.received[0].headers['authorization']).toBe('Bearer valid');
   });
 
-  it('lets the login page render when the access cookie is no longer valid', async () => {
-    api.respond((_req, res) => res.json({ success: true, data: { user: null } }));
+  it('lets the login page render when the access token is no longer valid', async () => {
+    api.respond((_req, res) => res.status(401).json({ success: false, data: null }));
 
     expect((await page('/auth/login', 'access_token=expired')).status).toBe(200);
   });

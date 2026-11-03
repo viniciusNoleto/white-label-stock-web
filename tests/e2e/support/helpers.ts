@@ -1,5 +1,30 @@
-import { type APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
-import { E2E_PREFIX } from './db';
+import { type APIRequestContext, type BrowserContext, expect, type Locator, type Page } from '@playwright/test';
+import { E2E_PREFIX, E2E_USER } from './db';
+
+/**
+ * Login pela API e grava os tokens nos cookies do contexto — o mesmo que o
+ * web faz depois do login (a API devolve os tokens no corpo, não em cookies).
+ */
+export async function signIn(context: BrowserContext, baseURL: string) {
+  const response = await context.request.post(`${baseURL}/api/auth/login`, { data: { email: E2E_USER.email, password: E2E_USER.password } });
+  if (!response.ok()) throw new Error(`e2e login failed: ${response.status()}`);
+
+  const { access_token, refresh_token, expires_in, refresh_expires_in } = (await response.json()).data;
+  const now = Math.floor(Date.now() / 1000);
+
+  await context.addCookies([
+    { name: 'access_token', value: access_token, url: baseURL, sameSite: 'Lax', expires: now + expires_in },
+    { name: 'refresh_token', value: refresh_token, url: baseURL, sameSite: 'Lax', expires: now + refresh_expires_in },
+  ]);
+}
+
+/** `Authorization: Bearer` com o access token salvo no storageState do `request`. */
+async function bearer(request: APIRequestContext): Promise<Record<string, string>> {
+  const { cookies } = await request.storageState();
+  const accessToken = cookies.find((cookie) => cookie.name === 'access_token')?.value;
+
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+}
 
 export function uniqueName(label: string) {
   return `${E2E_PREFIX}${label}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -24,7 +49,7 @@ export async function expectToast(page: Page, text: string | RegExp) {
 }
 
 async function post<T>(request: APIRequestContext, url: string, data: object): Promise<T> {
-  const response = await request.post(url, { data });
+  const response = await request.post(url, { data, headers: await bearer(request) });
   expect(response.ok()).toBeTruthy();
   return (await response.json()).data as T;
 }

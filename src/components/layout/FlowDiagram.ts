@@ -25,7 +25,7 @@ const STATIONS = [
           [class.flex-1]="!last"
         >
           <div class="flex w-18 shrink-0 flex-col sm:w-20 items-center gap-2 text-center">
-            <span class="center-flex size-12 rounded-xl border border-primary-200 bg-white/80 text-primary-500 shadow-sm dark:border-primary-900 dark:bg-neutral-900/80 dark:text-primary-300 dark:shadow-none">
+            <span class="center-flex size-12 border border-primary-200 bg-white/80 text-primary-500 dark:border-primary-900 dark:bg-neutral-900/80 dark:text-primary-300">
               <ng-icon
                 size="22"
                 [name]="station.icon"
@@ -47,7 +47,7 @@ const STATIONS = [
               class="relative mt-6 h-0.5 flex-1 bg-flow-dash animate-flow-dash"
             >
               <span
-                class="absolute top-1/2 size-2 -translate-y-1/2 rounded-[2px] bg-primary-500 animate-flow-packet dark:bg-primary-400"
+                class="absolute top-1/2 size-2 -translate-y-1/2 bg-primary-500 animate-flow-packet dark:bg-primary-400"
                 [style.animation-delay.ms]="index * -700"
               ></span>
             </span>

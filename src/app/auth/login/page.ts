@@ -42,7 +42,7 @@ const BARCODE_BARS = [2, 1, 1, 3, 1, 2, 1, 1, 3, 2, 1, 1, 2, 1, 3, 1, 1, 2, 1, 2
       <main class="relative flex flex-1 items-center justify-center px-6 pt-4 pb-40">
         <div class="grid w-full max-w-6xl items-center gap-16 lg:grid-cols-[1fr_28rem]">
           <section class="hidden flex-col gap-8 lg:flex">
-            <span class="inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-white/70 px-3 py-1 text-xs font-medium text-primary-600 backdrop-blur-sm dark:border-primary-900 dark:bg-neutral-900/70 dark:text-primary-300">
+            <span class="inline-flex w-fit items-center gap-2 border border-primary-200 bg-white/70 px-3 py-1 text-xs font-medium text-primary-600 backdrop-blur-sm dark:border-primary-900 dark:bg-neutral-900/70 dark:text-primary-300">
               <ng-icon
                 name="lucideBoxes"
                 size="14"

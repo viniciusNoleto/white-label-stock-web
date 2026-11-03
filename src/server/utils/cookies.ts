@@ -15,16 +15,3 @@ export function serializeCookieHeader(cookies: Record<string, string>) {
     .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
     .join('; ');
 }
-
-/** `nome → valor` de cada `Set-Cookie` (valor vazio quando o cookie está sendo apagado). */
-export function parseSetCookies(setCookies: string[]): Record<string, string> {
-  const cookies: Record<string, string> = {};
-
-  for (const cookie of setCookies) {
-    const [pair] = cookie.split(';');
-    const [key, ...rest] = pair.trim().split('=');
-    if (key) cookies[key] = decodeURIComponent(rest.join('='));
-  }
-
-  return cookies;
-}

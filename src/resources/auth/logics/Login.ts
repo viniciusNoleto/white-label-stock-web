@@ -29,7 +29,7 @@ export function injectLoginLogicData({ onSuccess }: { onSuccess: (user: IAuthUse
   const loginMutation = createMutation({
     mutationFn: () => loginUserService({ body: loginValidatedFormState.state() }),
     onSuccess: (res) => {
-      authStore.setUser(res.data.user);
+      authStore.setSession(res.data);
 
       onSuccess(res.data.user);
     },

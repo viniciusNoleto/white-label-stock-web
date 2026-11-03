@@ -1,4 +1,4 @@
-# White Label Inventory System — instruções para agentes
+# White Label Stock — instruções para agentes
 
 Angular **22** (standalone, zoneless, signals, Signal Forms, OnPush padrão) com SSR via `@angular/ssr` + Express. **Só o web**: a API é o projeto separado `white-label-stock-api` (Laravel + PostgreSQL, pasta irmã); o Express faz proxy de `/api/**` para `API_URL` e não acessa banco. UI com **Spartan UI** (helm em `src/libs/ui`, brain em `@spartan-ng/brain`) + Tailwind 4. As boas práticas oficiais do Angular estão em `node_modules/@angular/core/resources/best-practices.md` — siga-as.
 

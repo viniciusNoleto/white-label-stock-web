@@ -1,24 +1,32 @@
-# Sessão e tokens (fluxo do rentable)
+# Sessão e tokens (Bearer, fluxo do white-label-utility-list)
 
-## API (white-label-stock-api — `app/Services/Auth/`, `AuthController`)
+## API (white-label-stock-api — `app/Actions/Auth/`, `AuthController`)
 
 - Tokens **opacos** (32 bytes aleatórios), não JWT. No banco vai só o `sha256` (`access_tokens`, `refresh_tokens`).
 - Access token: 15 min. Refresh token: 30 dias, com `family_id`.
-- Ambos vivem **só** em cookies `httpOnly`, `SameSite=Lax`, `Secure` em produção (`COOKIE_SECURE` no `.env` da API sobrescreve). Nenhum código do browser lê ou escreve esses cookies; o login não devolve token no corpo.
-- Refresh (`POST /api/auth/token/refresh`) **rotaciona**: revoga o token usado e emite um par novo na mesma família. Reapresentar um token já rotacionado revoga a **família inteira** (sinal de roubo).
-- `RefreshSessionService` deduplica refreshes concorrentes do mesmo token por 10 s (lock + resultado no cache, compartilhado entre os workers do php-fpm) — sem isso, abas/chamadas paralelas/SSR cairiam na detecção de reuso.
-- `GET /api/auth/me`: `{ user: null }` para anônimo (sem cookies); 401 quando só sobrou o refresh (o client renova).
+- `POST /api/auth/login` e `POST /api/auth/token/refresh` devolvem a sessão **no corpo**: `{ user, access_token, refresh_token, expires_in, refresh_expires_in }` (`IAuthSession`; `expires_in`/`refresh_expires_in` em segundos). A API não lê nem grava cookies.
+- Rotas protegidas leem o access token de `Authorization: Bearer <token>`.
+- Refresh recebe `{ refresh_token }` no corpo e **rotaciona**: revoga o token usado e emite um par novo na mesma família. Reapresentar um token já rotacionado revoga a **família inteira** (sinal de roubo). Token inválido → 401.
+- `RefreshSessionAction` deduplica refreshes concorrentes do mesmo token por 10 s (lock + resultado no cache) — sem isso, abas/chamadas paralelas/SSR cairiam na detecção de reuso.
+- `GET /api/auth/me`: rota protegida, `{ user }`; 401 sem access válido (o client renova).
+- `POST /api/auth/logout`: Bearer (se ainda houver) + `{ refresh_token }` no corpo; revoga os dois.
+
+## Onde os tokens ficam no web
+
+- Cookies **comuns** (não httpOnly) da origem do web: `access_token` (`Max-Age` = `expires_in`) e `refresh_token` (`Max-Age` = `refresh_expires_in`), `Path=/`, `SameSite=Lax`, `Secure` em HTTPS. Formato único em `serializeAuthCookie` (`src/shared/utils/auth-cookie.ts`), usado pelo browser e pelo servidor.
+- Browser: `AuthTokens` (`src/resources/auth/stores/AuthTokens.ts`) lê/grava/apaga via `document.cookie` — sempre lido na hora, então a renovação feita pelo servidor ou por outra aba já vale. No SSR devolve `null`.
+- Nunca grave token em `localStorage` nem no estado do `AuthStore`.
 
 ## Servidor do web (`src/server/`)
 
-- `api-proxy.ts`: repassa `/api/**` para `API_URL` com os cookies da requisição e devolve todos os `Set-Cookie` da API — os cookies continuam sendo da origem do web.
-- `page-session.ts` (middleware de páginas, papel do `proxy.ts` do Next): sem access mas com refresh → chama o refresh **na API** e renova antes de servir a página (reescreve o header `cookie` do render); sem cookie nenhum em `/inventory/**` → 302 para `/auth/login`; logado em `/auth/login` (confirmado via `/api/auth/me`) → 302 para `/inventory`. API fora do ar → serve a página mesmo assim.
+- `api-proxy.ts`: repassa `/api/**` para `API_URL` com `Authorization`, `Accept-Language` e o corpo. **Não** repassa os cookies do web para a API nem `Set-Cookie` da API para o browser.
+- `page-session.ts` (middleware de páginas, papel do `proxy.ts` do Next): sem cookie de access mas com refresh → `POST /api/auth/token/refresh` com o refresh no corpo, grava o par novo via `Set-Cookie` antes de servir a página (e reescreve o header `cookie` do render); refresh recusado (401) → apaga os cookies e, em página protegida, 302 para `/auth/login`; sem cookie nenhum em `/inventory/**` → 302 para `/auth/login`; logado em `/auth/login` (confirmado via `/api/auth/me` com Bearer) → 302 para `/inventory`. API fora do ar → serve a página mesmo assim.
 
 ## Browser (`src/utils/app-client.ts`, `src/resources/auth/`)
 
-- `authRefreshInterceptor`: 401 → um único refresh compartilhado por todas as chamadas da aba (`SessionRefresher`) → repete a chamada uma vez. Rotas de auth nunca disparam refresh.
-- Refresh falhou → `AppEvents.sessionExpired$` → `AuthStore` zera o usuário, avisa e vai para o login.
-- `AuthStore.user` é a fonte única do usuário logado; `authGuard` protege `/inventory` (`ensureUser()`).
+- `authRefreshInterceptor`: põe `Authorization: Bearer` em toda chamada `/api/**` (exceto login e refresh). 401 → um único refresh compartilhado por todas as chamadas da aba (`SessionRefresher`, grava o par novo em `AuthTokens`) → repete a chamada uma vez, já com o token novo. Rotas de auth nunca disparam refresh; sem refresh_token nem chama a API.
+- Refresh falhou → `AppEvents.sessionExpired$` → `AuthStore` encerra a sessão local (apaga tokens e usuário), avisa e vai para o login.
+- `AuthStore.user` é a fonte única do usuário logado; `setSession(session)` no login, `clear()` no logout. `authGuard` protege `/inventory` (`ensureUser()` — sem nenhum token nem chama a API).
 - Páginas do inventário são `RenderMode.Client`; páginas públicas são SSR.
 
 ## Ao criar rotas novas

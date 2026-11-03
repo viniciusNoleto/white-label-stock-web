@@ -1,6 +1,6 @@
 services:
-  white-label-inventory-system-front:
-    container_name: white-label-inventory-system-front
+  white-label-stock-web:
+    container_name: white-label-stock-web
     user: node
     restart: unless-stopped
     tty: true
@@ -12,10 +12,10 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - white-label-inventory-system-network
+      - white-label-stock-web-network
 
-  white-label-inventory-system-server:
-    container_name: white-label-inventory-system-server
+  white-label-stock-web-server:
+    container_name: white-label-stock-web-server
     restart: unless-stopped
     tty: true
     build:
@@ -29,11 +29,11 @@ services:
       - ./configs/docker/nginx/nginx-502-page.html:/nginx-502-page.html
       - /etc/letsencrypt/:/etc/letsencrypt/
     networks:
-      - white-label-inventory-system-network
+      - white-label-stock-web-network
     depends_on:
-      - white-label-inventory-system-front
+      - white-label-stock-web
 
 networks:
-  white-label-inventory-system-network:
-    name: white-label-inventory-system-network
+  white-label-stock-web-network:
+    name: white-label-stock-web-network
     driver: bridge

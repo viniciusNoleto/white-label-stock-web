@@ -1,5 +1,7 @@
 # Diretiva UtilsCard (`appCard`)
 
+Painel de cantos retos e sem sombra (o tema usa `--radius: 0` — linhas retas em todo o sistema).
+
 `import { UtilsCard } from '@/components/utils/Card';`
 
 ## Interface
@@ -14,7 +16,7 @@ background = input('bg-white dark:bg-neutral-900'); // troque para cards transl�
 ## Estilo padrão (já aplicado)
 
 ```
-block rounded-2xl shadow-sm dark:shadow-none p-6 border border-gray-200 dark:border-gray-800 bg-white dark:bg-neutral-900
+block p-6 border border-gray-200 dark:border-gray-800 bg-white dark:bg-neutral-900
 ```
 
 Não repita essas classes — use `class` só para somar ou sobrescrever (as classes do elemento vencem as padrão).

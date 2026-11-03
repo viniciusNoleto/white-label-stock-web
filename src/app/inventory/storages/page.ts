@@ -29,11 +29,13 @@ type ModalKey = 'createStorage' | 'updateStorage' | 'deleteStorage';
     UpdateStorageLogicComponent,
     DeleteStorageLogicComponent,
   ],
-  host: { class: 'flex flex-col flex-1 gap-6 p-4 sm:p-6' },
+  host: { class: 'flex flex-col flex-1' },
   template: `
     <app-page-header
+      icon="lucideWarehouse"
       [title]="'storages.page.title' | t"
       [subtitle]="'storages.page.subtitle' | t"
+      [running]="storagesQuery.isFetching()"
     >
       <button
         appButton
@@ -44,7 +46,19 @@ type ModalKey = 'createStorage' | 'updateStorage' | 'deleteStorage';
       </button>
     </app-page-header>
 
-    <section appCard>
+    <section
+      appCard
+      noPadding
+      class="m-4 flex flex-col sm:m-8"
+    >
+      @if (storages().length; as total) {
+        <div class="flex items-center justify-end border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-neutral-800">
+          <p class="text-sm tabular-nums text-gray-600 dark:text-gray-400">
+            {{ 'storages.table.count' | t: { count: total } }}
+          </p>
+        </div>
+      }
+
       <app-utils-table
         [rows]="storages()"
         [rowKey]="rowKey"
