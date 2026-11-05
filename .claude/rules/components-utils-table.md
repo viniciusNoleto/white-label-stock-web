@@ -9,7 +9,7 @@ import { UtilsTable, UtilsTableCell, type TableAction } from '@/components/utils
 ```ts
 rows = input.required<readonly T[]>();
 columns = input.required<Record<string, string>>();  // campo → título; define a ordem
-loading = input(false);                               // overlay com blur + spinner
+loading = input(false);                               // após ~400 ms: overlay com o UtilsLoader (caixa abrindo/fechando)
 emptyText = input<string>();                          // padrão: common.table.emptyDefault
 rowKey = input<(ctx: { item: T; index: number }) => PropertyKey>();
 actions = input<TableAction<T>[] | ((ctx) => TableAction<T>[])>();

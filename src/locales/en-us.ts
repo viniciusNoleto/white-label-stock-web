@@ -14,6 +14,7 @@ export default {
       edit: 'Edit',
       delete: 'Delete',
     },
+    loading: 'Loading…',
     table: {
       emptyDefault: 'No data found',
       actionsColumn: 'Actions',
@@ -103,6 +104,8 @@ export default {
         placeholder: 'Type your password',
       },
       submit: 'Sign in',
+      noAccount: 'Don\'t have access yet?',
+      requestAccess: 'Request access',
       validation: {
         emailRequired: 'Email is required',
         emailInvalid: 'Invalid email',
@@ -110,6 +113,37 @@ export default {
       },
       notifications: {
         error: 'Could not sign in. Please try again.',
+      },
+    },
+    register: {
+      title: 'Request access',
+      subtitle: 'Send your details: an administrator approves the request before your first sign-in',
+      name: {
+        label: 'Name',
+        placeholder: 'Your full name',
+      },
+      password: {
+        placeholder: 'At least {{min}} characters',
+      },
+      passwordConfirmation: {
+        label: 'Confirm password',
+        placeholder: 'Type the password again',
+      },
+      submit: 'Send request',
+      hasAccount: 'Already have access?',
+      backToLogin: 'Back to sign in',
+      sent: {
+        title: 'Request sent',
+        description: 'Your access request for {{email}} is in the approval queue. Once an administrator approves it, sign in with the email and password you registered.',
+      },
+      validation: {
+        nameRequired: 'Name is required',
+        passwordMin: 'Password must be at least {{min}} characters',
+        passwordConfirmationRequired: 'Confirm the password',
+        passwordMismatch: 'Passwords do not match',
+      },
+      notifications: {
+        error: 'Could not send the request. Please try again.',
       },
     },
     sessionExpired: 'Your session has expired. Please sign in again.',
@@ -122,9 +156,12 @@ export default {
     units: 'Units',
     storages: 'Storages',
     deliveries: 'Deliveries',
+    registrationRequests: 'Registration requests',
+    users: 'Users',
     groups: {
       operation: 'Operations',
       registry: 'Catalog',
+      admin: 'Administration',
     },
   },
 
@@ -196,6 +233,66 @@ export default {
     },
     delete: {
       confirm: 'Are you sure you want to delete the storage "{{name}}"? This action cannot be undone.',
+    },
+  },
+
+  users: {
+    page: {
+      title: 'Users',
+      subtitle: 'Who has access to the system. Regular users can be deleted and lose access right away.',
+    },
+    search: {
+      placeholder: 'Search by name or email...',
+    },
+    table: {
+      count_one: '{{count}} user',
+      count_other: '{{count}} users',
+      columns: {
+        name: 'Name',
+        email: 'Email',
+        role: 'Role',
+        createdAt: 'Since',
+      },
+      empty: 'No users found.',
+    },
+    roles: {
+      admin: 'Administrator',
+      user: 'User',
+    },
+    modals: {
+      delete: 'Delete User',
+    },
+    delete: {
+      confirm: 'Are you sure you want to delete "{{name}}"? They lose access immediately and will need to request a new registration.',
+    },
+  },
+
+  registrationRequests: {
+    page: {
+      title: 'Registration requests',
+      subtitle: 'People who asked for access. Approve to create the user or reject to delete the request.',
+    },
+    table: {
+      count_one: '{{count}} pending request',
+      count_other: '{{count}} pending requests',
+      columns: {
+        requestedAt: 'Requested at',
+      },
+      empty: 'No registration requests awaiting approval.',
+    },
+    actions: {
+      approve: 'Approve',
+      reject: 'Reject',
+    },
+    modals: {
+      approve: 'Approve Registration',
+      reject: 'Reject Registration',
+    },
+    approve: {
+      confirm: 'Approve access for "{{name}}" ({{email}})? They will be able to sign in with the password they registered.',
+    },
+    reject: {
+      confirm: 'Reject the request from "{{name}}" ({{email}})? The request will be deleted.',
     },
   },
 
@@ -483,6 +580,9 @@ export default {
       updateDeliveryPackage: 'Could not update the package. Please try again.',
       deleteDeliveryPackage: 'Could not delete the package. Please try again.',
       deliverDeliveryPackage: 'Could not deliver the package.',
+      deleteUser: 'Could not delete the user. Please try again.',
+      approveRegistrationRequest: 'Could not approve the request. Please try again.',
+      rejectRegistrationRequest: 'Could not reject the request. Please try again.',
     },
   },
 };

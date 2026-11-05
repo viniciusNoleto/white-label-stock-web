@@ -8,7 +8,7 @@ import { parseCookieHeader, serializeCookieHeader } from './utils/cookies';
 
 const PROTECTED_PAGE_PREFIXES = ['/inventory'];
 
-const GUEST_ONLY_PAGES = ['/auth/login'];
+const GUEST_ONLY_PAGES = ['/auth/login', '/auth/register'];
 
 const STATIC_FILE = /\.[a-z0-9]+$/i;
 

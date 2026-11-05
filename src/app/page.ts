@@ -56,7 +56,7 @@ const FEATURES = [
               <a
                 appButton
                 size="lg"
-                class="px-8"
+                class="px-8 has-data-[icon=inline-end]:pr-8"
                 routerLink="/inventory"
                 rightIcon="lucideChevronRight"
               >

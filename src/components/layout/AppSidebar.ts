@@ -2,6 +2,7 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Component, computed, DestroyRef, inject, input, output, PLATFORM_ID, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { AuthStore } from '@/resources/auth/stores/AuthStore';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { BrandMark } from './BrandMark';
 
@@ -22,6 +23,21 @@ const NAV_GROUPS = [
       { href: '/inventory/storages', icon: 'lucideWarehouse', labelKey: 'sidebar.storages' },
     ],
   },
+] as const;
+
+/** Só para admins: fila de pedidos de cadastro e usuários com acesso. */
+const ADMIN_NAV_GROUP = {
+  labelKey: 'sidebar.groups.admin',
+  items: [
+    { href: '/inventory/registration-requests', icon: 'lucideUserPlus', labelKey: 'sidebar.registrationRequests' },
+    { href: '/inventory/users', icon: 'lucideUsers', labelKey: 'sidebar.users' },
+  ],
+} as const;
+
+/** Caixinhas da esteira do rodapé: saem em dupla e somem por ~11 s até a próxima leva. */
+const PARCELS = [
+  { width: 12, height: 10, delay: 2 },
+  { width: 9, height: 7, delay: 3.6 },
 ] as const;
 
 /** Mesmo breakpoint do `lg:` do Tailwind. */
@@ -77,7 +93,7 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
       </div>
 
       <nav class="flex flex-1 flex-col gap-7 pt-6">
-        @for (group of navGroups; track group.labelKey) {
+        @for (group of navGroups(); track group.labelKey) {
           <div class="flex flex-col gap-1">
             <p class="px-5 pb-1.5 text-[13px] text-gray-500 dark:text-gray-400">
               {{ group.labelKey | t }}
@@ -113,14 +129,25 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
         }
       </nav>
 
-      <!-- Fim da linha: a mesma esteira e faixa de sinalização do login. -->
+      <!-- Fim da linha: esteira estreita com caixinhas passando de tempos em tempos. -->
       <div
         aria-hidden="true"
         class="mt-8 flex shrink-0 flex-col"
       >
-        <div class="h-3 border-y border-stone-400/60 bg-conveyor-belt dark:border-neutral-700"></div>
+        <div class="relative h-3 overflow-hidden">
+          @for (parcel of parcels; track $index) {
+            <span
+              class="absolute bottom-0 block border border-primary-400 bg-primary-200 animate-sidebar-parcel dark:border-primary-700 dark:bg-primary-900"
+              [style.width.px]="parcel.width"
+              [style.height.px]="parcel.height"
+              [style.animation-delay.s]="parcel.delay"
+            ></span>
+          }
+        </div>
 
-        <div class="h-2 bg-hazard-stripes opacity-60"></div>
+        <div class="h-1.5 border-y border-stone-400/60 bg-conveyor-belt animate-conveyor-belt dark:border-neutral-700"></div>
+
+        <div class="h-1 bg-hazard-stripes opacity-60"></div>
       </div>
     </aside>
   `,
@@ -131,7 +158,10 @@ export class AppSidebar {
   readonly open = input(false);
   readonly closed = output<void>();
 
-  protected readonly navGroups = NAV_GROUPS;
+  private readonly authStore = inject(AuthStore);
+
+  protected readonly navGroups = computed(() => (this.authStore.user()?.is_admin ? [...NAV_GROUPS, ADMIN_NAV_GROUP] : NAV_GROUPS));
+  protected readonly parcels = PARCELS;
 
   private readonly isDesktop = signal(false);
 

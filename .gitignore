@@ -30,6 +30,9 @@ yarn-error.log
 /playwright-report
 /test-results
 /tests/e2e/.auth
+/test-results-demo
+/tests/demo
+/videos
 
 # Misc
 .DS_Store

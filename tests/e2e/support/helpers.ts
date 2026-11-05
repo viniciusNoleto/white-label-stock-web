@@ -5,8 +5,8 @@ import { E2E_PREFIX, E2E_USER } from './db';
  * Login pela API e grava os tokens nos cookies do contexto — o mesmo que o
  * web faz depois do login (a API devolve os tokens no corpo, não em cookies).
  */
-export async function signIn(context: BrowserContext, baseURL: string) {
-  const response = await context.request.post(`${baseURL}/api/auth/login`, { data: { email: E2E_USER.email, password: E2E_USER.password } });
+export async function signIn(context: BrowserContext, baseURL: string, user: { email: string; password: string } = E2E_USER) {
+  const response = await context.request.post(`${baseURL}/api/auth/login`, { data: { email: user.email, password: user.password } });
   if (!response.ok()) throw new Error(`e2e login failed: ${response.status()}`);
 
   const { access_token, refresh_token, expires_in, refresh_expires_in } = (await response.json()).data;

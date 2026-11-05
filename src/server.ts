@@ -16,7 +16,7 @@ const angularApp = new AngularNodeAppEngine();
 
 app.disable('x-powered-by');
 
-// Atrás do nginx (homolog/produção): respeita X-Forwarded-Proto/For.
+// Atrás do Nginx Proxy Manager (homolog/produção): respeita X-Forwarded-Proto/For.
 app.set('trust proxy', 'loopback, uniquelocal');
 
 /**

@@ -9,7 +9,7 @@ A API é o projeto **white-label-stock-api** (Laravel, pasta irmã `../white-lab
 ```
 
 - `message` é **sempre** o objeto i18n (`ApiMessage`) — resolvido no front por `resolveApiMessage` (já feito por `injectNotify`).
-- Erro: `success: false`, `data: null`. 400 = JSON malformado; 401 = sem sessão; 404 = não encontrado (inclui id inválido); 409 = conflito (registro em uso); 422 = payload inválido ou regra de negócio (ex.: estoque insuficiente); 500 = inesperado; **502 = API fora do ar** (respondido pelo próprio proxy do web, mesmo envelope).
+- Erro: `success: false`, `data: null`. 400 = JSON malformado; 401 = sem sessão; 403 = sem permissão (rota de admin para usuário comum; login com cadastro ainda pendente); 404 = não encontrado (inclui id inválido); 409 = conflito (registro em uso); 422 = payload inválido ou regra de negócio (ex.: estoque insuficiente); 500 = inesperado; **502 = API fora do ar** (respondido pelo próprio proxy do web, mesmo envelope).
 - Listagem paginada: `data = { items, meta: { page, per_page, total, last_page } }` (`PaginatedResponse<T>` em `src/shared/types/api.ts`).
 
 ## snake_case em todo o JSON
@@ -23,4 +23,4 @@ Propriedades, ids `number`, decimais como `string` (`"2.5000"`). Os models do fr
 
 ## Rotas protegidas
 
-Tudo em `/api` exige sessão (`Authorization: Bearer`, middleware `auth` da API), exceto `/api/auth/login`, `/api/auth/logout` e `/api/auth/token/refresh`. O `authRefreshInterceptor` põe o header sozinho — services não montam headers.
+Tudo em `/api` exige sessão (`Authorization: Bearer`, middleware `auth` da API), exceto `/api/auth/login`, `/api/auth/register`, `/api/auth/logout` e `/api/auth/token/refresh`. Rotas de administração (`/api/users`, `/api/registration-requests`) exigem também `is_admin`. O `authRefreshInterceptor` põe o header sozinho — services não montam headers.

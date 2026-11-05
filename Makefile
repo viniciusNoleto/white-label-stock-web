@@ -4,7 +4,6 @@ MAKEFLAGS += --no-print-directory
 
 COMPOSE := docker compose -f docker-compose.${APP_ENV}.yml
 APP_NAME := white-label-stock-web
-SERVER_NAME := white-label-stock-web-server
 
 f :=
 art:
@@ -28,9 +27,6 @@ install-deps:
 
 logs:
 	@docker logs -f $(APP_NAME)
-
-logs-server:
-	@docker logs -f $(SERVER_NAME)
 
 watch:
 	@$(COMPOSE) up
@@ -80,16 +76,6 @@ test-server-coverage:
 
 test-e2e:
 	@APP_URL=http://localhost:$(APP_PORT) npm run test:e2e
-
-d :=
-certbot:
-	@$(COMPOSE) exec $(SERVER_NAME) certbot --nginx -d $(d)
-
-certbot-renew:
-	@$(COMPOSE) exec $(SERVER_NAME) certbot renew --nginx
-
-nginx-reload:
-	@$(COMPOSE) exec $(SERVER_NAME) nginx -s reload
 
 s :=
 t :=

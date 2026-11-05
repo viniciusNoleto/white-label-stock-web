@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { adminGuard } from '@/resources/auth/guards/admin';
 import { authGuard } from '@/resources/auth/guards/auth';
 
 export const routes: Routes = [
@@ -12,6 +13,11 @@ export const routes: Routes = [
     path: 'auth/login',
     title: 'auth.login.title',
     loadComponent: () => import('./auth/login/page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'auth/register',
+    title: 'auth.register.title',
+    loadComponent: () => import('./auth/register/page').then((m) => m.RegisterPage),
   },
   {
     path: 'inventory',
@@ -43,6 +49,18 @@ export const routes: Routes = [
         path: 'storages',
         title: 'storages.page.title',
         loadComponent: () => import('./inventory/storages/page').then((m) => m.StoragesPage),
+      },
+      {
+        path: 'registration-requests',
+        title: 'registrationRequests.page.title',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./inventory/registration-requests/page').then((m) => m.RegistrationRequestsPage),
+      },
+      {
+        path: 'users',
+        title: 'users.page.title',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./inventory/users/page').then((m) => m.UsersPage),
       },
     ],
   },

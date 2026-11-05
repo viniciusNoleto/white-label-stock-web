@@ -2,6 +2,8 @@ export interface IAuthUser {
   id: number;
   name: string;
   email: string;
+  /** Admin aprova pedidos de cadastro e gerencia usuários. */
+  is_admin: boolean;
 }
 
 /** Sessão devolvida por POST /api/auth/login e /api/auth/token/refresh. */

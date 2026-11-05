@@ -35,9 +35,8 @@
   --input: oklch(0.923 0.003 48.717);
   --ring: theme(colors.primary.300);
 
-  /* Filete da linha em foco nas tabelas e fundo da coluna de ações no hover. */
-  --line-accent: theme(colors.primary.500);
-  --row-hover-solid: theme(colors.primary.50);
+  /* Fundo (sólido, por causa da coluna de ações fixa) da linha da tabela no hover. */
+  --row-hover-solid: var(--color-stone-100);
 }
 
 :root.dark {
@@ -62,7 +61,7 @@
   --input: oklch(1 0 0 / 15%);
   --ring: theme(colors.primary.700);
 
-  --row-hover-solid: color-mix(in oklab, theme(colors.primary.950) 45%, var(--color-neutral-900));
+  --row-hover-solid: var(--color-neutral-800);
 }
 
 @layer base {
@@ -222,31 +221,145 @@
   animation: flow-packet 2.1s ease-in-out infinite;
 }
 
-/* Linha em movimento enquanto há busca em andamento (barra fina sobre tabelas). */
-@keyframes line-running {
-  to {
-    background-position-x: 20px;
+/* Loader — caixa com abas abrindo e fechando (UtilsLoader). */
+.loader-box {
+  position: relative;
+  display: block;
+  width: 3.5rem;
+  height: 4.5rem;
+}
+
+.loader-box-body {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 2.25rem;
+  border: 1px solid theme(colors.primary.400);
+  background-color: theme(colors.primary.200);
+  background-image: linear-gradient(to right, transparent 42%, rgb(0 0 0 / 0.08) 42% 58%, transparent 58%);
+}
+
+.loader-box-flap {
+  position: absolute;
+  bottom: 2.25rem;
+  z-index: 2;
+  width: 50%;
+  height: 0.3125rem;
+  border: 1px solid theme(colors.primary.400);
+  background-color: theme(colors.primary.300);
+  animation: 1.8s ease-in-out infinite;
+}
+
+.loader-box-flap-left {
+  left: 0;
+  transform-origin: left bottom;
+  animation-name: loader-flap-left;
+}
+
+.loader-box-flap-right {
+  right: 0;
+  transform-origin: right bottom;
+  animation-name: loader-flap-right;
+}
+
+.loader-box-item {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  margin-left: -0.5rem;
+  border: 1px solid theme(colors.primary.600);
+  background-color: theme(colors.primary.500);
+  animation: loader-item 1.8s ease-in-out infinite;
+}
+
+:root.dark .loader-box-body {
+  border-color: theme(colors.primary.700);
+  background-color: theme(colors.primary.900);
+  background-image: linear-gradient(to right, transparent 42%, rgb(255 255 255 / 0.08) 42% 58%, transparent 58%);
+}
+
+:root.dark .loader-box-flap {
+  border-color: theme(colors.primary.700);
+  background-color: theme(colors.primary.800);
+}
+
+:root.dark .loader-box-item {
+  border-color: theme(colors.primary.300);
+  background-color: theme(colors.primary.400);
+}
+
+@keyframes loader-flap-left {
+  0%,
+  15%,
+  90%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  35%,
+  70% {
+    transform: rotate(-125deg);
   }
 }
 
-.bg-line-running {
-  background-image: repeating-linear-gradient(-45deg, theme(colors.primary.500) 0 6px, transparent 6px 10px);
-  background-size: 20px 100%;
+@keyframes loader-flap-right {
+  0%,
+  15%,
+  90%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  35%,
+  70% {
+    transform: rotate(125deg);
+  }
 }
 
-.animate-line-running {
-  animation: line-running 0.5s linear infinite;
+@keyframes loader-item {
+  0%,
+  30%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  48%,
+  62% {
+    transform: translateY(-1.75rem);
+  }
+}
+
+/* Esteira do menu lateral: caixinhas que passam de tempos em tempos (~na velocidade da esteira). */
+@keyframes sidebar-parcel {
+  0% {
+    left: -1rem;
+  }
+
+  45%,
+  100% {
+    left: 100%;
+  }
+}
+
+.animate-sidebar-parcel {
+  animation: sidebar-parcel 20s linear infinite backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-line-running,
   .animate-conveyor,
   .animate-conveyor-belt,
-  .animate-flow-dash {
+  .animate-flow-dash,
+  .loader-box-flap,
+  .loader-box-item {
     animation: none;
   }
 
-  .animate-flow-packet {
+  .animate-flow-packet,
+  .animate-sidebar-parcel {
     display: none;
   }
 }

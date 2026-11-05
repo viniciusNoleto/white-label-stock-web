@@ -8,8 +8,10 @@ src/
 │   ├── app.ts, app.config.ts, app.routes.ts, app.routes.server.ts
 │   ├── page.ts                            ← /
 │   ├── auth/login/page.ts                 ← /auth/login
+│   ├── auth/register/page.ts              ← /auth/register (pedido de cadastro)
 │   ├── inventory/layout.ts                ← casca autenticada (AppShell + <router-outlet>)
 │   ├── inventory/{items,deliveries,categories,units,storages}/page.ts
+│   ├── inventory/{users,registration-requests}/page.ts   ← só admin (adminGuard)
 │   └── not-found/page.ts
 ├── components/
 │   ├── form/      ← FormTextInput, FormSelect, FormButton… (Spartan + Signal Forms)
@@ -27,6 +29,7 @@ src/
 └── utils/                 ← AppClient, createQuery/createMutation, validatedFormState, notify…
 tests/server/              ← proxy e page-session contra uma API falsa (Vitest)
 tests/e2e/                 ← Playwright
+tests/demo/                ← vídeo de apresentação (`npm run demo:video`, API e banco próprios)
 src/**/*.spec.ts           ← unitários do Angular (`ng test`)
 ```
 

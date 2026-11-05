@@ -7,33 +7,16 @@ services:
     env_file: .env
     build:
       dockerfile: ./configs/docker/node/Dockerfile.deploy
-    # API_URL (.env) aponta para o white-label-stock-api. Se ela roda no mesmo host, use
-    # http://host.docker.internal:<NGINX_PORT da API>.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - white-label-stock-web-network
-
-  white-label-stock-web-server:
-    container_name: white-label-stock-web-server
-    restart: unless-stopped
-    tty: true
-    build:
-      dockerfile: ./configs/docker/nginx/Dockerfile.deploy
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./configs/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./configs/docker/nginx/conf/route.conf:/etc/nginx/conf.d/route.conf
-      - ./configs/docker/nginx/nginx-502-page.html:/nginx-502-page.html
-      - /etc/letsencrypt/:/etc/letsencrypt/
-    networks:
-      - white-label-stock-web-network
-    depends_on:
-      - white-label-stock-web
+      - proxy
 
 networks:
   white-label-stock-web-network:
     name: white-label-stock-web-network
     driver: bridge
+  proxy:
+    name: ${PROXY_NETWORK:-nginx-proxy-manager}
+    external: true

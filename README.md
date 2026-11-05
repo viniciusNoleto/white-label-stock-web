@@ -37,7 +37,16 @@ The browser never talks to the API directly: the Express server forwards `/api/*
 
 ## Authentication
 
-Sign-in uses **opaque access/refresh tokens** (only their SHA-256 hash is persisted by the API). The API returns them in the body of the login/refresh responses and reads the access token from `Authorization: Bearer`. The web keeps both in regular first-party cookies (`access_token` / `refresh_token`, `SameSite=Lax`, expiring with each token) so the browser client can build the header and the Express server can renew the session before rendering a page. Access tokens last 15 minutes; refresh tokens last 30 days and are **rotated on every use**, with reuse detection that revokes the whole token family. The browser client renews the session transparently on `401` (a single shared refresh per tab), and page navigations are renewed server-side (by calling the API) before rendering. There is no public sign-up: create accounts with the API seed (`SEED_ADMIN_*` in the API `.env`, then `make db-seed` there).
+Sign-in uses **opaque access/refresh tokens** (only their SHA-256 hash is persisted by the API). The API returns them in the body of the login/refresh responses and reads the access token from `Authorization: Bearer`. The web keeps both in regular first-party cookies (`access_token` / `refresh_token`, `SameSite=Lax`, expiring with each token) so the browser client can build the header and the Express server can renew the session before rendering a page. Access tokens last 15 minutes; refresh tokens last 30 days and are **rotated on every use**, with reuse detection that revokes the whole token family. The browser client renews the session transparently on `401` (a single shared refresh per tab), and page navigations are renewed server-side (by calling the API) before rendering. The first account is the **administrator**, created by the API seed (`SEED_ADMIN_*` in the API `.env`, then `make db-seed` there).
+
+### Sign-up with approval
+
+Anyone can **request access** at `/auth/register` (linked from the login). That creates a *registration request*, not an account: signing in before the approval answers "awaiting approval". Administrators get an **Administration** group in the sidebar:
+
+- **Registration requests** (`/inventory/registration-requests`) — approving creates a regular user with the password chosen at sign-up; rejecting deletes the request.
+- **Users** (`/inventory/users`) — everyone with access; regular users can be deleted, which revokes their sessions at once. Administrators cannot be deleted.
+
+Both screens (and their API routes) are admin-only: regular users don't see the menu, are sent back to the inventory, and get `403` from the API.
 
 ## Configuration & Deploy
 
@@ -70,25 +79,28 @@ make install
 | `make test` | Angular unit tests (`ng test`, Vitest + jsdom) |
 | `make test-server` / `make test-server-coverage` | Express server tests (API proxy and page session, against a fake API) |
 | `make test-e2e` | Playwright e2e suite from the host against the running app |
+| `npm run demo:video` | Records the presentation video (see below) |
 
 ### Tests
 
 - **Unit (`src/**/*.spec.ts`)** — form/query helpers, the HTTP client and its refresh flow, form and table components.
 - **Server (`tests/server`)** — the `/api` proxy (method, body, `Authorization`, no cookies in either direction, 502 when the API is down, 413) and the page session middleware (refresh before rendering, redirects), against a fake API.
 - **E2E (`tests/e2e`)** — full user flows against the web **and** the real API. The setup creates the e2e user directly in the API database (`E2E_DB_*` in `.env`, the Postgres port the API publishes on the host); every record is named with the `e2e-` prefix and removed before and after the run. Install the browser once with `npx playwright install chromium`.
+- **Presentation video (`tests/demo`)** — `npm run demo:video` records one long Playwright run through every feature (sign-up and approval, users, units, categories, storages, items and builds, deliveries, language, theme, small screens) and saves `videos/apresentacao.mp4` (ffmpeg trims it; without ffmpeg the raw `.webm` is kept). It never touches your data: it starts its own API container (`tests/demo/support/demo-api.sh`, port `DEMO_API_PORT`, default `8099`) on a separate `<DB_DATABASE>_demo` database in the API's Postgres, rebuilt from scratch at the start, and serves the production build on `DEMO_PORT` (default `3200`). Needs the API stack up (`make up` there); `DEMO_SKIP_BUILD=1` reuses the last `dist/`.
 - **API** — route, auth and business rule tests live in `white-label-stock-api` (Pest, `make test` there).
 
 ### Deploy (homolog / production)
 
-`docker-compose.homolog.yml` and `docker-compose.production.yml` run two containers: the app (`configs/docker/node/Dockerfile.deploy`, multi-stage `ng build` → `node dist/.../server/server.mjs`) and nginx with certbot (`configs/docker/nginx`) in front of it. Deploy the API first (see its README).
+`docker-compose.homolog.yml` and `docker-compose.production.yml` run only the app container (`configs/docker/node/Dockerfile.deploy`, multi-stage `ng build` → `node dist/.../server/server.mjs`), behind the server's **Nginx Proxy Manager**, which handles the domain and the Let's Encrypt certificate. The container publishes no port: it joins NPM's Docker network. Deploy the API first (see its README).
 
 1. Set `APP_ENV=homolog` or `production` in `.env`.
 2. Set `API_URL` to the API address reachable **from the web container** (e.g. `http://host.docker.internal:<API port>` when both run on the same host, or the API's internal/public URL).
 3. Add the public domain to `NG_ALLOWED_HOSTS` and set `NG_TRUST_PROXY_HEADERS=x-forwarded-proto,x-forwarded-host,x-forwarded-for` (Angular SSR rejects unknown `Host` headers).
-4. Replace `server_name _;` in `configs/docker/nginx/conf/route.conf` with your domain.
-5. `make build && make up`, then `make certbot d=your.domain`.
+4. Set `PROXY_NETWORK` to NPM's network name (`docker network ls`; default `nginx-proxy-manager`).
+5. `make build && make up`.
+6. In NPM, add a Proxy Host: your domain → scheme `http`, forward hostname `white-label-stock-web`, port `3000`; in the SSL tab request a Let's Encrypt certificate and enable *Force SSL*.
 
-Session cookies are set by the API and are `Secure` in production, so the web app must be reached over HTTPS (set `COOKIE_SECURE=false` in the **API** `.env` only to test over plain HTTP).
+The session cookies (`access_token` / `refresh_token`) are set by the web app and get `Secure` when the request arrived over HTTPS (read from the proxy's `X-Forwarded-Proto`), so serve the app over HTTPS.
 
 ### White-labeling
 

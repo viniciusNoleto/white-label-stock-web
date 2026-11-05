@@ -6,7 +6,11 @@ config({ path: '.env', quiet: true });
 
 export const E2E_PREFIX = 'e2e-';
 
+/** Usuário da sessão salva (storageState): admin, para alcançar também as telas de administração. */
 export const E2E_USER = { name: 'e2e-user', email: 'e2e-user@stockflow.local', password: 'e2e-password' };
+
+/** Usuário comum, para conferir que as telas de administração ficam fechadas para ele. */
+export const E2E_REGULAR_USER = { name: 'e2e-regular', email: 'e2e-regular@stockflow.local', password: 'e2e-password' };
 
 async function withClient<T>(fn: (client: Client) => Promise<T>) {
   // Banco da API (white-label-stock-api), exposto no host — ver E2E_DB_* no .env.
@@ -53,6 +57,7 @@ export async function cleanupE2EData() {
       await client.query('DELETE FROM item_categories WHERE name LIKE $1', [like]);
       await client.query('DELETE FROM units WHERE name LIKE $1', [like]);
       await client.query('DELETE FROM storages WHERE name LIKE $1', [like]);
+      await client.query('DELETE FROM registration_requests WHERE email LIKE $1', [like]);
       await client.query('DELETE FROM users WHERE email LIKE $1', [like]);
       await client.query('COMMIT');
     } catch (error) {
@@ -68,8 +73,14 @@ function laravelBcrypt(password: string) {
 }
 
 export async function createE2EUser() {
+  await insertUser(E2E_USER, true);
+  await insertUser(E2E_REGULAR_USER, false);
+}
+
+export async function insertUser(user: { name: string; email: string; password: string }, isAdmin = false) {
   await withClient((client) => client.query(
-    'INSERT INTO users (name, email, password, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) ON CONFLICT (email) DO NOTHING',
-    [E2E_USER.name, E2E_USER.email, laravelBcrypt(E2E_USER.password)],
+    `INSERT INTO users (name, email, password, is_admin, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())
+     ON CONFLICT (email) DO UPDATE SET is_admin = EXCLUDED.is_admin`,
+    [user.name, user.email, laravelBcrypt(user.password), isAdmin],
   ));
 }

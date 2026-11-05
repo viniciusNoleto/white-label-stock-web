@@ -2,10 +2,11 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, contentChildren, Directive, inject, input, output, TemplateRef } from '@angular/core';
 import type { ButtonVariants } from '@spartan-ng/helm/button';
 import { NgIcon } from '@ng-icons/core';
-import { HlmSpinner } from '@spartan-ng/helm/spinner';
 import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormButton } from '@/components/form/Button';
+import { delayedFlag } from '@/utils/delayed-flag';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { UtilsLoader } from './Loader';
 import { UtilsPagination } from './Pagination';
 
 export type TableRowContext<T> = { item: T; index: number };
@@ -47,25 +48,22 @@ export class UtilsTableCell<T> {
 
 @Component({
   selector: 'app-utils-table',
-  imports: [NgTemplateOutlet, NgIcon, FormButton, HlmSpinner, HlmTooltip, TranslatePipe, UtilsPagination],
+  imports: [NgTemplateOutlet, NgIcon, FormButton, HlmTooltip, TranslatePipe, UtilsLoader, UtilsPagination],
   host: { class: 'flex flex-col' },
   template: `
     <section
       class="relative flex flex-col"
       [attr.aria-busy]="loading()"
     >
-      @if (loading()) {
-        <div
-          aria-hidden="true"
-          class="absolute inset-x-0 top-0 z-10 h-1 bg-line-running animate-line-running"
-        ></div>
+      <!-- Só aparece se a busca demorar (delayedFlag): buscas rápidas não piscam nada. -->
+      @if (showLoader()) {
+        <div class="absolute inset-0 z-10 grid place-items-center bg-white/70 animate-in fade-in duration-200 dark:bg-neutral-900/70">
+          <app-utils-loader />
+        </div>
       }
 
       <div class="overflow-x-auto">
-        <table
-          class="w-max min-w-full border-separate border-spacing-0 text-left transition-opacity"
-          [class.opacity-50]="loading() && rows().length > 0"
-        >
+        <table class="w-max min-w-full border-separate border-spacing-0 text-left">
           <thead>
             <tr>
               @for (column of columnList(); track column.field) {
@@ -92,8 +90,8 @@ export class UtilsTableCell<T> {
             @for (row of rows(); track rowKeyOf(row, $index); let index = $index) {
               <tr class="group">
                 @for (column of columnList(); track column.field) {
-                  <!-- Linha em foco: fundo levemente roxo + filete à esquerda (marca de posição na esteira). -->
-                  <td class="whitespace-nowrap border-b border-gray-100 px-6 py-3.5 text-sm text-gray-900 transition-colors group-hover:bg-(--row-hover-solid) first:group-hover:shadow-[inset_3px_0_0_var(--line-accent)] dark:border-neutral-800 dark:text-gray-100 dark:group-hover:bg-(--row-hover-solid)">
+                  <!-- Linha em foco: fundo neutro um tom acima da tabela (mais escuro no claro, mais claro no escuro). -->
+                  <td class="whitespace-nowrap border-b border-gray-100 px-6 py-3.5 text-sm text-gray-900 transition-colors group-hover:bg-(--row-hover-solid) dark:border-neutral-800 dark:text-gray-100">
                     @if (cellTemplates().get(column.field); as template) {
                       <ng-container *ngTemplateOutlet="template; context: { $implicit: row, index }" />
                     } @else {
@@ -127,10 +125,8 @@ export class UtilsTableCell<T> {
                   class="px-6 py-14"
                   [attr.colspan]="colCount()"
                 >
-                  <div class="flex flex-col items-center gap-3 text-center">
-                    @if (loading()) {
-                      <hlm-spinner class="text-2xl text-primary-500" />
-                    } @else {
+                  <div class="flex min-h-24 flex-col items-center justify-center gap-3 text-center">
+                    @if (!loading()) {
                       <span
                         aria-hidden="true"
                         class="center-flex size-12 border border-dashed border-gray-300 text-gray-400 dark:border-neutral-700 dark:text-gray-500"
@@ -170,6 +166,8 @@ export class UtilsTable<T extends object> {
   /** Campo → título da coluna. A ordem define a ordem das colunas. */
   readonly columns = input.required<Record<string, string>>();
   readonly loading = input(false);
+
+  protected readonly showLoader = delayedFlag(this.loading);
   readonly emptyText = input<string>();
   readonly rowKey = input<(ctx: TableRowContext<T>) => PropertyKey>();
   readonly actions = input<TableActions<T>>();

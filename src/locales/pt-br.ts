@@ -16,6 +16,7 @@ export default {
       edit: 'Editar',
       delete: 'Excluir',
     },
+    loading: 'Carregando…',
     table: {
       emptyDefault: 'Nenhum dado encontrado',
       actionsColumn: 'Ações',
@@ -105,6 +106,8 @@ export default {
         placeholder: 'Digite sua senha',
       },
       submit: 'Entrar',
+      noAccount: 'Ainda não tem acesso?',
+      requestAccess: 'Solicitar acesso',
       validation: {
         emailRequired: 'E-mail é obrigatório',
         emailInvalid: 'E-mail inválido',
@@ -112,6 +115,37 @@ export default {
       },
       notifications: {
         error: 'Não foi possível entrar. Tente novamente.',
+      },
+    },
+    register: {
+      title: 'Solicitar acesso',
+      subtitle: 'Envie seus dados: um administrador aprova o pedido antes do primeiro acesso',
+      name: {
+        label: 'Nome',
+        placeholder: 'Seu nome completo',
+      },
+      password: {
+        placeholder: 'Mínimo de {{min}} caracteres',
+      },
+      passwordConfirmation: {
+        label: 'Confirmar senha',
+        placeholder: 'Digite a senha novamente',
+      },
+      submit: 'Enviar pedido',
+      hasAccount: 'Já tem acesso?',
+      backToLogin: 'Voltar para o login',
+      sent: {
+        title: 'Pedido enviado',
+        description: 'Seu pedido de acesso para {{email}} está na fila de aprovação. Assim que um administrador aprovar, é só entrar com o e-mail e a senha que você cadastrou.',
+      },
+      validation: {
+        nameRequired: 'Nome é obrigatório',
+        passwordMin: 'A senha deve ter pelo menos {{min}} caracteres',
+        passwordConfirmationRequired: 'Confirme a senha',
+        passwordMismatch: 'As senhas não conferem',
+      },
+      notifications: {
+        error: 'Não foi possível enviar o pedido. Tente novamente.',
       },
     },
     sessionExpired: 'Sua sessão expirou. Entre novamente.',
@@ -124,9 +158,12 @@ export default {
     units: 'Unidades',
     storages: 'Armazenamentos',
     deliveries: 'Entregas',
+    registrationRequests: 'Pedidos de cadastro',
+    users: 'Usuários',
     groups: {
       operation: 'Operação',
       registry: 'Cadastros',
+      admin: 'Administração',
     },
   },
 
@@ -198,6 +235,66 @@ export default {
     },
     delete: {
       confirm: 'Tem certeza que deseja excluir o armazenamento "{{name}}"? Esta ação não pode ser desfeita.',
+    },
+  },
+
+  users: {
+    page: {
+      title: 'Usuários',
+      subtitle: 'Quem tem acesso ao sistema. Usuários comuns podem ser excluídos e perdem o acesso na hora.',
+    },
+    search: {
+      placeholder: 'Buscar por nome ou e-mail...',
+    },
+    table: {
+      count_one: '{{count}} usuário',
+      count_other: '{{count}} usuários',
+      columns: {
+        name: 'Nome',
+        email: 'E-mail',
+        role: 'Perfil',
+        createdAt: 'Desde',
+      },
+      empty: 'Nenhum usuário encontrado.',
+    },
+    roles: {
+      admin: 'Administrador',
+      user: 'Usuário',
+    },
+    modals: {
+      delete: 'Excluir Usuário',
+    },
+    delete: {
+      confirm: 'Tem certeza que deseja excluir "{{name}}"? A pessoa perde o acesso imediatamente e precisará pedir um novo cadastro.',
+    },
+  },
+
+  registrationRequests: {
+    page: {
+      title: 'Pedidos de cadastro',
+      subtitle: 'Pessoas que pediram acesso. Aprove para criar o usuário ou recuse para excluir o pedido.',
+    },
+    table: {
+      count_one: '{{count}} pedido pendente',
+      count_other: '{{count}} pedidos pendentes',
+      columns: {
+        requestedAt: 'Pedido em',
+      },
+      empty: 'Nenhum pedido de cadastro aguardando aprovação.',
+    },
+    actions: {
+      approve: 'Aprovar',
+      reject: 'Recusar',
+    },
+    modals: {
+      approve: 'Aprovar Cadastro',
+      reject: 'Recusar Cadastro',
+    },
+    approve: {
+      confirm: 'Aprovar o acesso de "{{name}}" ({{email}})? A pessoa poderá entrar com a senha que cadastrou.',
+    },
+    reject: {
+      confirm: 'Recusar o pedido de "{{name}}" ({{email}})? O pedido será excluído.',
     },
   },
 
@@ -485,6 +582,9 @@ export default {
       updateDeliveryPackage: 'Não foi possível atualizar o pacote. Tente novamente.',
       deleteDeliveryPackage: 'Não foi possível excluir o pacote. Tente novamente.',
       deliverDeliveryPackage: 'Não foi possível entregar o pacote.',
+      deleteUser: 'Não foi possível excluir o usuário. Tente novamente.',
+      approveRegistrationRequest: 'Não foi possível aprovar o pedido. Tente novamente.',
+      rejectRegistrationRequest: 'Não foi possível recusar o pedido. Tente novamente.',
     },
   },
 } as typeof enUs;

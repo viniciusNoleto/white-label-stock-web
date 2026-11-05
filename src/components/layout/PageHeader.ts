@@ -1,5 +1,6 @@
 import { booleanAttribute, Component, input } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
+import { delayedFlag } from '@/utils/delayed-flag';
 
 /**
  * Placa da estação no topo de cada tela do inventário: ícone da estação,
@@ -51,7 +52,7 @@ import { NgIcon } from '@ng-icons/core';
     <div
       aria-hidden="true"
       class="relative h-1.5 bg-conveyor-belt"
-      [class.animate-conveyor-belt]="running()"
+      [class.animate-conveyor-belt]="beltRunning()"
     ></div>
   `,
 })
@@ -62,4 +63,7 @@ export class PageHeader {
   readonly icon = input<string>();
   /** Esteira em movimento — passe o `isFetching()` da query principal. */
   readonly running = input(false, { transform: booleanAttribute });
+
+  /** Mesmo atraso do loader da tabela: buscas rápidas não mexem a esteira. */
+  protected readonly beltRunning = delayedFlag(this.running);
 }

@@ -112,6 +112,18 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
               <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {{ user()?.email }}
               </div>
+
+              @if (user()?.is_admin) {
+                <span class="mt-2 inline-flex h-6 items-center gap-1.5 border border-primary-300 bg-primary-50 px-2 text-xs font-medium text-primary-800 dark:border-primary-800 dark:bg-primary-950/50 dark:text-primary-200">
+                  <ng-icon
+                    name="lucideShieldCheck"
+                    size="13"
+                    aria-hidden="true"
+                  />
+
+                  {{ 'users.roles.admin' | t }}
+                </span>
+              }
             </div>
 
             <button

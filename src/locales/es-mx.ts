@@ -16,6 +16,7 @@ export default {
       edit: 'Editar',
       delete: 'Eliminar',
     },
+    loading: 'Cargando…',
     table: {
       emptyDefault: 'No se encontraron datos',
       actionsColumn: 'Acciones',
@@ -105,6 +106,8 @@ export default {
         placeholder: 'Escribe tu contraseña',
       },
       submit: 'Entrar',
+      noAccount: '¿Aún no tienes acceso?',
+      requestAccess: 'Solicitar acceso',
       validation: {
         emailRequired: 'El correo es obligatorio',
         emailInvalid: 'Correo inválido',
@@ -112,6 +115,37 @@ export default {
       },
       notifications: {
         error: 'No fue posible iniciar sesión. Inténtalo de nuevo.',
+      },
+    },
+    register: {
+      title: 'Solicitar acceso',
+      subtitle: 'Envía tus datos: un administrador aprueba la solicitud antes del primer acceso',
+      name: {
+        label: 'Nombre',
+        placeholder: 'Tu nombre completo',
+      },
+      password: {
+        placeholder: 'Mínimo de {{min}} caracteres',
+      },
+      passwordConfirmation: {
+        label: 'Confirmar contraseña',
+        placeholder: 'Escribe la contraseña de nuevo',
+      },
+      submit: 'Enviar solicitud',
+      hasAccount: '¿Ya tienes acceso?',
+      backToLogin: 'Volver al inicio de sesión',
+      sent: {
+        title: 'Solicitud enviada',
+        description: 'Tu solicitud de acceso para {{email}} está en la fila de aprobación. Cuando un administrador la apruebe, inicia sesión con el correo y la contraseña que registraste.',
+      },
+      validation: {
+        nameRequired: 'El nombre es obligatorio',
+        passwordMin: 'La contraseña debe tener al menos {{min}} caracteres',
+        passwordConfirmationRequired: 'Confirma la contraseña',
+        passwordMismatch: 'Las contraseñas no coinciden',
+      },
+      notifications: {
+        error: 'No se pudo enviar la solicitud. Inténtalo de nuevo.',
       },
     },
     sessionExpired: 'Tu sesión expiró. Inicia sesión de nuevo.',
@@ -124,9 +158,12 @@ export default {
     units: 'Unidades',
     storages: 'Almacenamientos',
     deliveries: 'Entregas',
+    registrationRequests: 'Solicitudes de registro',
+    users: 'Usuarios',
     groups: {
       operation: 'Operación',
       registry: 'Catálogos',
+      admin: 'Administración',
     },
   },
 
@@ -198,6 +235,66 @@ export default {
     },
     delete: {
       confirm: '¿Estás seguro de que deseas eliminar el almacenamiento "{{name}}"? Esta acción no se puede deshacer.',
+    },
+  },
+
+  users: {
+    page: {
+      title: 'Usuarios',
+      subtitle: 'Quién tiene acceso al sistema. Los usuarios comunes se pueden eliminar y pierden el acceso al instante.',
+    },
+    search: {
+      placeholder: 'Buscar por nombre o correo...',
+    },
+    table: {
+      count_one: '{{count}} usuario',
+      count_other: '{{count}} usuarios',
+      columns: {
+        name: 'Nombre',
+        email: 'Correo',
+        role: 'Perfil',
+        createdAt: 'Desde',
+      },
+      empty: 'No se encontraron usuarios.',
+    },
+    roles: {
+      admin: 'Administrador',
+      user: 'Usuario',
+    },
+    modals: {
+      delete: 'Eliminar Usuario',
+    },
+    delete: {
+      confirm: '¿Seguro que deseas eliminar a "{{name}}"? La persona pierde el acceso de inmediato y tendrá que solicitar un nuevo registro.',
+    },
+  },
+
+  registrationRequests: {
+    page: {
+      title: 'Solicitudes de registro',
+      subtitle: 'Personas que pidieron acceso. Aprueba para crear el usuario o rechaza para eliminar la solicitud.',
+    },
+    table: {
+      count_one: '{{count}} solicitud pendiente',
+      count_other: '{{count}} solicitudes pendientes',
+      columns: {
+        requestedAt: 'Solicitado el',
+      },
+      empty: 'No hay solicitudes de registro esperando aprobación.',
+    },
+    actions: {
+      approve: 'Aprobar',
+      reject: 'Rechazar',
+    },
+    modals: {
+      approve: 'Aprobar Registro',
+      reject: 'Rechazar Registro',
+    },
+    approve: {
+      confirm: '¿Aprobar el acceso de "{{name}}" ({{email}})? La persona podrá iniciar sesión con la contraseña que registró.',
+    },
+    reject: {
+      confirm: '¿Rechazar la solicitud de "{{name}}" ({{email}})? La solicitud será eliminada.',
     },
   },
 
@@ -485,6 +582,9 @@ export default {
       updateDeliveryPackage: 'No se pudo actualizar el paquete. Inténtalo de nuevo.',
       deleteDeliveryPackage: 'No se pudo eliminar el paquete. Inténtalo de nuevo.',
       deliverDeliveryPackage: 'No se pudo entregar el paquete.',
+      deleteUser: 'No se pudo eliminar el usuario. Inténtalo de nuevo.',
+      approveRegistrationRequest: 'No se pudo aprobar la solicitud. Inténtalo de nuevo.',
+      rejectRegistrationRequest: 'No se pudo rechazar la solicitud. Inténtalo de nuevo.',
     },
   },
 } as typeof enUs;

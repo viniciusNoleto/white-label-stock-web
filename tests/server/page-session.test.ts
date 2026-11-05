@@ -105,6 +105,17 @@ describe('page session middleware', () => {
     expect(api.received[0].headers['authorization']).toBe('Bearer valid');
   });
 
+  it('sends a logged user away from the registration page', async () => {
+    api.respond((_req, res) => res.json({ success: true, data: { user: { id: 1 } } }));
+
+    expect(await page('/auth/register', 'access_token=valid')).toMatchObject({ status: 302, location: '/inventory' });
+  });
+
+  it('lets a visitor open the registration page', async () => {
+    expect((await page('/auth/register')).status).toBe(200);
+    expect(api.received).toHaveLength(0);
+  });
+
   it('lets the login page render when the access token is no longer valid', async () => {
     api.respond((_req, res) => res.status(401).json({ success: false, data: null }));
 
