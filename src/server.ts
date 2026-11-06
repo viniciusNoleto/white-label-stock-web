@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { createApiProxy } from './server/api-proxy';
+import { webManifest, withPublicAppConfig } from './server/app-config';
 import { pageSession } from './server/page-session';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -24,6 +25,11 @@ app.set('trust proxy', 'loopback, uniquelocal');
  * fala com esta origem (sem CORS); o access token vai em `Authorization: Bearer`.
  */
 app.use('/api', createApiProxy());
+
+/**
+ * Manifesto com o nome do sistema do `.env` (`APP_NAME`).
+ */
+app.get('/site.webmanifest', webManifest(browserDistFolder));
 
 /**
  * Serve static files from /browser
@@ -48,6 +54,7 @@ app.use(pageSession);
 app.use((req, res, next) => {
   angularApp
     .handle(req)
+    .then((response) => (response ? withPublicAppConfig(response) : null))
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )

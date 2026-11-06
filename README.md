@@ -94,7 +94,7 @@ make install
 `docker-compose.homolog.yml` and `docker-compose.production.yml` run only the app container (`configs/docker/node/Dockerfile.deploy`, multi-stage `ng build` → `node dist/.../server/server.mjs`), behind the server's **Nginx Proxy Manager**, which handles the domain and the Let's Encrypt certificate. The container publishes no port: it joins NPM's Docker network. Deploy the API first (see its README).
 
 1. Set `APP_ENV=homolog` or `production` in `.env`.
-2. Set `API_URL` to the API address reachable **from the web container** (e.g. `http://host.docker.internal:<API port>` when both run on the same host, or the API's internal/public URL).
+2. Set `API_URL=http://white-label-stock-api-nginx` — the API's nginx is on the same NPM network and publishes no port (see the API README).
 3. Add the public domain to `NG_ALLOWED_HOSTS` and set `NG_TRUST_PROXY_HEADERS=x-forwarded-proto,x-forwarded-host,x-forwarded-for` (Angular SSR rejects unknown `Host` headers).
 4. Set `PROXY_NETWORK` to NPM's network name (`docker network ls`; default `nginx-proxy-manager`).
 5. `make build && make up`.
@@ -104,7 +104,9 @@ The session cookies (`access_token` / `refresh_token`) are set by the web app an
 
 ### White-labeling
 
-- Brand name and author link: `src/shared/constants/brand.ts`.
+- Brand name: `APP_NAME` in `.env` (default `StockFlow`, in `src/shared/constants/brand.ts`). Read at runtime by the web server — UI, page titles and `site.webmanifest` follow it after a restart, no rebuild.
+- Logo and icons: `public/` (`icon.png`, `icon-128.png`, favicons).
+- Author link (attribution footer, must stay): `src/shared/constants/brand.ts`.
 - Colors: the `--color-primary-*` / `--color-secondary-*` / `--color-tertiary-*` scales in `src/styles.css`.
 - Texts: `src/locales/*.ts`.
 

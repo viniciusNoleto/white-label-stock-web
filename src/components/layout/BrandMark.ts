@@ -1,5 +1,5 @@
-import { Component, input } from '@angular/core';
-import { BRAND_NAME } from '@/shared/constants/brand';
+import { Component, inject, input } from '@angular/core';
+import { BRAND_NAME } from '@/utils/brand';
 
 /** Logo (ícone do sistema, `public/icon.png` reduzido) + nome da marca. */
 @Component({
@@ -24,5 +24,5 @@ import { BRAND_NAME } from '@/shared/constants/brand';
 export class BrandMark {
   readonly showName = input(true);
 
-  protected readonly brandName = BRAND_NAME;
+  protected readonly brandName = inject(BRAND_NAME);
 }

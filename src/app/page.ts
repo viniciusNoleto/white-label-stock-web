@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { FormButton } from '@/components/form/Button';
@@ -9,7 +9,7 @@ import { FlowDiagram } from '@/components/layout/FlowDiagram';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { WarehouseBackground } from '@/components/layout/WarehouseBackground';
 import { UtilsCard } from '@/components/utils/Card';
-import { BRAND_NAME } from '@/shared/constants/brand';
+import { BRAND_NAME } from '@/utils/brand';
 import { TranslatePipe } from '@/utils/translate.pipe';
 
 /** Larguras das barras do código de barras decorativo (o mesmo da etiqueta do login). */
@@ -145,7 +145,7 @@ const FEATURES = [
   `,
 })
 export class HomePage {
-  protected readonly brandName = BRAND_NAME;
+  protected readonly brandName = inject(BRAND_NAME);
   protected readonly features = FEATURES;
   protected readonly barcodeBars = BARCODE_BARS;
 }

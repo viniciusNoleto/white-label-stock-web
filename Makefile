@@ -3,7 +3,7 @@ include .env
 MAKEFLAGS += --no-print-directory
 
 COMPOSE := docker compose -f docker-compose.${APP_ENV}.yml
-APP_NAME := white-label-stock-web
+CONTAINER_NAME := white-label-stock-web
 
 f :=
 art:
@@ -23,10 +23,10 @@ build-cache:
 	@$(COMPOSE) build
 
 install-deps:
-	@$(COMPOSE) run --rm --no-deps $(APP_NAME) npm install
+	@$(COMPOSE) run --rm --no-deps $(CONTAINER_NAME) npm install
 
 logs:
-	@docker logs -f $(APP_NAME)
+	@docker logs -f $(CONTAINER_NAME)
 
 watch:
 	@$(COMPOSE) up
@@ -51,15 +51,15 @@ phoenix:
 	@make up
 
 update-build:
-	@$(COMPOSE) build $(APP_NAME)
-	@$(COMPOSE) up -d --no-deps $(APP_NAME)
+	@$(COMPOSE) build $(CONTAINER_NAME)
+	@$(COMPOSE) up -d --no-deps $(CONTAINER_NAME)
 
 c :=
 exec:
-	@$(COMPOSE) exec $(APP_NAME) $(c)
+	@$(COMPOSE) exec $(CONTAINER_NAME) $(c)
 
 shell:
-	@$(COMPOSE) exec -it $(APP_NAME) /bin/sh
+	@$(COMPOSE) exec -it $(CONTAINER_NAME) /bin/sh
 
 b ?=
 npm-install:
@@ -87,7 +87,7 @@ step:
 
 last-step:
 	@echo
-	@echo "░▒▓█ \033[38;2;22;198;12mWhite Label Stock\033[0m working on http://localhost:$(APP_PORT)"
+	@echo "░▒▓█ \033[38;2;22;198;12m$(or $(APP_NAME),StockFlow)\033[0m working on http://localhost:$(APP_PORT)"
 	@echo
 	@make echo-buda
 	@echo "\033[38;2;170;0;255m🞮\033[0m Vinícius Nolêto de Araújo"
