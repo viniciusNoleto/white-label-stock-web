@@ -11,10 +11,10 @@ import { injectNotify } from '@/utils/notify';
 import { createMutation } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { EQuantityMode } from '../enums/QuantityMode';
-import type { IInventoryItem } from '../models/InventoryItem';
-import { updateInventoryItemQuantityService } from '../services/updateInventoryItemQuantity';
+import type { IItem } from '../models/Item';
+import { updateItemQuantityService } from '../services/updateItemQuantity';
 
-export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { editingItemId: Signal<number | undefined>; onSuccess: () => void }) {
+export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: { editingItemId: Signal<number | undefined>; onSuccess: () => void }) {
   const i18n = inject(I18n);
   const notify = injectNotify();
 
@@ -60,7 +60,7 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
           ? { quantity_subtract: value }
           : { quantity: value };
 
-      return updateInventoryItemQuantityService({ itemId: editingItemId()!, body });
+      return updateItemQuantityService({ itemId: editingItemId()!, body });
     },
     onSuccess: (res) => {
       notify.success(res);
@@ -70,7 +70,7 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
     onError: (err) => notify.error(err, 'notifications.errors.updateQuantity'),
   });
 
-  function updateQuantityInit(item: IInventoryItem) {
+  function updateQuantityInit(item: Pick<IItem, 'quantity'>) {
     currentQuantity.set(Number(item.quantity));
     updateQuantityValidatedFormState.reset({ mode: EQuantityMode.SET, amount: Number(item.quantity) });
   }
@@ -79,7 +79,7 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
 }
 
 @Component({
-  selector: 'app-update-quantity-logic',
+  selector: 'app-update-item-quantity-logic',
   imports: [Form, FormField, FormNumberInput, FormSegmentedControl, FormButton, TranslatePipe],
   template: `
     @let form = logicData().updateQuantityValidatedFormState;
@@ -149,8 +149,8 @@ export function injectUpdateQuantityLogicData({ editingItemId, onSuccess }: { ed
     </form>
   `,
 })
-export class UpdateQuantityLogicComponent {
-  readonly logicData = input.required<ReturnType<typeof injectUpdateQuantityLogicData>>();
+export class UpdateItemQuantityLogicComponent {
+  readonly logicData = input.required<ReturnType<typeof injectUpdateItemQuantityLogicData>>();
   readonly itemName = input.required<string>();
   readonly cancel = output<void>();
 

@@ -6,7 +6,7 @@ import type { IDeliveryPackage } from '../models/DeliveryPackage';
 /** Substitui anotações e itens (só pacotes pendentes). */
 export type UpdateDeliveryPackageServicePayload = {
   notes: string | null;
-  items: Array<{ id: number; quantity: number }>;
+  items: Array<{ product_id: number; quantity: number }>;
 };
 
 export function updateDeliveryPackageService({ packageId, body }: PayloadBody<UpdateDeliveryPackageServicePayload> & { packageId: number }) {

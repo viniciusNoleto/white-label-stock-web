@@ -18,7 +18,7 @@ export class ItemsPage {
   protected readonly filters = signal<ItemsFilters>({ search: '' });
 
   protected readonly itemsQuery = createQuery({
-    queryFn: () => getInventoryItemsService({
+    queryFn: () => getItemsService({
       query: { search: this.filters().search || undefined, page: this.page(), per_page: 15 },
     }),
   });

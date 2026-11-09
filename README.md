@@ -43,6 +43,13 @@ Sign-in uses **opaque access/refresh tokens** (only their SHA-256 hash is persis
 
 Anyone can **request access** at `/auth/register` (linked from the login). That creates a *registration request*, not an account: signing in before the approval answers "awaiting approval". Administrators get an **Administration** group in the sidebar:
 
+### Products, items and operation
+
+- **Products** (`/inventory/products`) — the model of an item: unit, categories, recipe (other products used per unit), shelf life in days (optional) and tracking: **atomic** (each unit is an item with its own code — a cabinet, a cake) or **bulk** (an item is a lot with a quantity — screws, flour).
+- **Items** (`/inventory/items`) — every stock record, with its code (`{SKU}-0001`… or typed), production date (default today) and expiration (production + shelf life). Atomic items can be generated in batches (8 cakes at once, each with its own code), optionally consuming the recipe from stock first-expiring first; expired stock is never consumed nor packaged.
+- **Operation** (`/inventory/stock`) — the stock at a glance: atomic items grouped per product (4 cabinets → one row with 4), bulk lots one per row.
+- **Deliveries** reserve specific items (first-expiring first) and show which codes to pick.
+
 - **Registration requests** (`/inventory/registration-requests`) — approving creates a regular user with the password chosen at sign-up; rejecting deletes the request.
 - **Users** (`/inventory/users`) — everyone with access; regular users can be deleted, which revokes their sessions at once. Administrators cannot be deleted.
 

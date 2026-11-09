@@ -22,8 +22,13 @@ build:
 build-cache:
 	@$(COMPOSE) build
 
+# Só no local (bind mount): em homolog/produção as dependências já vêm instaladas na imagem (Dockerfile.deploy).
 install-deps:
+ifeq ($(APP_ENV),local)
 	@$(COMPOSE) run --rm --no-deps $(CONTAINER_NAME) npm install
+else
+	@echo "APP_ENV=$(APP_ENV): dependências já instaladas na imagem, nada a fazer."
+endif
 
 logs:
 	@docker logs -f $(CONTAINER_NAME)

@@ -3,7 +3,7 @@ import type { TOptions } from 'i18next';
 import { I18n } from '@/libs/i18n';
 
 /**
- * `{{ 'units.page.title' | t }}` / `{{ 'forms.build.requiredLabel' | t: { count } }}`
+ * `{{ 'units.page.title' | t }}` / `{{ 'stock.table.units' | t: { count } }}`
  *
  * Impuro de propósito: o idioma é um signal lido dentro do `transform`, então
  * a view é marcada para checagem ao trocar o idioma e o pipe precisa rodar de

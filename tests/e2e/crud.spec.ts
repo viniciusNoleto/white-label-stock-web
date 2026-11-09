@@ -41,13 +41,13 @@ test('creates a category with a swatch color', async ({ page }) => {
 
 test('cannot delete a unit that is in use', async ({ page, request }) => {
   const unit = await api.unit(request);
-  await api.item(request, { name: uniqueName('item'), unit_id: unit.id });
+  await api.product(request, { name: uniqueName('product'), unit_id: unit.id });
 
   await page.goto('/inventory/units');
   await row(page, unit.name).getByRole('button', { name: 'Excluir' }).click();
   await dialog(page).getByRole('button', { name: 'Excluir' }).click();
 
-  await expectToast(page, 'Esta unidade está em uso por itens do inventário.');
+  await expectToast(page, 'Esta unidade está em uso por produtos.');
 });
 
 test('creates and edits a storage', async ({ page }) => {

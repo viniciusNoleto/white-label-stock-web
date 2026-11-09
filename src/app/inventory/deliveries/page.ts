@@ -12,7 +12,7 @@ import { CreateDeliveryPackageLogicComponent, injectCreateDeliveryPackageLogicDa
 import { DeleteDeliveryPackageLogicComponent, injectDeleteDeliveryPackageLogicData } from '@/resources/delivery-package/logics/DeleteDeliveryPackage';
 import { DeliverDeliveryPackageLogicComponent, injectDeliverDeliveryPackageLogicData } from '@/resources/delivery-package/logics/DeliverDeliveryPackage';
 import { injectUpdateDeliveryPackageLogicData, UpdateDeliveryPackageLogicComponent } from '@/resources/delivery-package/logics/UpdateDeliveryPackage';
-import type { IDeliveryPackage } from '@/resources/delivery-package/models/DeliveryPackage';
+import type { IDeliveryPackage, IDeliveryPackageItem } from '@/resources/delivery-package/models/DeliveryPackage';
 import { getDeliveryPackagesService } from '@/resources/delivery-package/services/getDeliveryPackages';
 import type { PaginatedMeta } from '@/shared/types/api';
 import { debouncedEffect } from '@/utils/effects';
@@ -126,14 +126,20 @@ const STATUS_BY_FILTER: Record<EDeliveryPackageStatusFilter, EDeliveryPackageSta
           let-deliveryPackage
         >
           <ul class="flex flex-col gap-1">
-            @for (item of deliveryPackage.items; track item.id) {
-              <li class="flex items-baseline gap-2">
-                <span class="min-w-14 font-mono text-[13px] font-medium tabular-nums text-gray-900 dark:text-gray-100">
-                  {{ +item.quantity }} {{ item.unit.abbreviation }}
-                </span>
+            @for (item of deliveryPackage.items; track item.product_id) {
+              <li class="flex flex-col">
+                <div class="flex items-baseline gap-2">
+                  <span class="min-w-14 font-mono text-[13px] font-medium tabular-nums text-gray-900 dark:text-gray-100">
+                    {{ +item.quantity }} {{ item.unit.abbreviation }}
+                  </span>
 
-                <span class="text-gray-700 dark:text-gray-300">
-                  {{ item.name }}
+                  <span class="text-gray-700 dark:text-gray-300">
+                    {{ item.name }}
+                  </span>
+                </div>
+
+                <span class="pl-16 font-mono text-[11px] text-gray-500 dark:text-gray-400">
+                  {{ codes(item) }}
                 </span>
               </li>
             }
@@ -349,6 +355,11 @@ export class DeliveriesPage {
       this.page.set(1);
       this.packagesQuery.refetch();
     }, 500);
+  }
+
+  /** Códigos dos itens reservados/entregues (o que separar no estoque). */
+  protected codes(item: IDeliveryPackageItem) {
+    return item.allocations.map((allocation) => allocation.code).join(', ');
   }
 
   protected formatDate(value: string | null): string {

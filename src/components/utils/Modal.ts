@@ -38,7 +38,7 @@ const MODAL_MAX_WIDTH = {
     >
       <hlm-dialog-content
         *hlmDialogPortal="let ctx"
-        class="overflow-hidden border border-gray-200 p-6 pt-9 text-base ring-0 shadow-xl sm:p-8 sm:pt-10 dark:border-neutral-800"
+        class="max-h-[calc(100dvh-2rem)] overflow-y-auto border border-gray-200 p-6 pt-9 text-base ring-0 shadow-xl sm:p-8 sm:pt-10 dark:border-neutral-800"
         [style.width]="width()"
         [style.max-width]="width()"
       >
@@ -72,6 +72,8 @@ export class UtilsModal {
 
   protected readonly content = contentChild(TemplateRef);
 
+  // Altura limitada à tela com rolagem interna: formulários longos (receita com vários
+  // componentes) não empurram o botão de salvar para fora da viewport.
   // Largura fixa (e não só máxima): o painel do overlay encolhe para o conteúdo,
   // então `w-full` sozinho deixava o modal estreito. Em telas pequenas, 100vw - 2rem.
   protected readonly width = computed(() => `min(${MODAL_MAX_WIDTH[this.size()]}, calc(100vw - 2rem))`);

@@ -61,6 +61,12 @@ export const api = {
     post<{ id: number; name: string }>(request, '/api/item-categories', { name, color_hex }),
   storage: (request: APIRequestContext, name = uniqueName('storage'), description?: string) =>
     post<{ id: number; name: string }>(request, '/api/storages', { name, description }),
-  item: (request: APIRequestContext, body: { name: string; unit_id: number; quantity?: number; components?: { id: number; quantity_required: number }[] }) =>
-    post<{ id: number; name: string }>(request, '/api/inventory-items', body),
+  product: (
+    request: APIRequestContext,
+    body: { name: string; unit_id: number; sku?: string; is_atomic?: boolean; shelf_life_days?: number; components?: { id: number; quantity_required: number }[] },
+  ) => post<{ id: number; name: string; sku: string | null }>(request, '/api/products', body),
+  items: (
+    request: APIRequestContext,
+    body: { product_id: number; quantity?: number; produced_at?: string; storage_id?: number; code?: string; consume_components?: boolean },
+  ) => post<{ items: { id: number; code: string }[] }>(request, '/api/items', body).then((data) => data.items),
 };

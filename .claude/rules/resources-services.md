@@ -22,7 +22,7 @@ export function updateUnitService({ unitId, body }: PayloadBody<UpdateUnitServic
 
 - O service usa `inject(AppClient)` — chame-o **dentro** de `createQuery`/`createMutation` (que rodam no contexto de injeção capturado) ou de um guard/`runInInjectionContext`. Nunca dentro de `setTimeout`/`subscribe` soltos.
 - Sem lógica de negócio — só a chamada HTTP.
-- Genérico do `AppClient` é sempre a interface do recurso (`IUnit`, `PaginatedResponse<IInventoryItem>`…), nunca `any`.
+- Genérico do `AppClient` é sempre a interface do recurso (`IUnit`, `PaginatedResponse<IItem>`…), nunca `any`.
 - Ids são `number` (como vêm da API). Parâmetro de rota nomeado `{recurso}Id`.
 - Query params: `PayloadQuery<T>` + `inject(AppClient).get(url, { query })` (o client ignora valores vazios).
 - Não há query keys: cache/compartilhamento não existe; quem precisa dos dados cria a própria `createQuery` e chama `refetch()`.
@@ -33,5 +33,5 @@ export function updateUnitService({ unitId, body }: PayloadBody<UpdateUnitServic
 | Elemento | Padrão | Exemplo |
 |---|---|---|
 | Função | `{verbo}{Recurso}Service` | `getUnitsService`, `createUnitService` |
-| Tipo de query | `Get{Recurso}ServiceQuery` | `GetInventoryItemsServiceQuery` |
+| Tipo de query | `Get{Recurso}ServiceQuery` | `GetItemsServiceQuery` |
 | Tipo de payload | `{Verbo}{Recurso}ServicePayload` | `CreateUnitServicePayload` |

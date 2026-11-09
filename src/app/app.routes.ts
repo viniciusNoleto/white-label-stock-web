@@ -24,11 +24,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./inventory/layout').then((m) => m.InventoryLayout),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'items' },
+      { path: '', pathMatch: 'full', redirectTo: 'stock' },
+      {
+        path: 'stock',
+        title: 'stock.page.title',
+        loadComponent: () => import('./inventory/stock/page').then((m) => m.StockPage),
+      },
       {
         path: 'items',
-        title: 'inventory.page.title',
+        title: 'items.page.title',
         loadComponent: () => import('./inventory/items/page').then((m) => m.ItemsPage),
+      },
+      {
+        path: 'products',
+        title: 'products.page.title',
+        loadComponent: () => import('./inventory/products/page').then((m) => m.ProductsPage),
       },
       {
         path: 'deliveries',

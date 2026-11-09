@@ -151,7 +151,9 @@ export default {
 
   sidebar: {
     section: 'Inventory',
+    stock: 'Operation',
     items: 'Items',
+    products: 'Products',
     categories: 'Categories',
     units: 'Units',
     storages: 'Storages',
@@ -159,7 +161,7 @@ export default {
     registrationRequests: 'Registration requests',
     users: 'Users',
     groups: {
-      operation: 'Operations',
+      operation: 'Stock',
       registry: 'Catalog',
       admin: 'Administration',
     },
@@ -297,38 +299,9 @@ export default {
   },
 
   inventory: {
-    page: {
-      title: 'Items',
-      subtitle: 'Manage your stock items',
-    },
     actions: {
       newUnit: 'New Unit',
       newCategory: 'New Category',
-      newItem: 'New Item',
-    },
-    search: {
-      placeholder: 'Search by name...',
-    },
-    table: {
-      count_one: '{{count}} item',
-      count_other: '{{count}} items',
-      columns: {
-        name: 'Name',
-        categories: 'Categories',
-        quantity: 'Quantity',
-        unit: 'Unit',
-        storage: 'Storage',
-        packaged: 'Packaged',
-      },
-      empty: 'No items found. Create the first one by clicking \'New Item\'.',
-      packagedHint: 'Quantity set aside in pending delivery packages',
-    },
-    rowActions: {
-      editQuantity: 'Edit quantity',
-      adjustStock: 'Adjust stock',
-      editItem: 'Edit item',
-      editStorage: 'Edit storage',
-      build: 'Build',
     },
     modals: {
       createUnit: 'New Unit',
@@ -337,18 +310,140 @@ export default {
       createCategory: 'New Category',
       updateCategory: 'Edit Category',
       deleteCategory: 'Delete Category',
-      createItem: 'New Inventory Item',
-      updateQuantity: 'Edit Quantity',
-      updateItem: 'Edit Item',
-      updateStorage: 'Edit Storage',
-      build: 'Build: {{name}}',
+    },
+  },
+  stock: {
+    page: {
+      title: 'Operation',
+      subtitle: 'Stock at a glance: atomic items grouped by product, bulk lots as they are',
+    },
+    search: {
+      placeholder: 'Search by product, SKU or code...',
+    },
+    table: {
+      count_one: '{{count}} row',
+      count_other: '{{count}} rows',
+      columns: {
+        product: 'Product',
+        quantity: 'Quantity',
+        expiration: 'Next expiration',
+        storages: 'Storage',
+      },
+      empty: 'Nothing in stock yet. Generate items from a product to get started.',
+      units_one: '{{count}} item with its own code',
+      units_other: '{{count}} items with their own codes',
+      lot: 'Lot {{code}}',
+      expiredCount: '{{count}} expired',
+    },
+    rowActions: {
+      produce: 'Generate items',
+      viewItems: 'View items',
+    },
+  },
+  products: {
+    page: {
+      title: 'Products',
+      subtitle: 'The model of each item: unit, recipe and shelf life',
+    },
+    actions: {
+      new: 'New Product',
+    },
+    search: {
+      placeholder: 'Search by name or SKU...',
+    },
+    table: {
+      count_one: '{{count}} product',
+      count_other: '{{count}} products',
+      columns: {
+        name: 'Name',
+        mode: 'Tracking',
+        recipe: 'Recipe (per unit)',
+        shelfLife: 'Shelf life',
+        stock: 'Stock',
+      },
+      empty: 'No products found. Create the first one by clicking \'New Product\'.',
+      atomic: 'Atomic',
+      bulk: 'Bulk',
+      shelfLifeDays_one: '{{count}} day',
+      shelfLifeDays_other: '{{count}} days',
+      noShelfLife: 'Does not expire',
+      reserved: '{{count}} reserved',
+    },
+    rowActions: {
+      produce: 'Generate items',
+      viewItems: 'View items',
+      edit: 'Edit product',
+      delete: 'Delete product',
+    },
+    modals: {
+      create: 'New Product',
+      update: 'Edit Product',
+      delete: 'Delete Product',
+    },
+    delete: {
+      confirm: 'Are you sure you want to delete the product "{{name}}"? This action cannot be undone.',
+    },
+  },
+  items: {
+    page: {
+      title: 'Items',
+      subtitle: 'Every stock record, with its code, production date and expiration',
+    },
+    actions: {
+      new: 'Generate Items',
+    },
+    search: {
+      placeholder: 'Search by code or product...',
+    },
+    filters: {
+      product: 'All products',
+      expiration: {
+        all: 'All',
+        expiring: 'Expiring',
+        expired: 'Expired',
+      },
+    },
+    table: {
+      count_one: '{{count}} item',
+      count_other: '{{count}} items',
+      columns: {
+        code: 'Code',
+        product: 'Product',
+        quantity: 'Quantity',
+        producedAt: 'Produced',
+        expiresAt: 'Expires',
+        storage: 'Storage',
+      },
+      empty: 'No items found. Generate items by clicking \'Generate Items\'.',
+      reserved: '{{count}} reserved',
+      reservedHint: 'Quantity reserved in pending delivery packages',
+    },
+    expiration: {
+      expired: 'expired',
+      expiring: 'Expires soon',
+      valid: 'Within shelf life',
+      none: 'Does not expire',
+    },
+    rowActions: {
+      edit: 'Edit item',
+      adjustStock: 'Adjust quantity',
+      delete: 'Delete item',
+    },
+    modals: {
+      create: 'Generate Items',
+      update: 'Edit Item {{code}}',
+      updateQuantity: 'Adjust Quantity',
+      delete: 'Delete Item',
+    },
+    delete: {
+      confirm: 'Remove item "{{code}}" from the stock? Use it for losses, breakage or expired items.',
     },
   },
 
   deliveries: {
     page: {
       title: 'Deliveries',
-      subtitle: 'Build packages with stock items and record deliveries',
+      subtitle: 'Package products, see which items to pick and record deliveries',
     },
     actions: {
       new: 'New Package',
@@ -386,7 +481,8 @@ export default {
       delete: 'Delete Package',
     },
     deliver: {
-      confirm: 'When you confirm, these items will be subtracted from the stock:',
+      confirm: 'When you confirm, these items leave the stock:',
+      pick: 'Pick: {{codes}}',
       inStock: 'In stock: {{count}}',
       shortage: 'There is not enough stock for some item. Adjust the stock or edit the package before delivering.',
       submit: 'Confirm delivery',
@@ -456,38 +552,118 @@ export default {
       },
     },
 
-    inventoryItem: {
+    product: {
       name: {
         label: 'Name',
-        placeholder: 'Enter a name',
+        placeholder: 'E.g.: Cabinet model A',
+      },
+      sku: {
+        label: 'SKU',
+        placeholder: 'E.g.: CAB-A',
+      },
+      mode: {
+        label: 'Tracking',
+        atomic: 'Atomic',
+        bulk: 'Bulk',
+        atomicDescription: 'Each unit is an item with its own code (a cabinet, a cake).',
+        bulkDescription: 'Each item is a lot holding a quantity (screws, flour).',
+        locked: 'The product already has items: tracking can no longer change.',
       },
       unit: {
         label: 'Unit',
         placeholder: 'Select a unit',
       },
-      quantity: {
-        label: 'Initial quantity',
-        placeholder: 'Enter a quantity',
+      shelfLife: {
+        label: 'Shelf life (days)',
+        placeholder: 'Does not expire',
+        description: 'Days after production. Leave empty if it does not expire.',
       },
       categories: {
         label: 'Categories',
-        placeholder: 'Select categories',
-      },
-      storage: {
-        label: 'Storage',
-        placeholder: 'Select a storage location (optional)',
+        placeholder: 'Select the categories',
       },
       components: {
-        label: 'Components',
-        selectPlaceholder: 'Select an item',
-        qtyPlaceholder: 'Enter a quantity',
-        empty: 'No components added.',
+        label: 'Recipe',
+        description: 'Products used to make one unit. Can be consumed from the stock when generating items.',
+        selectPlaceholder: 'Select a product',
+        qtyPlaceholder: 'Quantity',
+        quantityOf: 'Quantity of {{name}}',
+        empty: 'No components: the product is not made from others.',
         add: 'Add component',
         remove: 'Remove component',
       },
       validation: {
         nameRequired: 'Name is required',
         unitRequired: 'Unit is required',
+        sku: 'Use letters, numbers, dots, hyphens or underscores',
+        shelfLife: 'Use a whole number of days, at least 1',
+        componentQuantity: 'Each component needs a quantity greater than zero',
+        componentInteger: 'Atomic components are counted per unit: use whole numbers',
+      },
+    },
+
+    createItems: {
+      product: {
+        label: 'Product',
+        placeholder: 'Select a product',
+      },
+      quantity: {
+        atomicLabel: 'How many items',
+        atomicDescription: 'Each one gets its own code.',
+        bulkLabel: 'Lot quantity ({{unit}})',
+        bulkDescription: 'A single record with this quantity.',
+      },
+      producedAt: {
+        label: 'Production date',
+        expiresOn: 'Expires on {{date}} ({{count}} days).',
+        noExpiration: 'This product does not expire.',
+      },
+      storage: {
+        label: 'Storage',
+        placeholder: 'Select a storage (optional)',
+      },
+      code: {
+        label: 'Code',
+        placeholder: 'Automatic',
+        description: 'Leave empty to use the next one ({{example}}…).',
+        batch: '{{count}} automatic codes, starting at the next one in the sequence ({{example}}…).',
+      },
+      consume: {
+        label: 'Consume the recipe from stock',
+        description: 'Components leave the stock, first-expiring first.',
+        line: 'Needs {{required}} · free {{free}}',
+        max: 'You can produce up to {{count}} with the free stock.',
+      },
+      submit: 'Generate',
+      validation: {
+        productRequired: 'Product is required',
+        quantityRequired: 'Quantity is required',
+        quantityPositive: 'Quantity must be greater than zero',
+        integer: 'Atomic items: use a whole number',
+        max: 'At most {{count}} at a time',
+        dateRequired: 'Production date is required',
+      },
+    },
+
+    updateItem: {
+      code: {
+        label: 'Code',
+      },
+      producedAt: {
+        label: 'Production date',
+        description: 'Changing it recalculates the expiration from the product shelf life.',
+      },
+      expiresAt: {
+        label: 'Expiration',
+        description: 'Empty = does not expire.',
+      },
+      storage: {
+        label: 'Storage',
+        placeholder: 'Select a storage (optional)',
+      },
+      validation: {
+        codeRequired: 'Code is required',
+        dateRequired: 'Production date is required',
       },
     },
 
@@ -520,31 +696,14 @@ export default {
       },
     },
 
-    build: {
-      noComponentsMessage: 'This item has no registered components. Add components when creating or editing the item.',
-      requiredComponentsLabel: 'Components required per unit',
-      requiredLabel: 'Required: {{count}}',
-      availableLabel: 'Available: {{count}}',
-      maxPossibleLabel: 'Max. possible: {{count}}',
-      quantity: {
-        label: 'Quantity to build',
-        placeholder: 'Enter a quantity',
-      },
-      submit: 'Build',
-      validation: {
-        required: 'Quantity is required',
-        min: 'Minimum of 1 unit',
-      },
-    },
-
     deliveryPackage: {
       items: {
-        label: 'Package items',
-        selectPlaceholder: 'Select an item',
+        label: 'Package products',
+        selectPlaceholder: 'Select a product',
         qtyPlaceholder: 'Quantity',
-        add: 'Add item',
-        remove: 'Remove item',
-        empty: 'No items added.',
+        add: 'Add product',
+        remove: 'Remove product',
+        empty: 'No products added.',
         free: 'Free: {{count}} {{unit}}',
         quantityOf: 'Quantity of {{name}}',
       },
@@ -553,8 +712,9 @@ export default {
         placeholder: 'Address, customer, time, payment method...',
       },
       validation: {
-        itemsRequired: 'Add at least one item to the package',
-        quantityPositive: 'Each item needs a quantity greater than zero',
+        itemsRequired: 'Add at least one product to the package',
+        quantityPositive: 'Each product needs a quantity greater than zero',
+        integer: 'Atomic products are counted per unit: use whole numbers',
         notesMax: 'Notes can have at most {{count}} characters',
       },
     },
@@ -568,11 +728,13 @@ export default {
       createCategory: 'Could not create the category. Please try again.',
       updateCategory: 'Could not update the category. Please try again.',
       deleteCategory: 'Could not delete the category. Please try again.',
-      createItem: 'Could not create the item. Please try again.',
+      createProduct: 'Could not create the product. Please try again.',
+      updateProduct: 'Could not update the product. Please try again.',
+      deleteProduct: 'Could not delete the product. Please try again.',
+      createItems: 'Could not generate the items.',
+      deleteItem: 'Could not delete the item. Please try again.',
       updateQuantity: 'Could not update the quantity.',
       updateItem: 'Could not update the item. Please try again.',
-      updateItemStorage: 'Could not update the storage. Please try again.',
-      build: 'Could not build the item.',
       createStorage: 'Could not create the storage. Please try again.',
       updateStorage: 'Could not update the storage. Please try again.',
       deleteStorage: 'Could not delete the storage. Please try again.',

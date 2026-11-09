@@ -39,21 +39,21 @@ export async function cleanupE2EData() {
     await client.query('BEGIN');
 
     try {
-      // Pacotes que contêm itens e2e (os itens do pacote saem em cascata).
+      const e2eProducts = 'SELECT id FROM products WHERE name LIKE $1';
+
+      // Pacotes com produtos e2e (as linhas do pacote saem em cascata).
       await client.query(`
         DELETE FROM delivery_packages
-        WHERE id IN (
-          SELECT delivery_package_id FROM delivery_package_has_item
-          WHERE inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1))`, [like]);
+        WHERE id IN (SELECT delivery_package_id FROM delivery_package_has_item WHERE product_id IN (${e2eProducts}))`, [like]);
+      await client.query(`DELETE FROM items WHERE product_id IN (${e2eProducts})`, [like]);
       await client.query(`
-        DELETE FROM inventory_item_has_component
-        WHERE inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1)
-           OR component_inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1)`, [like]);
+        DELETE FROM product_has_component
+        WHERE product_id IN (${e2eProducts}) OR component_product_id IN (${e2eProducts})`, [like]);
       await client.query(`
-        DELETE FROM inventory_item_has_category
-        WHERE inventory_item_id IN (SELECT id FROM inventory_items WHERE name LIKE $1)
+        DELETE FROM product_has_category
+        WHERE product_id IN (${e2eProducts})
            OR item_category_id IN (SELECT id FROM item_categories WHERE name LIKE $1)`, [like]);
-      await client.query('DELETE FROM inventory_items WHERE name LIKE $1', [like]);
+      await client.query('DELETE FROM products WHERE name LIKE $1', [like]);
       await client.query('DELETE FROM item_categories WHERE name LIKE $1', [like]);
       await client.query('DELETE FROM units WHERE name LIKE $1', [like]);
       await client.query('DELETE FROM storages WHERE name LIKE $1', [like]);

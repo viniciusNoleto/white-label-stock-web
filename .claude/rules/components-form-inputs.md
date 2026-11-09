@@ -7,6 +7,8 @@ import { FormTextarea } from '@/components/form/Textarea';            // app-for
 import { FormNumberInput } from '@/components/form/Number';           // app-form-number-input
 import { FormColorInput } from '@/components/form/ColorInput';        // app-form-color-input
 import { FormSegmentedControl } from '@/components/form/SegmentedControl'; // app-form-segmented-control
+import { FormDateInput } from '@/components/form/DateInput';            // app-form-date-input
+import { FormSwitch } from '@/components/form/Switch';                  // app-form-switch
 import { FormField } from '@angular/forms/signals';                   // diretiva [formField]
 ```
 
@@ -40,6 +42,8 @@ Componentes sobre o Spartan UI (`hlmInput`, `hlmTextarea`, `hlm-toggle-group`…
 | `FormNumberInput` | `number \| null` | vazio = `null`; `minValue`, `maxValue`, `step`, `ariaLabel` |
 | `FormColorInput` | `string` (`#RRGGBB`) | `swatches` |
 | `FormSegmentedControl` | `string \| number` | `data: { value, label }[]`, nunca fica vazio |
+| `FormDateInput` | `string` (`YYYY-MM-DD` ou `''`) | mesmo formato da API; `minDate`, `maxDate`. Datas sem hora: use `@/utils/date` (fuso local) |
+| `FormSwitch` | `boolean` | rótulo ao lado e `description` embaixo |
 
 ## Padrões corretos
 

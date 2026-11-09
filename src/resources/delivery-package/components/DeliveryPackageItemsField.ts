@@ -4,13 +4,14 @@ import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormButton } from '@/components/form/Button';
 import { FormNumberInput } from '@/components/form/Number';
 import { FormSelect, type SelectValue } from '@/components/form/Select';
-import type { IInventoryItem } from '@/resources/inventory-item/models/InventoryItem';
+import { freeStock, type IProduct } from '@/resources/product/models/Product';
 import { TranslatePipe } from '@/utils/translate.pipe';
-import { freeQuantity } from '../models/DeliveryPackage';
 
+/** `id` = id do produto. */
 export type DeliveryPackageItemEntry = {
   id: number;
   name: string;
+  isAtomic: boolean;
   unitAbbreviation: string;
   quantity: number | null;
 };
@@ -21,13 +22,15 @@ export function deliveryPackageItemsError(entries: DeliveryPackageItemEntry[]): 
 
   if (entries.some((entry) => !entry.quantity || entry.quantity <= 0)) return 'forms.deliveryPackage.validation.quantityPositive';
 
+  if (entries.some((entry) => entry.isAtomic && !Number.isInteger(entry.quantity))) return 'forms.deliveryPackage.validation.integer';
+
   return null;
 }
 
 /**
- * Escolha dos itens do estoque e da quantidade de cada um no pacote. Mostra quanto de cada
- * item ainda está livre (estoque − empacotado em outros pacotes pendentes); a API recusa
- * o que passar disso.
+ * Escolha dos produtos e da quantidade de cada um no pacote. Mostra quanto de cada produto
+ * ainda está livre (estoque − reservado em outros pacotes pendentes); a API recusa o que
+ * passar disso e escolhe os itens (códigos) por FEFO.
  */
 @Component({
   selector: 'app-delivery-package-items-field',
@@ -128,7 +131,7 @@ export function deliveryPackageItemsError(entries: DeliveryPackageItemEntry[]): 
 })
 export class DeliveryPackageItemsField {
   readonly items = model.required<DeliveryPackageItemEntry[]>();
-  readonly stockItems = input<readonly IInventoryItem[]>([]);
+  readonly stockItems = input<readonly IProduct[]>([]);
   /** Quantidades que o próprio pacote (em edição) já separou — contam como livres para ele. */
   readonly ownQuantities = input<Record<number, number>>({});
   readonly showErrors = input(false);
@@ -147,7 +150,7 @@ export class DeliveryPackageItemsField {
 
   protected freeOf(id: number): number | null {
     const stock = this.stockById().get(id);
-    return stock ? freeQuantity(stock, this.ownQuantities()[id] ?? 0) : null;
+    return stock ? freeStock(stock, this.ownQuantities()[id] ?? 0) : null;
   }
 
   protected addItem() {
@@ -156,7 +159,7 @@ export class DeliveryPackageItemsField {
 
     if (!item || !quantity || quantity <= 0) return;
 
-    this.items.update((entries) => [...entries, { id: item.id, name: item.name, unitAbbreviation: item.unit.abbreviation, quantity }]);
+    this.items.update((entries) => [...entries, { id: item.id, name: item.name, isAtomic: item.is_atomic, unitAbbreviation: item.unit.abbreviation, quantity }]);
 
     this.selectedItemId.set(null);
     this.newQuantity.set(1);

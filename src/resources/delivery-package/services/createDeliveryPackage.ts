@@ -5,7 +5,7 @@ import type { IDeliveryPackage } from '../models/DeliveryPackage';
 
 export type CreateDeliveryPackageServicePayload = {
   notes: string | null;
-  items: Array<{ id: number; quantity: number }>;
+  items: Array<{ product_id: number; quantity: number }>;
 };
 
 export function createDeliveryPackageService({ body }: PayloadBody<CreateDeliveryPackageServicePayload>) {

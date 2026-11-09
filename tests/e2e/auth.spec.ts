@@ -20,8 +20,8 @@ test.describe('authentication', () => {
     await page.getByLabel(/Senha/).fill(E2E_USER.password);
     await page.getByRole('button', { name: 'Entrar' }).click();
 
-    await expect(page).toHaveURL(/\/inventory\/items$/);
-    await expect(page.getByRole('heading', { name: 'Itens' })).toBeVisible();
+    await expect(page).toHaveURL(/\/inventory\/stock$/);
+    await expect(page.getByRole('heading', { name: 'Operação' })).toBeVisible();
   });
 
   test('renews an expired access token transparently', async ({ page, context }) => {
@@ -29,7 +29,7 @@ test.describe('authentication', () => {
     await page.getByLabel('E-mail').fill(E2E_USER.email);
     await page.getByLabel(/Senha/).fill(E2E_USER.password);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/inventory\/items$/);
+    await expect(page).toHaveURL(/\/inventory\/stock$/);
 
     // simula o browser descartando o cookie de access expirado
     const cookies = await context.cookies();

@@ -21,7 +21,7 @@ export interface IUnit {
 Cálculos sobre o model ficam no próprio arquivo como funções puras (testáveis), não em classes:
 
 ```ts
-export function maxBuildableQuantity(item: Pick<IInventoryItem, 'components'>): number { … }
+export function maxProducible(product: Pick<IProduct, 'is_atomic' | 'components'>): number | null { … }
 ```
 
 Crie uma classe `{Recurso}` só se for realmente preciso normalizar dados (ex.: arrays que podem vir `null`); o construtor recebe a interface.

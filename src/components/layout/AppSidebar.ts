@@ -11,13 +11,15 @@ const NAV_GROUPS = [
   {
     labelKey: 'sidebar.groups.operation',
     items: [
-      { href: '/inventory/items', icon: 'lucidePackage', labelKey: 'sidebar.items' },
+      { href: '/inventory/stock', icon: 'lucideLayers', labelKey: 'sidebar.stock' },
+      { href: '/inventory/items', icon: 'lucideScanBarcode', labelKey: 'sidebar.items' },
       { href: '/inventory/deliveries', icon: 'lucideTruck', labelKey: 'sidebar.deliveries' },
     ],
   },
   {
     labelKey: 'sidebar.groups.registry',
     items: [
+      { href: '/inventory/products', icon: 'lucideBox', labelKey: 'sidebar.products' },
       { href: '/inventory/categories', icon: 'lucideTag', labelKey: 'sidebar.categories' },
       { href: '/inventory/units', icon: 'lucideRuler', labelKey: 'sidebar.units' },
       { href: '/inventory/storages', icon: 'lucideWarehouse', labelKey: 'sidebar.storages' },

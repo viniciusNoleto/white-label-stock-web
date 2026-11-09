@@ -71,9 +71,9 @@ describe('AppClient + authRefreshInterceptor', () => {
   });
 
   it('serializes query params, skipping empty values', async () => {
-    const result = firstValueFrom(client.get<number[]>('/api/inventory-items', { query: { search: '', page: 2, per_page: 15 } }));
+    const result = firstValueFrom(client.get<number[]>('/api/items', { query: { search: '', page: 2, per_page: 15 } }));
 
-    http.expectOne('/api/inventory-items?page=2&per_page=15').flush(ok([1]));
+    http.expectOne('/api/items?page=2&per_page=15').flush(ok([1]));
 
     expect((await result).data).toEqual([1]);
   });

@@ -4,7 +4,7 @@ import { FormButton } from '@/components/form/Button';
 import { injectNotify } from '@/utils/notify';
 import { createMutation } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
-import type { IDeliveryPackage } from '../models/DeliveryPackage';
+import type { IDeliveryPackage, IDeliveryPackageItem } from '../models/DeliveryPackage';
 import { deliverDeliveryPackageService } from '../services/deliverDeliveryPackage';
 
 export function injectDeliverDeliveryPackageLogicData({ editingPackageId, onSuccess }: { editingPackageId: Signal<number | undefined>; onSuccess: () => void }) {
@@ -36,19 +36,25 @@ export function injectDeliverDeliveryPackageLogicData({ editingPackageId, onSucc
       </p>
 
       <ul class="flex flex-col gap-1.5 p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
-        @for (item of deliveryPackage().items; track item.id) {
-          @let enough = +item.current_quantity >= +item.quantity;
+        @for (item of deliveryPackage().items; track item.product_id) {
+          @let enough = +item.stock_quantity >= +item.quantity;
 
-          <li class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
-            <span class="truncate">
-              {{ +item.quantity }} {{ item.unit.abbreviation }} · {{ item.name }}
-            </span>
+          <li class="flex flex-col gap-1 text-sm">
+            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <span class="truncate">
+                {{ +item.quantity }} {{ item.unit.abbreviation }} · {{ item.name }}
+              </span>
 
-            <span
-              hlmBadge
-              [variant]="enough ? 'secondary' : 'destructive'"
-            >
-              {{ 'deliveries.deliver.inStock' | t: { count: +item.current_quantity } }}
+              <span
+                hlmBadge
+                [variant]="enough ? 'secondary' : 'destructive'"
+              >
+                {{ 'deliveries.deliver.inStock' | t: { count: +item.stock_quantity } }}
+              </span>
+            </div>
+
+            <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
+              {{ 'deliveries.deliver.pick' | t: { codes: pickList(item) } }}
             </span>
           </li>
         }
@@ -91,5 +97,10 @@ export class DeliverDeliveryPackageLogicComponent {
   readonly deliveryPackage = input.required<IDeliveryPackage>();
   readonly cancel = output<void>();
 
-  protected readonly shortage = computed(() => this.deliveryPackage().items.some((item) => +item.current_quantity < +item.quantity));
+  protected readonly shortage = computed(() => this.deliveryPackage().items.some((item) => +item.stock_quantity < +item.quantity));
+
+  /** Códigos a separar (lote a granel com a quantidade: `PAR-0001 ×200`). */
+  protected pickList(item: IDeliveryPackageItem) {
+    return item.allocations.map((allocation) => (item.is_atomic ? allocation.code : `${allocation.code} ×${+allocation.quantity}`)).join(', ');
+  }
 }

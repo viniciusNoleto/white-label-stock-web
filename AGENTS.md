@@ -16,7 +16,7 @@ Cada arquivo documenta a interface exata, o comportamento e os padrões de um co
 | Ao usar... | Leia |
 |---|---|
 | `<form appForm>` / submit | `components-form.md` |
-| `FormTextInput`, `FormPassword`, `FormTextarea`, `FormNumberInput`, `FormColorInput`, `FormSegmentedControl` | `components-form-inputs.md` |
+| `FormTextInput`, `FormPassword`, `FormTextarea`, `FormNumberInput`, `FormColorInput`, `FormSegmentedControl`, `FormDateInput`, `FormSwitch` | `components-form-inputs.md` |
 | `FormSelect`, `FormMultiSelect` | `components-form-select.md` |
 | `appButton` (ícones, loading, tooltip) | `components-form-button.md` |
 | Grid de campos | `form-grid.md` |

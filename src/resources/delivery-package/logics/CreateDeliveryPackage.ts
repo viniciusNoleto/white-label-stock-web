@@ -3,7 +3,7 @@ import { FormField } from '@angular/forms/signals';
 import { FormButton } from '@/components/form/Button';
 import { Form } from '@/components/form/Form';
 import { FormTextarea } from '@/components/form/Textarea';
-import { getInventoryItemsService } from '@/resources/inventory-item/services/getInventoryItems';
+import { getProductsService } from '@/resources/product/services/getProducts';
 import { validatedFormState } from '@/utils/form';
 import { injectNotify } from '@/utils/notify';
 import { createMutation, createQuery } from '@/utils/query';
@@ -24,7 +24,7 @@ export function injectCreateDeliveryPackageLogicData({ onSuccess }: { onSuccess:
     mutationFn: () => createDeliveryPackageService({
       body: {
         notes: createPackageValidatedFormState.state().notes.trim() || null,
-        items: createPackageItems().map((entry) => ({ id: entry.id, quantity: entry.quantity ?? 0 })),
+        items: createPackageItems().map((entry) => ({ product_id: entry.id, quantity: entry.quantity ?? 0 })),
       },
     }),
     onSuccess: (res) => {
@@ -115,7 +115,7 @@ export class CreateDeliveryPackageLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectCreateDeliveryPackageLogicData>>();
   readonly cancel = output<void>();
 
-  private readonly stockQuery = createQuery({ queryFn: () => getInventoryItemsService({ query: { per_page: 100 } }) });
+  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
 
   protected readonly stockItems = computed(() => this.stockQuery.data()?.data.items ?? []);
 

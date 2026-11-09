@@ -3,7 +3,7 @@ import { FormField } from '@angular/forms/signals';
 import { FormButton } from '@/components/form/Button';
 import { Form } from '@/components/form/Form';
 import { FormTextarea } from '@/components/form/Textarea';
-import { getInventoryItemsService } from '@/resources/inventory-item/services/getInventoryItems';
+import { getProductsService } from '@/resources/product/services/getProducts';
 import { validatedFormState } from '@/utils/form';
 import { injectNotify } from '@/utils/notify';
 import { createMutation, createQuery } from '@/utils/query';
@@ -28,7 +28,7 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
       packageId: editingPackageId()!,
       body: {
         notes: updatePackageValidatedFormState.state().notes.trim() || null,
-        items: updatePackageItems().map((entry) => ({ id: entry.id, quantity: entry.quantity ?? 0 })),
+        items: updatePackageItems().map((entry) => ({ product_id: entry.id, quantity: entry.quantity ?? 0 })),
       },
     }),
     onSuccess: (res) => {
@@ -42,12 +42,13 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
   function updatePackageInit(deliveryPackage: IDeliveryPackage) {
     updatePackageValidatedFormState.reset({ notes: deliveryPackage.notes ?? '' });
     updatePackageItems.set(deliveryPackage.items.map((item) => ({
-      id: item.id,
+      id: item.product_id,
       name: item.name,
+      isAtomic: item.is_atomic,
       unitAbbreviation: item.unit.abbreviation,
       quantity: Number(item.quantity),
     })));
-    updatePackageOwnQuantities.set(Object.fromEntries(deliveryPackage.items.map((item) => [item.id, Number(item.quantity)])));
+    updatePackageOwnQuantities.set(Object.fromEntries(deliveryPackage.items.map((item) => [item.product_id, Number(item.quantity)])));
     updatePackageShowItemErrors.set(false);
   }
 
@@ -127,7 +128,7 @@ export class UpdateDeliveryPackageLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectUpdateDeliveryPackageLogicData>>();
   readonly cancel = output<void>();
 
-  private readonly stockQuery = createQuery({ queryFn: () => getInventoryItemsService({ query: { per_page: 100 } }) });
+  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
 
   protected readonly stockItems = computed(() => this.stockQuery.data()?.data.items ?? []);
 

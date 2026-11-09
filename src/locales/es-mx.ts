@@ -153,7 +153,9 @@ export default {
 
   sidebar: {
     section: 'Inventario',
+    stock: 'Operación',
     items: 'Artículos',
+    products: 'Productos',
     categories: 'Categorías',
     units: 'Unidades',
     storages: 'Almacenamientos',
@@ -161,7 +163,7 @@ export default {
     registrationRequests: 'Solicitudes de registro',
     users: 'Usuarios',
     groups: {
-      operation: 'Operación',
+      operation: 'Inventario',
       registry: 'Catálogos',
       admin: 'Administración',
     },
@@ -299,38 +301,9 @@ export default {
   },
 
   inventory: {
-    page: {
-      title: 'Artículos',
-      subtitle: 'Gestiona tus artículos de existencias',
-    },
     actions: {
       newUnit: 'Nueva Unidad',
       newCategory: 'Nueva Categoría',
-      newItem: 'Nuevo Artículo',
-    },
-    search: {
-      placeholder: 'Buscar por nombre...',
-    },
-    table: {
-      count_one: '{{count}} artículo',
-      count_other: '{{count}} artículos',
-      columns: {
-        name: 'Nombre',
-        categories: 'Categorías',
-        quantity: 'Cantidad',
-        unit: 'Unidad',
-        storage: 'Almacenamiento',
-        packaged: 'Empaquetado',
-      },
-      empty: 'No se encontraron artículos. Crea el primero haciendo clic en \'Nuevo Artículo\'.',
-      packagedHint: 'Cantidad separada en paquetes de entrega pendientes',
-    },
-    rowActions: {
-      editQuantity: 'Editar cantidad',
-      adjustStock: 'Ajustar inventario',
-      editItem: 'Editar artículo',
-      editStorage: 'Editar almacenamiento',
-      build: 'Construir',
     },
     modals: {
       createUnit: 'Nueva Unidad',
@@ -339,18 +312,140 @@ export default {
       createCategory: 'Nueva Categoría',
       updateCategory: 'Editar Categoría',
       deleteCategory: 'Eliminar Categoría',
-      createItem: 'Nuevo Artículo de Inventario',
-      updateQuantity: 'Editar Cantidad',
-      updateItem: 'Editar Artículo',
-      updateStorage: 'Editar Almacenamiento',
-      build: 'Construir: {{name}}',
+    },
+  },
+  stock: {
+    page: {
+      title: 'Operación',
+      subtitle: 'El inventario de un vistazo: artículos atómicos agrupados por producto, lotes a granel tal cual',
+    },
+    search: {
+      placeholder: 'Buscar por producto, SKU o código...',
+    },
+    table: {
+      count_one: '{{count}} fila',
+      count_other: '{{count}} filas',
+      columns: {
+        product: 'Producto',
+        quantity: 'Cantidad',
+        expiration: 'Próxima caducidad',
+        storages: 'Almacenamiento',
+      },
+      empty: 'Aún no hay nada en inventario. Genera artículos a partir de un producto para empezar.',
+      units_one: '{{count}} artículo con código propio',
+      units_other: '{{count}} artículos con código propio',
+      lot: 'Lote {{code}}',
+      expiredCount: '{{count}} caducado(s)',
+    },
+    rowActions: {
+      produce: 'Generar artículos',
+      viewItems: 'Ver artículos',
+    },
+  },
+  products: {
+    page: {
+      title: 'Productos',
+      subtitle: 'El modelo de cada artículo: unidad, receta y caducidad',
+    },
+    actions: {
+      new: 'Nuevo Producto',
+    },
+    search: {
+      placeholder: 'Buscar por nombre o SKU...',
+    },
+    table: {
+      count_one: '{{count}} producto',
+      count_other: '{{count}} productos',
+      columns: {
+        name: 'Nombre',
+        mode: 'Control',
+        recipe: 'Receta (por unidad)',
+        shelfLife: 'Caducidad',
+        stock: 'Inventario',
+      },
+      empty: 'No se encontraron productos. Crea el primero haciendo clic en \'Nuevo Producto\'.',
+      atomic: 'Atómico',
+      bulk: 'A granel',
+      shelfLifeDays_one: '{{count}} día',
+      shelfLifeDays_other: '{{count}} días',
+      noShelfLife: 'No caduca',
+      reserved: '{{count}} reservado(s)',
+    },
+    rowActions: {
+      produce: 'Generar artículos',
+      viewItems: 'Ver artículos',
+      edit: 'Editar producto',
+      delete: 'Eliminar producto',
+    },
+    modals: {
+      create: 'Nuevo Producto',
+      update: 'Editar Producto',
+      delete: 'Eliminar Producto',
+    },
+    delete: {
+      confirm: '¿Seguro que deseas eliminar el producto "{{name}}"? Esta acción no se puede deshacer.',
+    },
+  },
+  items: {
+    page: {
+      title: 'Artículos',
+      subtitle: 'Cada registro del inventario, con código, producción y caducidad',
+    },
+    actions: {
+      new: 'Generar Artículos',
+    },
+    search: {
+      placeholder: 'Buscar por código o producto...',
+    },
+    filters: {
+      product: 'Todos los productos',
+      expiration: {
+        all: 'Todos',
+        expiring: 'Por caducar',
+        expired: 'Caducados',
+      },
+    },
+    table: {
+      count_one: '{{count}} artículo',
+      count_other: '{{count}} artículos',
+      columns: {
+        code: 'Código',
+        product: 'Producto',
+        quantity: 'Cantidad',
+        producedAt: 'Producción',
+        expiresAt: 'Caducidad',
+        storage: 'Almacenamiento',
+      },
+      empty: 'No se encontraron artículos. Genera artículos haciendo clic en \'Generar Artículos\'.',
+      reserved: '{{count}} reservado(s)',
+      reservedHint: 'Cantidad reservada en paquetes de entrega pendientes',
+    },
+    expiration: {
+      expired: 'caducado',
+      expiring: 'Caduca pronto',
+      valid: 'Dentro de la caducidad',
+      none: 'No caduca',
+    },
+    rowActions: {
+      edit: 'Editar artículo',
+      adjustStock: 'Ajustar cantidad',
+      delete: 'Eliminar artículo',
+    },
+    modals: {
+      create: 'Generar Artículos',
+      update: 'Editar Artículo {{code}}',
+      updateQuantity: 'Ajustar Cantidad',
+      delete: 'Eliminar Artículo',
+    },
+    delete: {
+      confirm: '¿Sacar el artículo "{{code}}" del inventario? Úsalo para pérdidas, roturas o caducados.',
     },
   },
 
   deliveries: {
     page: {
       title: 'Entregas',
-      subtitle: 'Arma paquetes con artículos del inventario y registra las entregas',
+      subtitle: 'Arma paquetes de productos, mira qué artículos separar y registra las entregas',
     },
     actions: {
       new: 'Nuevo Paquete',
@@ -388,7 +483,8 @@ export default {
       delete: 'Eliminar Paquete',
     },
     deliver: {
-      confirm: 'Al confirmar, estos artículos se restarán del inventario:',
+      confirm: 'Al confirmar, estos artículos salen del inventario:',
+      pick: 'Separar: {{codes}}',
       inStock: 'En inventario: {{count}}',
       shortage: 'No hay existencias suficientes de algún artículo. Ajusta el inventario o edita el paquete antes de entregarlo.',
       submit: 'Confirmar entrega',
@@ -458,38 +554,118 @@ export default {
       },
     },
 
-    inventoryItem: {
+    product: {
       name: {
         label: 'Nombre',
-        placeholder: 'Escribe un nombre',
+        placeholder: 'Ej.: Armario modelo A',
+      },
+      sku: {
+        label: 'SKU',
+        placeholder: 'Ej.: ARM-A',
+      },
+      mode: {
+        label: 'Control',
+        atomic: 'Atómico',
+        bulk: 'A granel',
+        atomicDescription: 'Cada unidad es un artículo con código propio (un armario, un pastel).',
+        bulkDescription: 'Cada artículo es un lote con una cantidad (tornillos, harina).',
+        locked: 'El producto ya tiene artículos: el control ya no puede cambiar.',
       },
       unit: {
         label: 'Unidad',
-        placeholder: 'Seleccionar una unidad',
+        placeholder: 'Selecciona una unidad',
       },
-      quantity: {
-        label: 'Cantidad inicial',
-        placeholder: 'Escribe una cantidad',
+      shelfLife: {
+        label: 'Caducidad (días)',
+        placeholder: 'No caduca',
+        description: 'Días después de la producción. Déjalo vacío si no caduca.',
       },
       categories: {
         label: 'Categorías',
-        placeholder: 'Seleccionar categorías',
-      },
-      storage: {
-        label: 'Almacenamiento',
-        placeholder: 'Selecciona un lugar de almacenamiento (opcional)',
+        placeholder: 'Selecciona las categorías',
       },
       components: {
-        label: 'Componentes',
-        selectPlaceholder: 'Seleccionar un artículo',
-        qtyPlaceholder: 'Escribe una cantidad',
-        empty: 'No se agregaron componentes.',
+        label: 'Receta',
+        description: 'Productos usados para hacer una unidad. Se pueden consumir del inventario al generar artículos.',
+        selectPlaceholder: 'Selecciona un producto',
+        qtyPlaceholder: 'Cantidad',
+        quantityOf: 'Cantidad de {{name}}',
+        empty: 'Sin componentes: el producto no se hace a partir de otros.',
         add: 'Agregar componente',
         remove: 'Quitar componente',
       },
       validation: {
         nameRequired: 'El nombre es obligatorio',
         unitRequired: 'La unidad es obligatoria',
+        sku: 'Usa letras, números, punto, guion o guion bajo',
+        shelfLife: 'Usa un número entero de días, a partir de 1',
+        componentQuantity: 'Cada componente necesita una cantidad mayor que cero',
+        componentInteger: 'Los componentes atómicos se cuentan por unidad: usa números enteros',
+      },
+    },
+
+    createItems: {
+      product: {
+        label: 'Producto',
+        placeholder: 'Selecciona un producto',
+      },
+      quantity: {
+        atomicLabel: 'Cuántos artículos',
+        atomicDescription: 'Cada uno recibe un código propio.',
+        bulkLabel: 'Cantidad del lote ({{unit}})',
+        bulkDescription: 'Un único registro con esta cantidad.',
+      },
+      producedAt: {
+        label: 'Fecha de producción',
+        expiresOn: 'Caduca el {{date}} ({{count}} días).',
+        noExpiration: 'Este producto no caduca.',
+      },
+      storage: {
+        label: 'Almacenamiento',
+        placeholder: 'Selecciona un almacenamiento (opcional)',
+      },
+      code: {
+        label: 'Código',
+        placeholder: 'Automático',
+        description: 'Déjalo vacío para usar el siguiente ({{example}}…).',
+        batch: '{{count}} códigos automáticos, a partir del siguiente de la secuencia ({{example}}…).',
+      },
+      consume: {
+        label: 'Consumir la receta del inventario',
+        description: 'Los componentes salen del inventario, lo que caduca primero sale primero.',
+        line: 'Necesita {{required}} · libre {{free}}',
+        max: 'Puedes producir hasta {{count}} con el inventario libre.',
+      },
+      submit: 'Generar',
+      validation: {
+        productRequired: 'El producto es obligatorio',
+        quantityRequired: 'La cantidad es obligatoria',
+        quantityPositive: 'La cantidad debe ser mayor que cero',
+        integer: 'Artículos atómicos: usa un número entero',
+        max: 'Como máximo {{count}} por vez',
+        dateRequired: 'La fecha de producción es obligatoria',
+      },
+    },
+
+    updateItem: {
+      code: {
+        label: 'Código',
+      },
+      producedAt: {
+        label: 'Fecha de producción',
+        description: 'Al cambiarla, la caducidad se recalcula con la del producto.',
+      },
+      expiresAt: {
+        label: 'Caducidad',
+        description: 'Vacío = no caduca.',
+      },
+      storage: {
+        label: 'Almacenamiento',
+        placeholder: 'Selecciona un almacenamiento (opcional)',
+      },
+      validation: {
+        codeRequired: 'El código es obligatorio',
+        dateRequired: 'La fecha de producción es obligatoria',
       },
     },
 
@@ -522,31 +698,14 @@ export default {
       },
     },
 
-    build: {
-      noComponentsMessage: 'Este artículo no tiene componentes registrados. Agrega componentes al crear o editar el artículo.',
-      requiredComponentsLabel: 'Componentes necesarios por unidad',
-      requiredLabel: 'Necesario: {{count}}',
-      availableLabel: 'Disponible: {{count}}',
-      maxPossibleLabel: 'Máx. posible: {{count}}',
-      quantity: {
-        label: 'Cantidad a construir',
-        placeholder: 'Escribe una cantidad',
-      },
-      submit: 'Construir',
-      validation: {
-        required: 'La cantidad es obligatoria',
-        min: 'Mínimo de 1 unidad',
-      },
-    },
-
     deliveryPackage: {
       items: {
-        label: 'Artículos del paquete',
-        selectPlaceholder: 'Selecciona un artículo',
+        label: 'Productos del paquete',
+        selectPlaceholder: 'Selecciona un producto',
         qtyPlaceholder: 'Cantidad',
-        add: 'Agregar artículo',
-        remove: 'Quitar artículo',
-        empty: 'Ningún artículo agregado.',
+        add: 'Agregar producto',
+        remove: 'Quitar producto',
+        empty: 'No se agregaron productos.',
         free: 'Libre: {{count}} {{unit}}',
         quantityOf: 'Cantidad de {{name}}',
       },
@@ -555,8 +714,9 @@ export default {
         placeholder: 'Dirección, cliente, horario, forma de pago...',
       },
       validation: {
-        itemsRequired: 'Agrega al menos un artículo al paquete',
-        quantityPositive: 'Cada artículo necesita una cantidad mayor que cero',
+        itemsRequired: 'Agrega al menos un producto al paquete',
+        quantityPositive: 'Cada producto necesita una cantidad mayor que cero',
+        integer: 'Los productos atómicos se cuentan por unidad: usa números enteros',
         notesMax: 'Las notas pueden tener como máximo {{count}} caracteres',
       },
     },
@@ -570,11 +730,13 @@ export default {
       createCategory: 'No se pudo crear la categoría. Inténtalo de nuevo.',
       updateCategory: 'No se pudo actualizar la categoría. Inténtalo de nuevo.',
       deleteCategory: 'No se pudo eliminar la categoría. Inténtalo de nuevo.',
-      createItem: 'No se pudo crear el artículo. Inténtalo de nuevo.',
+      createProduct: 'No se pudo crear el producto. Inténtalo de nuevo.',
+      updateProduct: 'No se pudo actualizar el producto. Inténtalo de nuevo.',
+      deleteProduct: 'No se pudo eliminar el producto. Inténtalo de nuevo.',
+      createItems: 'No se pudieron generar los artículos.',
+      deleteItem: 'No se pudo eliminar el artículo. Inténtalo de nuevo.',
       updateQuantity: 'No se pudo actualizar la cantidad.',
       updateItem: 'No se pudo actualizar el artículo. Inténtalo de nuevo.',
-      updateItemStorage: 'No se pudo actualizar el almacenamiento. Inténtalo de nuevo.',
-      build: 'No se pudo construir el artículo.',
       createStorage: 'No se pudo crear el almacenamiento. Inténtalo de nuevo.',
       updateStorage: 'No se pudo actualizar el almacenamiento. Inténtalo de nuevo.',
       deleteStorage: 'No se pudo eliminar el almacenamiento. Inténtalo de nuevo.',
