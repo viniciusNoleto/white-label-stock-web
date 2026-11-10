@@ -16,6 +16,8 @@ actions = input<TableAction<T>[] | ((ctx) => TableAction<T>[])>();
 page = input(1);
 lastPage = input(1);                                  // paginação só aparece se > 1
 pageChange = output<number>();
+numbered = input(true);                               // coluna "#" com o número da linha
+perPage = input(DEFAULT_PER_PAGE);                    // usado na numeração
 
 type TableAction<T> = {
   label: string;      // tooltip + aria-label (e texto, se não houver icon)
@@ -70,3 +72,4 @@ protected readonly actions = computed<TableAction<IUnit>[]>(() => [
 
 - Ações condicionais por linha: passe uma função `({ item }) => TableAction[]`.
 - Ao trocar de página, `page.set(n)` + `refetch()` — ver `paginated-list.md`.
+- Numeração (padrão ligada): `(page - 1) * perPage + posição + 1`, contínua entre páginas. Só é recalculada quando chegam `rows` novas (a página muda `page` antes do refetch). Página com `per_page` diferente do padrão passa `[perPage]`; `[numbered]="false"` desliga.

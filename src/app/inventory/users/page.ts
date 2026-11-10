@@ -12,12 +12,11 @@ import type { PaginatedMeta } from '@/shared/types/api';
 import { debouncedEffect } from '@/utils/effects';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'deleteUser';
 
 type UsersFilters = { search: string };
-
-const PER_PAGE = 15;
 
 /** Usuários com acesso (só admin): usuário comum pode ser excluído e perde o acesso na hora; admin não. */
 @Component({
@@ -148,7 +147,7 @@ export class UsersPage {
       query: {
         search: this.filters().search || undefined,
         page: this.page(),
-        per_page: PER_PAGE,
+        per_page: DEFAULT_PER_PAGE,
       },
     }),
   });

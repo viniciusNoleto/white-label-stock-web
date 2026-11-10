@@ -5,14 +5,13 @@ import type { IItem } from '../models/Item';
 
 /**
  * Atômico: `quantity` = quantos itens gerar (lote, cada um com código). A granel: quantidade do lote.
- * `code` só para um único item (vazio = automático). `consume_components` tira a receita do estoque.
+ * O código é sempre gerado pela API. `consume_components` tira a receita do estoque.
  */
 export type CreateItemsServicePayload = {
   product_id: number;
   quantity: number;
   produced_at: string;
   storage_id: number | null;
-  code: string | null;
   consume_components: boolean;
 };
 

@@ -12,6 +12,8 @@ import { getItemCategoriesService } from '@/resources/item-category/services/get
 import { I18n } from '@/libs/i18n';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import type { PaginatedMeta } from '@/shared/types/api';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategory';
 
@@ -51,7 +53,7 @@ type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategor
       noPadding
       class="m-4 flex flex-col sm:m-8"
     >
-      @if (categories().length; as total) {
+      @if (meta().total; as total) {
         <div class="flex items-center justify-end border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-neutral-800">
           <p class="text-sm tabular-nums text-gray-600 dark:text-gray-400">
             {{ 'categories.table.count' | t: { count: total } }}
@@ -69,6 +71,9 @@ type ModalKey = 'createItemCategory' | 'updateItemCategory' | 'deleteItemCategor
           color_hex: 'categories.table.columns.color' | t,
         }"
         [actions]="actions()"
+        [page]="page()"
+        [lastPage]="meta().last_page ?? 1"
+        (pageChange)="changePage($event)"
       >
         <ng-template
           appTableCell="color_hex"
@@ -140,9 +145,14 @@ export class CategoriesPage {
   protected readonly modals = signal<Record<ModalKey, boolean>>({ createItemCategory: false, updateItemCategory: false, deleteItemCategory: false });
   protected readonly editingItemCategory = signal<IItemCategory | null>(null);
 
-  protected readonly categoriesQuery = createQuery({ queryFn: () => getItemCategoriesService() });
+  protected readonly page = signal(1);
 
-  protected readonly categories = computed(() => this.categoriesQuery.data()?.data ?? []);
+  protected readonly categoriesQuery = createQuery({
+    queryFn: () => getItemCategoriesService({ query: { page: this.page(), per_page: DEFAULT_PER_PAGE } }),
+  });
+
+  protected readonly categories = computed(() => this.categoriesQuery.data()?.data.items ?? []);
+  protected readonly meta = computed<Partial<PaginatedMeta>>(() => this.categoriesQuery.data()?.data.meta ?? {});
 
   protected readonly rowKey = ({ item }: { item: IItemCategory }) => item.id;
 
@@ -182,6 +192,11 @@ export class CategoriesPage {
       this.closeModal('deleteItemCategory');
     },
   });
+
+  protected changePage(page: number) {
+    this.page.set(page);
+    this.categoriesQuery.refetch();
+  }
 
   protected openCreateItemCategoryModal() {
     this.createItemCategoryLogicData.createItemCategoryReset();

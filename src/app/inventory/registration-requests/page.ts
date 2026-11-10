@@ -13,12 +13,11 @@ import type { PaginatedMeta } from '@/shared/types/api';
 import { debouncedEffect } from '@/utils/effects';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'approveRequest' | 'rejectRequest';
 
 type RegistrationRequestsFilters = { search: string };
-
-const PER_PAGE = 15;
 
 /** Fila de pedidos de cadastro (só admin): aprovar cria o usuário, recusar exclui o pedido. */
 @Component({
@@ -151,7 +150,7 @@ export class RegistrationRequestsPage {
       query: {
         search: this.filters().search || undefined,
         page: this.page(),
-        per_page: PER_PAGE,
+        per_page: DEFAULT_PER_PAGE,
       },
     }),
   });

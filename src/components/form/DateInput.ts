@@ -28,6 +28,8 @@ import { FormControlBase } from './types';
         [disabled]="disabled()"
         [forceInvalid]="showError()"
         [attr.aria-invalid]="showError() || null"
+        [attr.aria-label]="ariaLabel() || null"
+        [attr.title]="ariaLabel() || null"
         [value]="value()"
         (input)="value.set($any($event.target).value)"
         (blur)="touch.emit()"
@@ -40,4 +42,6 @@ export class FormDateInput extends FormControlBase<string> {
 
   readonly minDate = input<string>();
   readonly maxDate = input<string>();
+  /** Nome acessível (e dica ao passar o mouse) quando não há `label` — ex.: filtros. */
+  readonly ariaLabel = input<string>();
 }

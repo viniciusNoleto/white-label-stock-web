@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, output, type Signal, signal } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
+import { NgIcon } from '@ng-icons/core';
 import * as yup from 'yup';
 import { FormButton } from '@/components/form/Button';
 import { Form } from '@/components/form/Form';
@@ -14,6 +15,9 @@ import { EQuantityMode } from '../enums/QuantityMode';
 import type { IItem } from '../models/Item';
 import { updateItemQuantityService } from '../services/updateItemQuantity';
 
+/** Campo vazio: o schema acusa o obrigatório no submit. */
+const EMPTY_AMOUNT = null as unknown as number;
+
 export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: { editingItemId: Signal<number | undefined>; onSuccess: () => void }) {
   const i18n = inject(I18n);
   const notify = injectNotify();
@@ -21,12 +25,13 @@ export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: 
   const currentQuantity = signal(0);
 
   const updateQuantitySchema = computed(() => yup.object({
-    mode: yup.mixed<EQuantityMode>().oneOf(Object.values(EQuantityMode)).default(EQuantityMode.SET).required(),
+    // Somar é o padrão: é a operação segura com várias pessoas mexendo no mesmo lote.
+    mode: yup.mixed<EQuantityMode>().oneOf(Object.values(EQuantityMode)).default(EQuantityMode.ADD).required(),
     // Definir aceita 0; somar/subtrair precisam de valor positivo, e a subtração
     // não passa do estoque atual (a API também recusa e devolve 422).
     amount: yup.number()
       .nullable()
-      .default(0)
+      .default(null)
       .required(i18n.t('forms.updateQuantity.validation.required'))
       .min(0, i18n.t('forms.updateQuantity.validation.min'))
       .when('mode', {
@@ -72,7 +77,7 @@ export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: 
 
   function updateQuantityInit(item: Pick<IItem, 'quantity'>) {
     currentQuantity.set(Number(item.quantity));
-    updateQuantityValidatedFormState.reset({ mode: EQuantityMode.SET, amount: Number(item.quantity) });
+    updateQuantityValidatedFormState.reset({ mode: EQuantityMode.ADD, amount: EMPTY_AMOUNT });
   }
 
   return { updateQuantityValidatedFormState, updateQuantityMutation, updateQuantityInit, currentQuantity: currentQuantity.asReadonly(), computeQuantity };
@@ -80,7 +85,7 @@ export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: 
 
 @Component({
   selector: 'app-update-item-quantity-logic',
-  imports: [Form, FormField, FormNumberInput, FormSegmentedControl, FormButton, TranslatePipe],
+  imports: [Form, FormField, NgIcon, FormNumberInput, FormSegmentedControl, FormButton, TranslatePipe],
   template: `
     @let form = logicData().updateQuantityValidatedFormState;
 
@@ -105,13 +110,40 @@ export function injectUpdateItemQuantityLogicData({ editingItemId, onSuccess }: 
 
       <app-form-segmented-control
         [data]="[
-          { value: modes.SET, label: 'forms.updateQuantity.mode.set' | t },
           { value: modes.ADD, label: 'forms.updateQuantity.mode.add' | t },
           { value: modes.SUBTRACT, label: 'forms.updateQuantity.mode.subtract' | t },
+          { value: modes.SET, label: 'forms.updateQuantity.mode.set' | t },
         ]"
         [value]="mode"
         (valueChange)="changeMode($any($event))"
       />
+
+      @if (mode === modes.SET) {
+        <div
+          role="alert"
+          class="flex gap-3 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+        >
+          <ng-icon
+            name="lucideTriangleAlert"
+            size="18"
+            class="mt-0.5 shrink-0"
+          />
+
+          <div class="flex flex-col gap-1.5">
+            <p class="font-medium">
+              {{ 'forms.updateQuantity.setWarning.title' | t }}
+            </p>
+
+            <p>
+              {{ 'forms.updateQuantity.setWarning.body' | t }}
+            </p>
+
+            <p>
+              {{ 'forms.updateQuantity.setWarning.advice' | t }}
+            </p>
+          </div>
+        </div>
+      }
 
       <app-form-number-input
         [minValue]="0"
@@ -159,7 +191,7 @@ export class UpdateItemQuantityLogicComponent {
   protected changeMode(mode: EQuantityMode) {
     const { updateQuantityValidatedFormState, currentQuantity } = this.logicData();
 
-    updateQuantityValidatedFormState.setState({ mode, amount: mode === EQuantityMode.SET ? currentQuantity() : 0 });
+    updateQuantityValidatedFormState.setState({ mode, amount: mode === EQuantityMode.SET ? currentQuantity() : EMPTY_AMOUNT });
   }
 
   protected updateQuantity() {

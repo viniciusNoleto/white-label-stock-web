@@ -18,10 +18,9 @@ import type { PaginatedMeta } from '@/shared/types/api';
 import { debouncedEffect } from '@/utils/effects';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'createPackage' | 'updatePackage' | 'deliverPackage' | 'deletePackage';
-
-const PER_PAGE = 15;
 
 type DeliveriesFilters = { status: EDeliveryPackageStatusFilter };
 
@@ -282,7 +281,7 @@ export class DeliveriesPage {
       query: {
         status: STATUS_BY_FILTER[this.filters().status],
         page: this.page(),
-        per_page: PER_PAGE,
+        per_page: DEFAULT_PER_PAGE,
       },
     }),
   });
@@ -312,7 +311,7 @@ export class DeliveriesPage {
         ]
       : []),
     {
-      icon: 'lucideTrash2',
+      icon: 'lucideUndo2',
       label: this.i18n.t('deliveries.rowActions.delete'),
       variant: 'destructive',
       onClick: ({ item: row }) => this.openDeletePackageModal(row),

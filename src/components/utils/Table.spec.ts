@@ -12,7 +12,9 @@ type Row = { id: number; name: string; qty: number };
       [rows]="rows()"
       [columns]="{ name: 'Nome', qty: 'Qtd' }"
       [actions]="actions"
-      [page]="1"
+      [page]="currentPage()"
+      [perPage]="2"
+      [numbered]="numbered()"
       [lastPage]="lastPage()"
       (pageChange)="page = $event"
     >
@@ -31,6 +33,8 @@ type Row = { id: number; name: string; qty: number };
 class Host {
   readonly rows = signal<Row[]>([{ id: 1, name: 'Parafuso', qty: 3 }]);
   readonly lastPage = signal(1);
+  readonly currentPage = signal(1);
+  readonly numbered = signal(true);
   page = 1;
   clicked: Row | null = null;
   readonly actions: TableAction<Row>[] = [{ label: 'Editar', icon: 'lucidePencil', onClick: ({ item }) => (this.clicked = item) }];
@@ -46,8 +50,8 @@ describe('UtilsTable', () => {
   it('renders headers, raw values and custom cells', async () => {
     const { element } = await render();
 
-    expect([...element.querySelectorAll('th')].map((th) => th.textContent!.trim())).toEqual(['Nome', 'Qtd', 'Ações']);
-    expect(element.querySelector('tbody td')!.textContent!.trim()).toBe('Parafuso');
+    expect([...element.querySelectorAll('th')].map((th) => th.textContent!.trim())).toEqual(['#', 'Nome', 'Qtd', 'Ações']);
+    expect(element.querySelector('tbody td:nth-child(2)')!.textContent!.trim()).toBe('Parafuso');
     expect(element.querySelector('tbody strong')!.textContent!.trim()).toBe('6');
   });
 
@@ -72,5 +76,31 @@ describe('UtilsTable', () => {
 
     (element.querySelector('button[aria-current="page"] ~ button') as HTMLButtonElement).click();
     expect(fixture.componentInstance.page).toBe(2);
+  });
+
+  it('numbers rows from page and perPage, only after the new rows arrive', async () => {
+    const { fixture, element } = await render();
+    const numbers = () => [...element.querySelectorAll('tbody tr td:first-child')].map((td) => td.textContent!.trim());
+
+    expect(numbers()).toEqual(['1']);
+
+    // Página trocada, linhas ainda as antigas (refetch em andamento): a numeração não muda.
+    fixture.componentInstance.currentPage.set(3);
+    await fixture.whenStable();
+    expect(numbers()).toEqual(['1']);
+
+    fixture.componentInstance.rows.set([{ id: 5, name: 'Porca', qty: 1 }, { id: 6, name: 'Arruela', qty: 2 }]);
+    await fixture.whenStable();
+    expect(numbers()).toEqual(['5', '6']);
+  });
+
+  it('hides the numbering when numbered is false', async () => {
+    const { fixture, element } = await render();
+
+    fixture.componentInstance.numbered.set(false);
+    await fixture.whenStable();
+
+    expect([...element.querySelectorAll('th')].map((th) => th.textContent!.trim())).toEqual(['Nome', 'Qtd', 'Ações']);
+    expect(element.querySelector('tbody td')!.textContent!.trim()).toBe('Parafuso');
   });
 });

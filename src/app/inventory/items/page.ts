@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormButton } from '@/components/form/Button';
-import { FormSegmentedControl } from '@/components/form/SegmentedControl';
 import { FormSelect } from '@/components/form/Select';
 import { FormTextInput } from '@/components/form/TextInput';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -10,6 +10,7 @@ import { UtilsModal } from '@/components/utils/Modal';
 import { type TableAction, UtilsTable, UtilsTableCell } from '@/components/utils/Table';
 import { I18n } from '@/libs/i18n';
 import { ExpirationBadge } from '@/resources/item/components/ExpirationBadge';
+import { ItemExpirationFilter } from '@/resources/item/components/ItemExpirationFilter';
 import { EItemExpirationFilter } from '@/resources/item/enums/ItemExpirationFilter';
 import { CreateItemsLogicComponent, injectCreateItemsLogicData } from '@/resources/item/logics/CreateItems';
 import { DeleteItemLogicComponent, injectDeleteItemLogicData } from '@/resources/item/logics/DeleteItem';
@@ -18,24 +19,41 @@ import { injectUpdateItemQuantityLogicData, UpdateItemQuantityLogicComponent } f
 import type { IItem } from '@/resources/item/models/Item';
 import { getItemsService } from '@/resources/item/services/getItems';
 import { getProductsService } from '@/resources/product/services/getProducts';
+import { getStoragesService } from '@/resources/storage/services/getStorages';
 import type { PaginatedMeta } from '@/shared/types/api';
 import { formatISODate } from '@/utils/date';
 import { debouncedEffect } from '@/utils/effects';
+import { dateParam, enumParam, idParam, injectFilterQueryParams } from '@/utils/query-params';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { DEFAULT_PER_PAGE, MAX_PER_PAGE } from '@/shared/constants/pagination';
+
+/** Filtros que ficam recolhidos num botão de ícone até serem usados. */
+type CollapsibleFilter = 'productId' | 'storageId';
 
 type ModalKey = 'createItems' | 'updateItem' | 'updateQuantity' | 'deleteItem';
 
-const PER_PAGE = 15;
+type ItemsFilters = {
+  /** Só o código do item. */
+  code: string;
+  productId: number | null;
+  storageId: number | null;
+  /** Vencimento exato (`YYYY-MM-DD`) ou `''` — só vale com `expiration` = `DATE`. */
+  expiresAt: string;
+  expiration: EItemExpirationFilter;
+};
 
-type ItemsFilters = { search: string; productId: number | null; expiration: EItemExpirationFilter };
+/** Só "vencendo"/"vencidos" vão para a API como `expiration` (data exata vai em `expires_at`). */
+function apiExpiration(expiration: EItemExpirationFilter) {
+  return expiration === EItemExpirationFilter.EXPIRING || expiration === EItemExpirationFilter.EXPIRED ? expiration : undefined;
+}
 
 @Component({
   selector: 'app-items-page',
   imports: [
     FormButton,
-    FormSegmentedControl,
     FormSelect,
+    HlmTooltip,
     FormTextInput,
     PageHeader,
     RouterLink,
@@ -45,6 +63,7 @@ type ItemsFilters = { search: string; productId: number | null; expiration: EIte
     UtilsTableCell,
     TranslatePipe,
     ExpirationBadge,
+    ItemExpirationFilter,
     CreateItemsLogicComponent,
     UpdateItemLogicComponent,
     UpdateItemQuantityLogicComponent,
@@ -72,43 +91,82 @@ type ItemsFilters = { search: string; productId: number | null; expiration: EIte
       noPadding
       class="m-4 flex flex-col sm:m-8"
     >
-      <div class="flex flex-wrap items-center gap-4 border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
-        <app-form-text-input
-          type="search"
-          class="w-full max-w-xs"
-          leftIcon="lucideSearch"
-          [placeholder]="'items.search.placeholder' | t"
-          [value]="filters().search"
-          (valueChange)="setFilter('search', $event)"
-        />
+      <div class="flex flex-col gap-4 border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
+        <div class="flex flex-wrap items-center gap-4">
+          <app-item-expiration-filter
+            [expiration]="filters().expiration"
+            [expiresAt]="filters().expiresAt"
+            (expirationChange)="setFilter('expiration', $event)"
+            (expiresAtChange)="setFilter('expiresAt', $event)"
+          />
 
-        <app-form-select
-          class="w-full max-w-xs"
-          valueField="id"
-          labelField="name"
-          [clearable]="true"
-          [placeholder]="'items.filters.product' | t"
-          [data]="products()"
-          [value]="filters().productId"
-          (valueChange)="setFilter('productId', $any($event))"
-        />
+          @if (meta().total; as total) {
+            <p class="ml-auto text-sm tabular-nums text-gray-600 dark:text-gray-400">
+              {{ 'items.table.count' | t: { count: total } }}
+            </p>
+          }
+        </div>
 
-        <app-form-segmented-control
-          class="w-full max-w-sm"
-          [data]="[
-            { value: expirationFilters.ALL, label: 'items.filters.expiration.all' | t },
-            { value: expirationFilters.EXPIRING, label: 'items.filters.expiration.expiring' | t },
-            { value: expirationFilters.EXPIRED, label: 'items.filters.expiration.expired' | t },
-          ]"
-          [value]="filters().expiration"
-          (valueChange)="setFilter('expiration', $any($event))"
-        />
+        <div class="flex flex-wrap items-center gap-2">
+          <app-form-text-input
+            type="search"
+            class="me-2 w-full max-w-xs"
+            leftIcon="lucideSearch"
+            [placeholder]="'items.search.placeholder' | t"
+            [value]="filters().code"
+            (valueChange)="setFilter('code', $event)"
+          />
 
-        @if (meta().total; as total) {
-          <p class="ml-auto text-sm tabular-nums text-gray-600 dark:text-gray-400">
-            {{ 'items.table.count' | t: { count: total } }}
-          </p>
-        }
+          @if (showFilter('productId')) {
+            <app-form-select
+              class="w-full max-w-64"
+              valueField="id"
+              labelField="name"
+              [clearable]="true"
+              [autoOpen]="filters().productId === null"
+              [placeholder]="'items.filters.product' | t"
+              [data]="products()"
+              [value]="filters().productId"
+              (valueChange)="setFilter('productId', $any($event))"
+              (touch)="collapseFilter('productId')"
+            />
+          } @else {
+            <button
+              appButton
+              variant="outline"
+              size="icon"
+              icon="lucidePackage"
+              [attr.aria-label]="'items.filters.byProduct' | t"
+              [hlmTooltip]="'items.filters.byProduct' | t"
+              (click)="expandFilter('productId')"
+            ></button>
+          }
+
+          @if (showFilter('storageId')) {
+            <app-form-select
+              class="w-full max-w-64"
+              valueField="id"
+              labelField="name"
+              [clearable]="true"
+              [autoOpen]="filters().storageId === null"
+              [placeholder]="'items.filters.storage' | t"
+              [data]="storages()"
+              [value]="filters().storageId"
+              (valueChange)="setFilter('storageId', $any($event))"
+              (touch)="collapseFilter('storageId')"
+            />
+          } @else {
+            <button
+              appButton
+              variant="outline"
+              size="icon"
+              icon="lucideWarehouse"
+              [attr.aria-label]="'items.filters.byStorage' | t"
+              [hlmTooltip]="'items.filters.byStorage' | t"
+              (click)="expandFilter('storageId')"
+            ></button>
+          }
+        </div>
       </div>
 
       <app-utils-table
@@ -161,13 +219,13 @@ type ItemsFilters = { search: string; productId: number | null; expiration: EIte
         >
           <div class="flex flex-wrap items-center gap-2">
             @if (item.product.is_atomic) {
-              <span class="font-mono text-[15px] tabular-nums">
+              <span class="font-mono tabular-nums">
                 1 {{ item.product.unit.abbreviation }}
               </span>
             } @else {
               <button
                 type="button"
-                class="font-mono text-[15px] font-medium tabular-nums underline-offset-4 hover:text-primary-600 hover:underline dark:hover:text-primary-300"
+                class="font-mono font-medium tabular-nums underline-offset-4 hover:text-primary-600 hover:underline dark:hover:text-primary-300"
                 [class.text-gray-400]="+item.quantity === 0"
                 [title]="'items.rowActions.adjustStock' | t"
                 (click)="openUpdateQuantityModal(item)"
@@ -279,16 +337,35 @@ type ItemsFilters = { search: string; productId: number | null; expiration: EIte
 })
 export class ItemsPage {
   private readonly i18n = inject(I18n);
+  private readonly router = inject(Router);
 
   protected readonly expirationFilters = EItemExpirationFilter;
 
   protected readonly page = signal(1);
-  // `?product=ID` (vindo de Produtos/Operação) já abre filtrado.
-  protected readonly filters = signal<ItemsFilters>({
-    search: '',
-    productId: Number(inject(ActivatedRoute).snapshot.queryParamMap.get('product')) || null,
-    expiration: EItemExpirationFilter.ALL,
+
+  // Filtros na URL (`?code=&product=&storage=&expires_at=&expiration=`): o link leva ao mesmo filtro.
+  private readonly filterParams = injectFilterQueryParams<ItemsFilters>({
+    read: (params) => {
+      const expiresAt = dateParam(params, 'expires_at');
+
+      return {
+        code: params.get('code') ?? '',
+        productId: idParam(params, 'product'),
+        storageId: idParam(params, 'storage'),
+        expiresAt,
+        expiration: expiresAt ? EItemExpirationFilter.DATE : enumParam(params, 'expiration', EItemExpirationFilter, EItemExpirationFilter.ALL),
+      };
+    },
+    write: (filters) => ({
+      code: filters.code.trim(),
+      product: filters.productId,
+      storage: filters.storageId,
+      expires_at: filters.expiration === EItemExpirationFilter.DATE ? filters.expiresAt : null,
+      expiration: apiExpiration(filters.expiration) ?? null,
+    }),
   });
+
+  protected readonly filters = signal<ItemsFilters>(this.filterParams.initial);
 
   protected readonly modals = signal<Record<ModalKey, boolean>>({
     createItems: false,
@@ -297,31 +374,38 @@ export class ItemsPage {
     deleteItem: false,
   });
 
+  /** Filtros recolhidos que o usuário abriu (com valor, o filtro fica sempre aberto). */
+  private readonly expandedFilters = signal<Record<CollapsibleFilter, boolean>>({ productId: false, storageId: false });
+
   protected readonly editingItem = signal<IItem | null>(null);
 
   private readonly editingItemId = computed(() => this.editingItem()?.id);
 
   protected readonly itemsQuery = createQuery({
     queryFn: () => {
-      const { search, productId, expiration } = this.filters();
+      const { code, productId, storageId, expiresAt, expiration } = this.filters();
 
       return getItemsService({
         query: {
-          search: search || undefined,
+          search: code.trim() || undefined,
           product_id: productId ?? undefined,
-          expiration: expiration === EItemExpirationFilter.ALL ? undefined : expiration,
+          storage_id: storageId ?? undefined,
+          expires_at: (expiration === EItemExpirationFilter.DATE && expiresAt) || undefined,
+          expiration: apiExpiration(expiration),
           page: this.page(),
-          per_page: PER_PAGE,
+          per_page: DEFAULT_PER_PAGE,
         },
       });
     },
   });
 
-  private readonly productsQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
+  private readonly productsQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: MAX_PER_PAGE } }) });
+  private readonly storagesQuery = createQuery({ queryFn: () => getStoragesService({ query: { per_page: MAX_PER_PAGE } }) });
 
   protected readonly items = computed(() => this.itemsQuery.data()?.data.items ?? []);
   protected readonly meta = computed<Partial<PaginatedMeta>>(() => this.itemsQuery.data()?.data.meta ?? {});
   protected readonly products = computed(() => this.productsQuery.data()?.data.items ?? []);
+  protected readonly storages = computed(() => this.storagesQuery.data()?.data.items ?? []);
 
   protected readonly rowKey = ({ item }: { item: IItem }) => item.id;
 
@@ -339,6 +423,11 @@ export class ItemsPage {
           label: this.i18n.t('items.rowActions.adjustStock'),
           onClick: ({ item: row }: { item: IItem }) => this.openUpdateQuantityModal(row),
         }]),
+    {
+      icon: 'lucideHistory',
+      label: this.i18n.t('items.rowActions.movements'),
+      onClick: ({ item: row }) => this.router.navigate(['/inventory/movements'], { queryParams: { search: row.code } }),
+    },
     {
       icon: 'lucideTrash2',
       label: this.i18n.t('items.rowActions.delete'),
@@ -379,7 +468,10 @@ export class ItemsPage {
   });
 
   constructor() {
-    debouncedEffect(this.filters, () => {
+    this.filterParams.bind(this.filters);
+
+    debouncedEffect(this.filters, (filters) => {
+      this.filterParams.save(filters);
       this.page.set(1);
       this.itemsQuery.refetch();
     }, 500);
@@ -391,6 +483,21 @@ export class ItemsPage {
 
   protected setFilter<K extends keyof ItemsFilters>(key: K, value: ItemsFilters[K]) {
     this.filters.update((filters) => ({ ...filters, [key]: value }));
+  }
+
+  protected showFilter(key: CollapsibleFilter) {
+    return this.expandedFilters()[key] || this.filters()[key] !== null;
+  }
+
+  protected expandFilter(key: CollapsibleFilter) {
+    this.expandedFilters.update((filters) => ({ ...filters, [key]: true }));
+  }
+
+  /** Fechou a lista sem escolher (ou limpou): volta a ser o botão de ícone. */
+  protected collapseFilter(key: CollapsibleFilter) {
+    if (this.filters()[key] !== null) return;
+
+    this.expandedFilters.update((filters) => ({ ...filters, [key]: false }));
   }
 
   protected changePage(page: number) {

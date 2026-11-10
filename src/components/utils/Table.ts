@@ -1,9 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, contentChildren, Directive, inject, input, output, TemplateRef } from '@angular/core';
+import { Component, computed, contentChildren, Directive, inject, input, linkedSignal, output, TemplateRef, untracked } from '@angular/core';
 import type { ButtonVariants } from '@spartan-ng/helm/button';
 import { NgIcon } from '@ng-icons/core';
 import { HlmTooltip } from '@spartan-ng/helm/tooltip';
 import { FormButton } from '@/components/form/Button';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 import { delayedFlag } from '@/utils/delayed-flag';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { UtilsLoader } from './Loader';
@@ -66,6 +67,16 @@ export class UtilsTableCell<T> {
         <table class="w-max min-w-full border-separate border-spacing-0 text-left">
           <thead>
             <tr>
+              @if (numbered()) {
+                <th
+                  scope="col"
+                  class="w-px whitespace-nowrap border-b border-gray-300 bg-stone-50 py-3 pl-6 pr-2 text-right text-[13px] font-medium text-gray-500 dark:border-neutral-700 dark:bg-neutral-950/40 dark:text-gray-500"
+                  [attr.aria-label]="'common.table.rowNumberLabel' | t"
+                >
+                  {{ 'common.table.rowNumber' | t }}
+                </th>
+              }
+
               @for (column of columnList(); track column.field) {
                 <th
                   scope="col"
@@ -89,6 +100,12 @@ export class UtilsTableCell<T> {
           <tbody>
             @for (row of rows(); track rowKeyOf(row, $index); let index = $index) {
               <tr class="group">
+                @if (numbered()) {
+                  <td class="w-px whitespace-nowrap border-b border-gray-100 py-3.5 pl-6 pr-2 text-right text-sm tabular-nums text-gray-500 transition-colors group-hover:bg-(--row-hover-solid) dark:border-neutral-800 dark:text-gray-500">
+                    {{ rowOffset() + index + 1 }}
+                  </td>
+                }
+
                 @for (column of columnList(); track column.field) {
                   <!-- Linha em foco: fundo neutro um tom acima da tabela (mais escuro no claro, mais claro no escuro). -->
                   <td class="whitespace-nowrap border-b border-gray-100 px-6 py-3.5 text-sm text-gray-900 transition-colors group-hover:bg-(--row-hover-solid) dark:border-neutral-800 dark:text-gray-100">
@@ -177,6 +194,19 @@ export class UtilsTable<T extends object> {
   readonly lastPage = input(1);
   readonly pageChange = output<number>();
 
+  /** Numeração das linhas, contínua entre páginas: `(page - 1) * perPage + posição`. */
+  readonly numbered = input(true);
+  readonly perPage = input(DEFAULT_PER_PAGE);
+
+  /**
+   * Deslocamento da numeração, recalculado só quando chegam linhas novas: a página troca o
+   * `page` antes do refetch, e as linhas antigas não podem ganhar os números da página nova.
+   */
+  protected readonly rowOffset = linkedSignal({
+    source: this.rows,
+    computation: () => untracked(() => (Math.max(1, this.page()) - 1) * this.perPage()),
+  });
+
   private readonly cells = contentChildren(UtilsTableCell);
 
   protected readonly cellTemplates = computed(
@@ -192,7 +222,7 @@ export class UtilsTable<T extends object> {
     return typeof actions === 'function' || (actions?.length ?? 0) > 0;
   });
 
-  protected readonly colCount = computed(() => this.columnList().length + (this.hasActions() ? 1 : 0));
+  protected readonly colCount = computed(() => this.columnList().length + (this.numbered() ? 1 : 0) + (this.hasActions() ? 1 : 0));
 
   protected rowKeyOf(row: T, index: number): PropertyKey {
     return this.rowKey()?.({ item: row, index }) ?? index;

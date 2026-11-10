@@ -31,9 +31,14 @@ export function uniqueName(label: string) {
 }
 
 /** Abre um `app-form-select` (Spartan) e escolhe a opção. */
-export async function selectOption(page: Page, trigger: Locator, option: string) {
+export async function selectOption(page: Page, trigger: Locator, option: string | RegExp) {
   await trigger.click();
   await page.getByRole('option', { name: option, exact: true }).click();
+}
+
+/** Opção do select de produtos do pacote: `{nome} · {livre} {unidade}`. */
+export function packageProductOption(name: string) {
+  return new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · `);
 }
 
 export function row(page: Page, text: string) {
@@ -54,6 +59,12 @@ async function post<T>(request: APIRequestContext, url: string, data: object): P
   return (await response.json()).data as T;
 }
 
+async function patch<T>(request: APIRequestContext, url: string, data: object): Promise<T> {
+  const response = await request.patch(url, { data, headers: await bearer(request) });
+  expect(response.ok()).toBeTruthy();
+  return (await response.json()).data as T;
+}
+
 export const api = {
   unit: (request: APIRequestContext, name = uniqueName('unit'), abbreviation = 'un') =>
     post<{ id: number; name: string }>(request, '/api/units', { name, abbreviation }),
@@ -69,4 +80,9 @@ export const api = {
     request: APIRequestContext,
     body: { product_id: number; quantity?: number; produced_at?: string; storage_id?: number; code?: string; consume_components?: boolean },
   ) => post<{ items: { id: number; code: string }[] }>(request, '/api/items', body).then((data) => data.items),
+  updateItem: (
+    request: APIRequestContext,
+    itemId: number,
+    body: { quantity?: number; quantity_add?: number; quantity_subtract?: number; storage_id?: number | null },
+  ) => patch<{ id: number; code: string }>(request, `/api/items/${itemId}`, body),
 };

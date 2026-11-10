@@ -17,10 +17,9 @@ import type { PaginatedMeta } from '@/shared/types/api';
 import { debouncedEffect } from '@/utils/effects';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'createProduct' | 'updateProduct' | 'deleteProduct' | 'createItems';
-
-const PER_PAGE = 15;
 
 type ProductsFilters = { search: string };
 
@@ -181,7 +180,7 @@ type ProductsFilters = { search: string };
         >
           <div class="flex flex-col gap-0.5">
             <span
-              class="font-mono text-[15px] font-medium tabular-nums"
+              class="font-mono font-medium tabular-nums"
               [class.text-gray-400]="+product.stock_quantity === 0"
             >
               {{ +product.stock_quantity }} {{ product.unit.abbreviation }}
@@ -281,7 +280,7 @@ export class ProductsPage {
       query: {
         search: this.filters().search || undefined,
         page: this.page(),
-        per_page: PER_PAGE,
+        per_page: DEFAULT_PER_PAGE,
       },
     }),
   });
@@ -379,7 +378,7 @@ export class ProductsPage {
   }
 
   protected openCreateItemsModal(product: IProduct) {
-    this.createItemsLogicData.createItemsReset(product.id);
+    this.createItemsLogicData.createItemsReset(product.id, { lockProduct: true });
     this.setModal('createItems', true);
   }
 

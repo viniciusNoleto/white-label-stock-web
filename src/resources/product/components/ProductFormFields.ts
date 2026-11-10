@@ -14,6 +14,7 @@ import { EProductMode } from '../enums/ProductMode';
 import type { ProductFormValues } from '../schemas/product';
 import { getProductsService } from '../services/getProducts';
 import { type ProductRecipeEntry, ProductRecipeField } from './ProductRecipeField';
+import { MAX_PER_PAGE } from '@/shared/constants/pagination';
 
 /** Campos do produto, compartilhados entre criar e editar (cada logic tem o próprio `<form>`). */
 @Component({
@@ -102,11 +103,11 @@ export class ProductFormFields {
 
   protected readonly modes = EProductMode;
 
-  private readonly unitsQuery = createQuery({ queryFn: () => getUnitsService() });
-  private readonly categoriesQuery = createQuery({ queryFn: () => getItemCategoriesService() });
-  private readonly productsQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
+  private readonly unitsQuery = createQuery({ queryFn: () => getUnitsService({ query: { per_page: MAX_PER_PAGE } }) });
+  private readonly categoriesQuery = createQuery({ queryFn: () => getItemCategoriesService({ query: { per_page: MAX_PER_PAGE } }) });
+  private readonly productsQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: MAX_PER_PAGE } }) });
 
-  protected readonly units = computed(() => this.unitsQuery.data()?.data ?? []);
-  protected readonly categories = computed(() => this.categoriesQuery.data()?.data ?? []);
+  protected readonly units = computed(() => this.unitsQuery.data()?.data.items ?? []);
+  protected readonly categories = computed(() => this.categoriesQuery.data()?.data.items ?? []);
   protected readonly products = computed(() => this.productsQuery.data()?.data.items ?? []);
 }

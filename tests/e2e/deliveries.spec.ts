@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { api, dialog, expectToast, row, selectOption, uniqueName } from './support/helpers';
+import { api, dialog, expectToast, packageProductOption, row, selectOption, uniqueName } from './support/helpers';
 
 test('packages a bulk product, shows it as reserved and subtracts it on delivery', async ({ page, request }) => {
   const unit = await api.unit(request);
@@ -14,7 +14,7 @@ test('packages a bulk product, shows it as reserved and subtracts it on delivery
   await modal.getByRole('button', { name: 'Salvar' }).click();
   await expect(modal).toContainText('Adicione ao menos um produto ao pacote');
 
-  await selectOption(page, modal.getByRole('combobox').filter({ hasText: 'Selecione um produto' }), coco.name);
+  await selectOption(page, modal.getByRole('combobox').filter({ hasText: 'Selecione um produto' }), packageProductOption(coco.name));
   await modal.getByLabel('Quantidade', { exact: true }).fill('12');
   await modal.getByLabel('Adicionar produto').click();
   await expect(modal.getByRole('listitem').filter({ hasText: coco.name })).toContainText('Livre: 10 un');

@@ -12,6 +12,8 @@ import { getUnitsService } from '@/resources/unit/services/getUnits';
 import { I18n } from '@/libs/i18n';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import type { PaginatedMeta } from '@/shared/types/api';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'createUnit' | 'updateUnit' | 'deleteUnit';
 
@@ -50,7 +52,7 @@ type ModalKey = 'createUnit' | 'updateUnit' | 'deleteUnit';
       noPadding
       class="m-4 flex flex-col sm:m-8"
     >
-      @if (units().length; as total) {
+      @if (meta().total; as total) {
         <div class="flex items-center justify-end border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-neutral-800">
           <p class="text-sm tabular-nums text-gray-600 dark:text-gray-400">
             {{ 'units.table.count' | t: { count: total } }}
@@ -68,6 +70,9 @@ type ModalKey = 'createUnit' | 'updateUnit' | 'deleteUnit';
           abbreviation: 'units.table.columns.abbreviation' | t,
         }"
         [actions]="actions()"
+        [page]="page()"
+        [lastPage]="meta().last_page ?? 1"
+        (pageChange)="changePage($event)"
       />
     </section>
 
@@ -121,9 +126,14 @@ export class UnitsPage {
   protected readonly modals = signal<Record<ModalKey, boolean>>({ createUnit: false, updateUnit: false, deleteUnit: false });
   protected readonly editingUnit = signal<IUnit | null>(null);
 
-  protected readonly unitsQuery = createQuery({ queryFn: () => getUnitsService() });
+  protected readonly page = signal(1);
 
-  protected readonly units = computed(() => this.unitsQuery.data()?.data ?? []);
+  protected readonly unitsQuery = createQuery({
+    queryFn: () => getUnitsService({ query: { page: this.page(), per_page: DEFAULT_PER_PAGE } }),
+  });
+
+  protected readonly units = computed(() => this.unitsQuery.data()?.data.items ?? []);
+  protected readonly meta = computed<Partial<PaginatedMeta>>(() => this.unitsQuery.data()?.data.meta ?? {});
 
   protected readonly rowKey = ({ item }: { item: IUnit }) => item.id;
 
@@ -163,6 +173,11 @@ export class UnitsPage {
       this.closeModal('deleteUnit');
     },
   });
+
+  protected changePage(page: number) {
+    this.page.set(page);
+    this.unitsQuery.refetch();
+  }
 
   protected openCreateUnitModal() {
     this.createUnitLogicData.createUnitReset();

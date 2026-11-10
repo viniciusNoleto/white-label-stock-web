@@ -11,6 +11,7 @@ src/
 │   ├── auth/register/page.ts              ← /auth/register (pedido de cadastro)
 │   ├── inventory/layout.ts                ← casca autenticada (AppShell + <router-outlet>)
 │   ├── inventory/stock/page.ts            ← operação: atômicos agrupados por produto, lotes a granel por linha
+│   ├── inventory/movements/page.ts        ← histórico de movimentações dos itens (só leitura)
 │   ├── inventory/{products,items,deliveries,categories,units,storages}/page.ts
 │   ├── inventory/{users,registration-requests}/page.ts   ← só admin (adminGuard)
 │   └── not-found/page.ts

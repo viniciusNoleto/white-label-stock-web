@@ -8,10 +8,12 @@ import { validatedFormState } from '@/utils/form';
 import { injectNotify } from '@/utils/notify';
 import { createMutation, createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
-import { type DeliveryPackageItemEntry, DeliveryPackageItemsField, deliveryPackageItemsError } from '../components/DeliveryPackageItemsField';
+import { type DeliveryPackageItemEntry, DeliveryPackageItemsField, deliveryPackageItemsError, deliveryPackageItemsPayload } from '../components/DeliveryPackageItemsField';
+import { EAllocationMode } from '../enums/AllocationMode';
 import type { IDeliveryPackage } from '../models/DeliveryPackage';
 import { injectDeliveryPackageSchema } from '../schemas/deliveryPackage';
 import { updateDeliveryPackageService } from '../services/updateDeliveryPackage';
+import { MAX_PER_PAGE } from '@/shared/constants/pagination';
 
 export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSuccess }: { editingPackageId: Signal<number | undefined>; onSuccess: () => void }) {
   const notify = injectNotify();
@@ -22,13 +24,15 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
   const updatePackageShowItemErrors = signal(false);
   /** O que o pacote já separou antes da edição: conta como livre para ele mesmo. */
   const updatePackageOwnQuantities = signal<Record<number, number>>({});
+  /** Itens que o pacote já separou: continuam escolhíveis para ele. */
+  const updatePackageOwnItemIds = signal<number[]>([]);
 
   const updatePackageMutation = createMutation({
     mutationFn: () => updateDeliveryPackageService({
       packageId: editingPackageId()!,
       body: {
         notes: updatePackageValidatedFormState.state().notes.trim() || null,
-        items: updatePackageItems().map((entry) => ({ product_id: entry.id, quantity: entry.quantity ?? 0 })),
+        items: deliveryPackageItemsPayload(updatePackageItems()),
       },
     }),
     onSuccess: (res) => {
@@ -39,7 +43,13 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
     onError: (err) => notify.error(err, 'notifications.errors.updateDeliveryPackage'),
   });
 
+  /**
+   * Atômicos abrem em "escolher item a item" com os itens já separados: salvar sem mexer mantém
+   * exatamente os mesmos itens (o FEFO poderia trocar por outros que vencem antes).
+   */
   function updatePackageInit(deliveryPackage: IDeliveryPackage) {
+    const ownItemIds = (item: IDeliveryPackage['items'][number]) => item.allocations.flatMap((allocation) => (allocation.item_id === null ? [] : [allocation.item_id]));
+
     updatePackageValidatedFormState.reset({ notes: deliveryPackage.notes ?? '' });
     updatePackageItems.set(deliveryPackage.items.map((item) => ({
       id: item.product_id,
@@ -47,7 +57,10 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
       isAtomic: item.is_atomic,
       unitAbbreviation: item.unit.abbreviation,
       quantity: Number(item.quantity),
+      allocationMode: item.is_atomic ? EAllocationMode.MANUAL : EAllocationMode.FEFO,
+      itemIds: item.is_atomic ? ownItemIds(item) : [],
     })));
+    updatePackageOwnItemIds.set(deliveryPackage.items.flatMap(ownItemIds));
     updatePackageOwnQuantities.set(Object.fromEntries(deliveryPackage.items.map((item) => [item.product_id, Number(item.quantity)])));
     updatePackageShowItemErrors.set(false);
   }
@@ -66,6 +79,7 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
     updatePackageItems,
     updatePackageShowItemErrors,
     updatePackageOwnQuantities,
+    updatePackageOwnItemIds,
     updatePackageMutation,
     updatePackageInit,
     updatePackageValidate,
@@ -90,6 +104,7 @@ export function injectUpdateDeliveryPackageLogicData({ editingPackageId, onSucce
           class="col-span-12"
           [stockItems]="stockItems()"
           [ownQuantities]="logicData().updatePackageOwnQuantities()"
+          [ownItemIds]="logicData().updatePackageOwnItemIds()"
           [showErrors]="logicData().updatePackageShowItemErrors()"
           [(items)]="logicData().updatePackageItems"
         />
@@ -128,7 +143,7 @@ export class UpdateDeliveryPackageLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectUpdateDeliveryPackageLogicData>>();
   readonly cancel = output<void>();
 
-  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
+  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: MAX_PER_PAGE } }) });
 
   protected readonly stockItems = computed(() => this.stockQuery.data()?.data.items ?? []);
 

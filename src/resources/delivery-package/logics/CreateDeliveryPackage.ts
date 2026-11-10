@@ -8,9 +8,10 @@ import { validatedFormState } from '@/utils/form';
 import { injectNotify } from '@/utils/notify';
 import { createMutation, createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
-import { type DeliveryPackageItemEntry, DeliveryPackageItemsField, deliveryPackageItemsError } from '../components/DeliveryPackageItemsField';
+import { type DeliveryPackageItemEntry, DeliveryPackageItemsField, deliveryPackageItemsError, deliveryPackageItemsPayload } from '../components/DeliveryPackageItemsField';
 import { injectDeliveryPackageSchema } from '../schemas/deliveryPackage';
 import { createDeliveryPackageService } from '../services/createDeliveryPackage';
+import { MAX_PER_PAGE } from '@/shared/constants/pagination';
 
 export function injectCreateDeliveryPackageLogicData({ onSuccess }: { onSuccess: () => void }) {
   const notify = injectNotify();
@@ -24,7 +25,7 @@ export function injectCreateDeliveryPackageLogicData({ onSuccess }: { onSuccess:
     mutationFn: () => createDeliveryPackageService({
       body: {
         notes: createPackageValidatedFormState.state().notes.trim() || null,
-        items: createPackageItems().map((entry) => ({ product_id: entry.id, quantity: entry.quantity ?? 0 })),
+        items: deliveryPackageItemsPayload(createPackageItems()),
       },
     }),
     onSuccess: (res) => {
@@ -115,7 +116,7 @@ export class CreateDeliveryPackageLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectCreateDeliveryPackageLogicData>>();
   readonly cancel = output<void>();
 
-  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: 100 } }) });
+  private readonly stockQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: MAX_PER_PAGE } }) });
 
   protected readonly stockItems = computed(() => this.stockQuery.data()?.data.items ?? []);
 

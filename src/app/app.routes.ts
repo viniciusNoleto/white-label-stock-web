@@ -46,6 +46,11 @@ export const routes: Routes = [
         loadComponent: () => import('./inventory/deliveries/page').then((m) => m.DeliveriesPage),
       },
       {
+        path: 'movements',
+        title: 'movements.page.title',
+        loadComponent: () => import('./inventory/movements/page').then((m) => m.MovementsPage),
+      },
+      {
         path: 'categories',
         title: 'categories.page.title',
         loadComponent: () => import('./inventory/categories/page').then((m) => m.CategoriesPage),

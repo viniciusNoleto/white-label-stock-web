@@ -12,6 +12,8 @@ import { getStoragesService } from '@/resources/storage/services/getStorages';
 import { I18n } from '@/libs/i18n';
 import { createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
+import type { PaginatedMeta } from '@/shared/types/api';
+import { DEFAULT_PER_PAGE } from '@/shared/constants/pagination';
 
 type ModalKey = 'createStorage' | 'updateStorage' | 'deleteStorage';
 
@@ -51,7 +53,7 @@ type ModalKey = 'createStorage' | 'updateStorage' | 'deleteStorage';
       noPadding
       class="m-4 flex flex-col sm:m-8"
     >
-      @if (storages().length; as total) {
+      @if (meta().total; as total) {
         <div class="flex items-center justify-end border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-neutral-800">
           <p class="text-sm tabular-nums text-gray-600 dark:text-gray-400">
             {{ 'storages.table.count' | t: { count: total } }}
@@ -69,6 +71,9 @@ type ModalKey = 'createStorage' | 'updateStorage' | 'deleteStorage';
           description: 'storages.table.columns.description' | t,
         }"
         [actions]="actions()"
+        [page]="page()"
+        [lastPage]="meta().last_page ?? 1"
+        (pageChange)="changePage($event)"
       >
         <ng-template
           appTableCell="description"
@@ -132,9 +137,14 @@ export class StoragesPage {
   protected readonly modals = signal<Record<ModalKey, boolean>>({ createStorage: false, updateStorage: false, deleteStorage: false });
   protected readonly editingStorage = signal<IStorage | null>(null);
 
-  protected readonly storagesQuery = createQuery({ queryFn: () => getStoragesService() });
+  protected readonly page = signal(1);
 
-  protected readonly storages = computed(() => this.storagesQuery.data()?.data ?? []);
+  protected readonly storagesQuery = createQuery({
+    queryFn: () => getStoragesService({ query: { page: this.page(), per_page: DEFAULT_PER_PAGE } }),
+  });
+
+  protected readonly storages = computed(() => this.storagesQuery.data()?.data.items ?? []);
+  protected readonly meta = computed<Partial<PaginatedMeta>>(() => this.storagesQuery.data()?.data.meta ?? {});
 
   protected readonly rowKey = ({ item }: { item: IStorage }) => item.id;
 
@@ -174,6 +184,11 @@ export class StoragesPage {
       this.closeModal('deleteStorage');
     },
   });
+
+  protected changePage(page: number) {
+    this.page.set(page);
+    this.storagesQuery.refetch();
+  }
 
   protected openCreateStorageModal() {
     this.createStorageLogicData.createStorageReset();

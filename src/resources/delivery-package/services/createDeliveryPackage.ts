@@ -5,7 +5,8 @@ import type { IDeliveryPackage } from '../models/DeliveryPackage';
 
 export type CreateDeliveryPackageServicePayload = {
   notes: string | null;
-  items: Array<{ product_id: number; quantity: number }>;
+  /** `item_ids`: só atômicos, itens escolhidos um a um (quantidade = quantos); sem ele, FEFO. */
+  items: Array<{ product_id: number; quantity: number; item_ids?: number[] }>;
 };
 
 export function createDeliveryPackageService({ body }: PayloadBody<CreateDeliveryPackageServicePayload>) {

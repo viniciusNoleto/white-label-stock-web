@@ -42,7 +42,7 @@ Componentes sobre o Spartan UI (`hlmInput`, `hlmTextarea`, `hlm-toggle-group`…
 | `FormNumberInput` | `number \| null` | vazio = `null`; `minValue`, `maxValue`, `step`, `ariaLabel` |
 | `FormColorInput` | `string` (`#RRGGBB`) | `swatches` |
 | `FormSegmentedControl` | `string \| number` | `data: { value, label }[]`, nunca fica vazio |
-| `FormDateInput` | `string` (`YYYY-MM-DD` ou `''`) | mesmo formato da API; `minDate`, `maxDate`. Datas sem hora: use `@/utils/date` (fuso local) |
+| `FormDateInput` | `string` (`YYYY-MM-DD` ou `''`) | mesmo formato da API; `minDate`, `maxDate`, `ariaLabel` (filtros sem label). Datas sem hora: use `@/utils/date` (fuso local) |
 | `FormSwitch` | `boolean` | rótulo ao lado e `description` embaixo |
 
 ## Padrões corretos

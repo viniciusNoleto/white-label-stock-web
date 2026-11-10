@@ -102,6 +102,20 @@
   background-color: var(--color-neutral-600);
 }
 
+/* FormSelect: o trigger ocupa todo o campo e o texto longo termina em reticências. Com o botão de
+   limpar (X), o texto para antes dele — o X fica dentro do select, entre o valor e a seta. */
+.form-select [data-slot='select-trigger'] {
+  @apply w-full;
+}
+
+.form-select [data-slot='select-value'] {
+  @apply block min-w-0 truncate text-left;
+}
+
+.form-select.select-clearable [data-slot='select-value'] {
+  @apply me-6;
+}
+
 .center-flex {
   @apply flex items-center justify-center;
 }

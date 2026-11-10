@@ -55,7 +55,7 @@ export function injectDeleteDeliveryPackageLogicData({ editingPackageId, onSucce
           [loading]="isPending"
           (click)="logicData().deletePackageMutation.mutate()"
         >
-          {{ 'common.actions.delete' | t }}
+          {{ 'deliveries.delete.submit' | t }}
         </button>
       </div>
     </div>

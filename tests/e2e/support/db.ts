@@ -45,6 +45,8 @@ export async function cleanupE2EData() {
       await client.query(`
         DELETE FROM delivery_packages
         WHERE id IN (SELECT delivery_package_id FROM delivery_package_has_item WHERE product_id IN (${e2eProducts}))`, [like]);
+      // Histórico (as FKs viram null ao excluir, mas as linhas guardam o nome e2e copiado).
+      await client.query('DELETE FROM stock_movements WHERE product_name LIKE $1', [like]);
       await client.query(`DELETE FROM items WHERE product_id IN (${e2eProducts})`, [like]);
       await client.query(`
         DELETE FROM product_has_component

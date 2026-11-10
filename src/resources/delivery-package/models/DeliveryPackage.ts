@@ -15,7 +15,7 @@ export interface IDeliveryPackageAllocation {
 
 /**
  * Produto dentro do pacote: `quantity` = quantidade no pacote; `stock_quantity` = estoque atual do produto;
- * `allocations` = quais itens pegar (códigos), escolhidos por FEFO.
+ * `allocations` = quais itens pegar (códigos), escolhidos por FEFO ou um a um (atômicos).
  */
 export interface IDeliveryPackageItem {
   product_id: number;

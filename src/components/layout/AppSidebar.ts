@@ -14,6 +14,7 @@ const NAV_GROUPS = [
       { href: '/inventory/stock', icon: 'lucideLayers', labelKey: 'sidebar.stock' },
       { href: '/inventory/items', icon: 'lucideScanBarcode', labelKey: 'sidebar.items' },
       { href: '/inventory/deliveries', icon: 'lucideTruck', labelKey: 'sidebar.deliveries' },
+      { href: '/inventory/movements', icon: 'lucideHistory', labelKey: 'sidebar.movements' },
     ],
   },
   {

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { api, dialog, expectToast, row, selectOption, uniqueName } from './support/helpers';
+import { api, dialog, expectToast, packageProductOption, row, selectOption, uniqueName } from './support/helpers';
 
 function isoDaysFromToday(days: number) {
   const date = new Date();
@@ -17,7 +17,8 @@ function skuFor(label: string) {
 
 async function searchOperation(page: Page, text: string) {
   await page.goto('/inventory/stock');
-  await page.getByPlaceholder('Buscar por produto, SKU ou código...').fill(text);
+  await page.getByPlaceholder('Buscar por produto ou SKU...').fill(text);
+  await expect(page).toHaveURL(/[?&]search=/);
 }
 
 test('furniture store: creates the cabinet recipe, produces 4 cabinets and sees them as one row', async ({ page, request }) => {
@@ -57,11 +58,13 @@ test('furniture store: creates the cabinet recipe, produces 4 cabinets and sees 
   await expect(row(page, cabinet)).toContainText('100×');
   await row(page, cabinet).getByRole('button', { name: 'Gerar itens' }).click();
 
+  // Pela linha do produto, o produto fica fixo no formulário.
   const produce = dialog(page);
+  await expect(produce).toContainText('Gerando a partir da linha deste produto: o produto não pode ser trocado aqui.');
   await expect(produce.getByRole('switch')).toBeChecked();
   await expect(produce).toContainText('Dá para produzir até 5 com o estoque livre.');
   await produce.getByLabel(/Quantos itens/).fill('4');
-  await expect(produce).toContainText(`4 códigos automáticos, a partir do próximo da sequência (${cabinetSku}-0001…)`);
+  await expect(produce).toContainText(`4 códigos gerados automaticamente, a partir do próximo da sequência (${cabinetSku}-0001…)`);
   await selectOption(page, produce.getByRole('combobox', { name: /Armazenamento/ }), showroom.name);
   await produce.getByRole('button', { name: 'Gerar' }).click();
   await expectToast(page, '4 item(ns) gerado(s) com sucesso.');
@@ -72,6 +75,11 @@ test('furniture store: creates the cabinet recipe, produces 4 cabinets and sees 
   await expect(row(page, cabinet)).toContainText('4 un');
   await expect(row(page, cabinet)).toContainText('4 itens com código próprio');
   await expect(row(page, cabinet)).toContainText(showroom.name);
+
+  // Clicar no armazenamento leva aos itens daquele produto ali (filtros na URL).
+  await row(page, cabinet).getByRole('link', { name: showroom.name }).click();
+  await expect(page).toHaveURL(new RegExp(`/inventory/items\\?product=\\d+&storage=${showroom.id}$`));
+  await expect(page.getByRole('row')).toHaveCount(5);
 
   await searchOperation(page, screw.sku!);
   await expect(row(page, screw.name)).toContainText('600 un');
@@ -86,18 +94,24 @@ test('furniture store: creates the cabinet recipe, produces 4 cabinets and sees 
     await expect(row(page, `${cabinetSku}-${n}`)).toContainText(cabinet);
   }
 
-  // Encontrar um armário pelo código e trocar o código dele.
-  await page.getByPlaceholder('Buscar por código ou produto...').fill(`${cabinetSku}-0003`);
+  // Encontrar um armário pelo código (o filtro vai para a URL); o código não é editável.
+  await page.getByPlaceholder('Buscar por código...').fill(`${cabinetSku}-0003`);
   await expect(page.getByRole('row')).toHaveCount(2);
+  await expect(page).toHaveURL(new RegExp(`[?&]code=${cabinetSku}-0003`));
   await row(page, `${cabinetSku}-0003`).getByRole('button', { name: 'Editar item' }).click();
-  await dialog(page).getByLabel(/^\s*Código/).fill(`${cabinetSku}-VITRINE`);
-  await dialog(page).getByRole('button', { name: 'Salvar' }).click();
-  await expectToast(page, 'Item atualizado com sucesso.');
-  await page.getByPlaceholder('Buscar por código ou produto...').fill('VITRINE');
-  await expect(row(page, `${cabinetSku}-VITRINE`)).toBeVisible();
+  await expect(dialog(page).getByLabel(/^\s*Código/)).toBeDisabled();
+  await expect(dialog(page).getByLabel(/^\s*Código/)).toHaveValue(`${cabinetSku}-0003`);
+  await dialog(page).getByRole('button', { name: 'Cancelar' }).click();
+
+  // O link com o filtro abre a mesma lista.
+  await page.goto(page.url());
+  await expect(page.getByPlaceholder('Buscar por código...')).toHaveValue(`${cabinetSku}-0003`);
+  await expect(page.getByRole('row')).toHaveCount(2);
 });
 
 test('bakery: bakes 8 cakes at once with expiration and sells the first-expiring ones', async ({ page, request }) => {
+  test.setTimeout(60_000);
+
   const unit = await api.unit(request);
   const kg = await api.unit(request, uniqueName('kg'), 'kg');
   const flour = await api.product(request, { name: uniqueName('farinha'), sku: skuFor('far'), unit_id: kg.id, is_atomic: false, shelf_life_days: 180 });
@@ -133,7 +147,7 @@ test('bakery: bakes 8 cakes at once with expiration and sells the first-expiring
   await produce.getByRole('button', { name: 'Gerar' }).click();
   await expectToast(page, '8 item(ns) gerado(s) com sucesso.');
 
-  await page.getByPlaceholder('Buscar por código ou produto...').fill(cakeSku);
+  await page.getByPlaceholder('Buscar por código...').fill(cakeSku);
   await expect(page.getByRole('row')).toHaveCount(9);
   await expect(row(page, `${cakeSku}-0008`)).toContainText(ptBrDate(isoDaysFromToday(5)));
 
@@ -146,13 +160,20 @@ test('bakery: bakes 8 cakes at once with expiration and sells the first-expiring
   // Operação: uma linha com 8; a farinha caiu para 7,6 kg.
   await searchOperation(page, cakeSku);
   await expect(row(page, cake)).toContainText('8 un');
+
+  // Clicar no próximo vencimento leva aos itens do produto com aquele vencimento.
+  await row(page, cake).getByTitle('Ver os itens deste produto com este vencimento').click();
+  await expect(page).toHaveURL(/\/inventory\/items\?product=\d+&expires_at=\d{4}-\d{2}-\d{2}$/);
+  await expect(page.getByRole('row')).toHaveCount(9);
+
+  await searchOperation(page, cakeSku);
   await searchOperation(page, flour.sku!);
   await expect(row(page, flour.name)).toContainText('7.6 kg');
 
   // Venda de 3 bolos: o pacote mostra quais códigos separar e a entrega tira só eles.
   await page.goto('/inventory/deliveries');
   await page.getByRole('button', { name: 'Novo Pacote' }).click();
-  await selectOption(page, dialog(page).getByRole('combobox').filter({ hasText: 'Selecione um produto' }), cake);
+  await selectOption(page, dialog(page).getByRole('combobox').filter({ hasText: 'Selecione um produto' }), packageProductOption(cake));
   await dialog(page).getByLabel('Quantidade', { exact: true }).fill('3');
   await dialog(page).getByLabel('Adicionar produto').click();
   await expect(dialog(page).getByRole('listitem').filter({ hasText: cake })).toContainText('Livre: 8 un');
@@ -172,6 +193,20 @@ test('bakery: bakes 8 cakes at once with expiration and sells the first-expiring
 
   await searchOperation(page, cakeSku);
   await expect(row(page, cake)).toContainText('5 un');
+
+  // Empacotar escolhendo item a item, no lugar dos que vencem primeiro.
+  await page.goto('/inventory/deliveries');
+  await page.getByRole('button', { name: 'Novo Pacote' }).click();
+  await selectOption(page, dialog(page).getByRole('combobox').filter({ hasText: 'Selecione um produto' }), packageProductOption(cake));
+  await dialog(page).getByLabel('Quantidade', { exact: true }).fill('1');
+  await dialog(page).getByLabel('Adicionar produto').click();
+  await dialog(page).getByRole('button', { name: 'Escolher item a item' }).click();
+  await dialog(page).getByLabel(/^Itens selecionados/).fill(`${cakeSku}-0008`);
+  await page.getByRole('option', { name: new RegExp(`${cakeSku}-0008`) }).click();
+  await dialog(page).getByLabel('Anotações').fill(`${cakeSku} escolhido`);
+  await dialog(page).getByRole('button', { name: 'Salvar' }).click();
+  await expectToast(page, 'Pacote criado com sucesso.');
+  await expect(row(page, `${cakeSku} escolhido`)).toContainText(`${cakeSku}-0008`);
 });
 
 test('adjusts a bulk lot, writes off an item and protects a product in use', async ({ page, request }) => {
@@ -183,6 +218,9 @@ test('adjusts a bulk lot, writes off an item and protects a product in use', asy
 
   await page.goto(`/inventory/items?product=${screw.id}`);
   await row(page, lot.code).getByRole('button', { name: 'Ajustar quantidade' }).click();
+  await expect(dialog(page).getByRole('button', { name: 'Somar' })).toHaveAttribute('aria-pressed', 'true');
+  await dialog(page).getByRole('button', { name: 'Definir valor' }).click();
+  await expect(dialog(page).getByRole('alert')).toContainText('Cuidado: "Definir valor" apaga o que outras pessoas registrarem ao mesmo tempo');
   await dialog(page).getByRole('button', { name: 'Subtrair' }).click();
   await dialog(page).getByLabel(/Valor/).fill('20');
   await dialog(page).getByRole('button', { name: 'Salvar' }).click();

@@ -18,6 +18,8 @@ export default {
     table: {
       emptyDefault: 'No data found',
       actionsColumn: 'Actions',
+      rowNumber: '#',
+      rowNumberLabel: 'Row number',
     },
     notifications: {
       errorTitle: 'Error',
@@ -158,6 +160,7 @@ export default {
     units: 'Units',
     storages: 'Storages',
     deliveries: 'Deliveries',
+    movements: 'Movements',
     registrationRequests: 'Registration requests',
     users: 'Users',
     groups: {
@@ -318,7 +321,7 @@ export default {
       subtitle: 'Stock at a glance: atomic items grouped by product, bulk lots as they are',
     },
     search: {
-      placeholder: 'Search by product, SKU or code...',
+      placeholder: 'Search by product or SKU...',
     },
     table: {
       count_one: '{{count}} row',
@@ -338,6 +341,12 @@ export default {
     rowActions: {
       produce: 'Generate items',
       viewItems: 'View items',
+      viewExpiring: 'See this product\'s items with this expiration',
+      viewInStorage: 'See this product\'s items in {{name}}',
+    },
+    filters: {
+      storage: 'All storages',
+      expiresAt: 'Expiration date',
     },
   },
   products: {
@@ -393,7 +402,7 @@ export default {
       new: 'Generate Items',
     },
     search: {
-      placeholder: 'Search by code or product...',
+      placeholder: 'Search by code...',
     },
     filters: {
       product: 'All products',
@@ -401,7 +410,12 @@ export default {
         all: 'All',
         expiring: 'Expiring',
         expired: 'Expired',
+        date: 'Date',
       },
+      byProduct: 'Filter by product',
+      byStorage: 'Filter by storage',
+      storage: 'All storages',
+      expiresAt: 'Expiration date',
     },
     table: {
       count_one: '{{count}} item',
@@ -428,6 +442,7 @@ export default {
       edit: 'Edit item',
       adjustStock: 'Adjust quantity',
       delete: 'Delete item',
+      movements: 'View movements',
     },
     modals: {
       create: 'Generate Items',
@@ -437,6 +452,53 @@ export default {
     },
     delete: {
       confirm: 'Remove item "{{code}}" from the stock? Use it for losses, breakage or expired items.',
+    },
+  },
+
+  movements: {
+    page: {
+      title: 'Movements',
+      subtitle: 'Everything that came in, went out or moved around the stock, item by item',
+    },
+    search: {
+      placeholder: 'Search by code or product...',
+    },
+    filters: {
+      type: 'All types',
+      product: 'All products',
+      storage: 'All storages',
+      period: 'Period',
+      dateFrom: 'Start date',
+      dateTo: 'End date',
+    },
+    types: {
+      entry: 'Entry',
+      production: 'Production',
+      consumption: 'Consumption',
+      adjustment: 'Adjustment',
+      transfer: 'Transfer',
+      delivery: 'Delivery',
+      write_off: 'Write-off',
+    },
+    table: {
+      count_one: '{{count}} movement',
+      count_other: '{{count}} movements',
+      empty: 'No movements found',
+      columns: {
+        date: 'Date',
+        type: 'Type',
+        item: 'Item',
+        product: 'Product',
+        quantity: 'Quantity',
+        balance: 'Item balance',
+        storage: 'Storage',
+        user: 'User',
+      },
+      package: 'Package #{{id}}',
+      openItem: 'Open in the items list',
+      itemGone: 'This item has already left the stock',
+      noStorage: 'No storage',
+      to: 'to',
     },
   },
 
@@ -472,13 +534,13 @@ export default {
     rowActions: {
       deliver: 'Mark as delivered',
       edit: 'Edit package',
-      delete: 'Delete package',
+      delete: 'Undo package',
     },
     modals: {
       create: 'New Delivery Package',
       update: 'Edit Package #{{id}}',
       deliver: 'Deliver Package #{{id}}',
-      delete: 'Delete Package',
+      delete: 'Undo Package',
     },
     deliver: {
       confirm: 'When you confirm, these items leave the stock:',
@@ -488,8 +550,9 @@ export default {
       submit: 'Confirm delivery',
     },
     delete: {
-      confirmPending: 'Are you sure you want to delete package #{{id}}? The items are no longer set aside and stay in the stock.',
-      confirmDelivered: 'Are you sure you want to delete package #{{id}} from the history? Delivered items do not go back to the stock.',
+      submit: 'Undo',
+      confirmPending: 'Are you sure you want to undo package #{{id}}? The items are no longer set aside and stay in the stock.',
+      confirmDelivered: 'Are you sure you want to undo package #{{id}} and remove it from the history? Delivered items do not go back to the stock.',
     },
   },
 
@@ -606,6 +669,7 @@ export default {
       product: {
         label: 'Product',
         placeholder: 'Select a product',
+        locked: 'Producing from this product\'s row: the product cannot be changed here.',
       },
       quantity: {
         atomicLabel: 'How many items',
@@ -621,12 +685,6 @@ export default {
       storage: {
         label: 'Storage',
         placeholder: 'Select a storage (optional)',
-      },
-      code: {
-        label: 'Code',
-        placeholder: 'Automatic',
-        description: 'Leave empty to use the next one ({{example}}…).',
-        batch: '{{count}} automatic codes, starting at the next one in the sequence ({{example}}…).',
       },
       consume: {
         label: 'Consume the recipe from stock',
@@ -648,6 +706,7 @@ export default {
     updateItem: {
       code: {
         label: 'Code',
+        description: 'Generated automatically on creation; it cannot be changed.',
       },
       producedAt: {
         label: 'Production date',
@@ -662,7 +721,6 @@ export default {
         placeholder: 'Select a storage (optional)',
       },
       validation: {
-        codeRequired: 'Code is required',
         dateRequired: 'Production date is required',
       },
     },
@@ -694,6 +752,11 @@ export default {
         positive: 'Amount must be greater than zero',
         max: 'Cannot subtract more than the current stock ({{count}})',
       },
+      setWarning: {
+        title: 'Careful: "Set value" erases what other people record at the same time',
+        body: 'The number you type replaces the whole quantity of this lot. If someone records stock coming in or going out of it while this window is open, that movement is lost without warning and the stock ends up wrong.',
+        advice: 'Prefer "Add" or "Subtract": they only apply the difference and never erase anyone\'s record. Use "Set value" only to fix the number after counting the lot by hand.',
+      },
     },
 
     deliveryPackage: {
@@ -706,6 +769,18 @@ export default {
         empty: 'No products added.',
         free: 'Free: {{count}} {{unit}}',
         quantityOf: 'Quantity of {{name}}',
+        option: '{{name}} · {{count}} {{unit}}',
+        mode: {
+          fefo: 'Oldest first',
+          manual: 'Pick one by one',
+          fefoDescription: 'The system sets aside the items that expire first.',
+          manualDescription: 'Choose exactly which items go in the package, in the quantity entered.',
+        },
+        pickLabel: 'Selected items ({{selected}} of {{count}})',
+        pickPlaceholder: 'Search by code',
+        pickLoading: 'Loading items…',
+        pickOption: '{{code}} · expires {{date}}',
+        pickOptionNoExpiration: '{{code}} · does not expire',
       },
       notes: {
         label: 'Notes',
@@ -716,6 +791,7 @@ export default {
         quantityPositive: 'Each product needs a quantity greater than zero',
         integer: 'Atomic products are counted per unit: use whole numbers',
         notesMax: 'Notes can have at most {{count}} characters',
+        selectionMismatch: 'In "Pick one by one", pick exactly the quantity entered for each product',
       },
     },
   },
@@ -740,7 +816,7 @@ export default {
       deleteStorage: 'Could not delete the storage. Please try again.',
       createDeliveryPackage: 'Could not create the package. Please try again.',
       updateDeliveryPackage: 'Could not update the package. Please try again.',
-      deleteDeliveryPackage: 'Could not delete the package. Please try again.',
+      deleteDeliveryPackage: 'Could not undo the package. Please try again.',
       deliverDeliveryPackage: 'Could not deliver the package.',
       deleteUser: 'Could not delete the user. Please try again.',
       approveRegistrationRequest: 'Could not approve the request. Please try again.',

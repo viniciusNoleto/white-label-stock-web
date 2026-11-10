@@ -14,17 +14,17 @@ import { createMutation, createQuery } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import type { IItem } from '../models/Item';
 import { updateItemService, type UpdateItemServicePayload } from '../services/updateItem';
+import { MAX_PER_PAGE } from '@/shared/constants/pagination';
 
-type UpdateItemValues = { code: string; produced_at: string; expires_at: string; storage_id: number | null };
+type UpdateItemValues = { produced_at: string; expires_at: string; storage_id: number | null };
 
 /**
  * Só o que mudou vai para a API. Mudar a produção sem mexer no vencimento deixa a API
- * recalcular o vencimento pela validade do produto.
+ * recalcular o vencimento pela validade do produto. O código nunca muda (é gerado pela API).
  */
 export function updateItemPayload(initial: UpdateItemValues, current: UpdateItemValues): UpdateItemServicePayload {
   const body: UpdateItemServicePayload = {};
 
-  if (current.code.trim() !== initial.code) body.code = current.code.trim();
   if (current.produced_at !== initial.produced_at) body.produced_at = current.produced_at;
   if (current.expires_at !== initial.expires_at) body.expires_at = current.expires_at || null;
   if (current.storage_id !== initial.storage_id) body.storage_id = current.storage_id;
@@ -37,7 +37,6 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
   const notify = injectNotify();
 
   const updateItemSchema = computed(() => yup.object({
-    code: yup.string().default('').trim().required(i18n.t('forms.updateItem.validation.codeRequired')).max(80),
     produced_at: yup.string().default('').required(i18n.t('forms.updateItem.validation.dateRequired')),
     expires_at: yup.string().default(''),
     storage_id: yup.number().nullable().default(null),
@@ -45,7 +44,10 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
 
   const updateItemValidatedFormState = validatedFormState(updateItemSchema);
 
-  const initialValues = signal<UpdateItemValues>({ code: '', produced_at: '', expires_at: '', storage_id: null });
+  const initialValues = signal<UpdateItemValues>({ produced_at: '', expires_at: '', storage_id: null });
+
+  /** Só para exibir: o código não é editável. */
+  const updateItemCode = signal('');
 
   const updateItemMutation = createMutation({
     mutationFn: () => updateItemService({ itemId: editingItemId()!, body: updateItemPayload(initialValues(), updateItemValidatedFormState.state()) }),
@@ -58,8 +60,9 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
   });
 
   function updateItemInit(item: IItem) {
-    const values = { code: item.code, produced_at: item.produced_at, expires_at: item.expires_at ?? '', storage_id: item.storage?.id ?? null };
+    const values = { produced_at: item.produced_at, expires_at: item.expires_at ?? '', storage_id: item.storage?.id ?? null };
 
+    updateItemCode.set(item.code);
     initialValues.set(values);
     updateItemValidatedFormState.reset(values);
   }
@@ -69,7 +72,7 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
     return Object.keys(updateItemPayload(initialValues(), updateItemValidatedFormState.state())).length > 0;
   }
 
-  return { updateItemValidatedFormState, updateItemMutation, updateItemInit, updateItemHasChanges };
+  return { updateItemValidatedFormState, updateItemMutation, updateItemInit, updateItemHasChanges, updateItemCode: updateItemCode.asReadonly() };
 }
 
 @Component({
@@ -89,8 +92,9 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
         <app-form-text-input
           class="col-span-12"
           [label]="'forms.updateItem.code.label' | t"
-          [formField]="form.field.code"
-          withAsterisk
+          [description]="'forms.updateItem.code.description' | t"
+          [value]="logicData().updateItemCode()"
+          [disabled]="true"
         />
 
         <app-form-date-input
@@ -145,9 +149,9 @@ export class UpdateItemLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectUpdateItemLogicData>>();
   readonly cancel = output<void>();
 
-  private readonly storagesQuery = createQuery({ queryFn: () => getStoragesService() });
+  private readonly storagesQuery = createQuery({ queryFn: () => getStoragesService({ query: { per_page: MAX_PER_PAGE } }) });
 
-  protected readonly storages = computed(() => this.storagesQuery.data()?.data ?? []);
+  protected readonly storages = computed(() => this.storagesQuery.data()?.data.items ?? []);
 
   protected updateItem() {
     const { updateItemValidatedFormState, updateItemMutation, updateItemHasChanges } = this.logicData();

@@ -1,6 +1,7 @@
-import { Component, computed, input, model } from '@angular/core';
+import { afterNextRender, Component, computed, input, model, viewChild } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
-import { HlmSelectImports } from '@spartan-ng/helm/select';
+import { BrnSelect } from '@spartan-ng/brain/select';
+import { HlmSelect, HlmSelectImports } from '@spartan-ng/helm/select';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { FormFieldWrapper } from './FieldWrapper';
 import { FormControlBase } from './types';
@@ -40,7 +41,10 @@ export function toSelectOptions(data: readonly unknown[], valueField?: string, l
       [invalid]="showError()"
       [withAsterisk]="withAsterisk()"
     >
-      <div class="relative">
+      <div
+        class="form-select relative [&_hlm-select-trigger]:block"
+        [class.select-clearable]="showClear()"
+      >
         <hlm-select
           [value]="value()"
           [itemToString]="itemToString"
@@ -50,7 +54,6 @@ export function toSelectOptions(data: readonly unknown[], valueField?: string, l
         >
           <hlm-select-trigger
             class="w-full"
-            [class.pe-14]="showClear()"
             [buttonId]="inputId()"
             [forceInvalid]="showError()"
             [aria-invalid]="showError()"
@@ -79,7 +82,7 @@ export function toSelectOptions(data: readonly unknown[], valueField?: string, l
         @if (showClear()) {
           <button
             type="button"
-            class="absolute right-8 top-1/2 -translate-y-1/2 center-flex size-5 rounded-sm text-muted-foreground hover:bg-muted"
+            class="absolute right-7 top-1/2 -translate-y-1/2 center-flex size-5 rounded-sm text-muted-foreground hover:bg-muted"
             [attr.aria-label]="'forms.select.clear' | t"
             (click)="clear()"
           >
@@ -100,6 +103,18 @@ export class FormSelect extends FormControlBase<SelectValue | null> {
   readonly valueField = input<string>();
   readonly labelField = input<string>();
   readonly clearable = input(false);
+  /** Abre a lista assim que o campo aparece (ex.: filtro que vira select ao clicar no botão). */
+  readonly autoOpen = input(false);
+
+  private readonly select = viewChild(HlmSelect, { read: BrnSelect });
+
+  constructor() {
+    super();
+
+    afterNextRender(() => {
+      if (this.autoOpen()) this.select()?.open();
+    });
+  }
 
   protected readonly options = computed(() => toSelectOptions(this.data(), this.valueField(), this.labelField()));
 

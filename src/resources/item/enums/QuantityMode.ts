@@ -1,5 +1,6 @@
+/** Ordem = ordem de exibição: somar/subtrair primeiro; definir (sobrescreve, sujeito a concorrência) por último. */
 export enum EQuantityMode {
-  SET = 'set',
   ADD = 'add',
   SUBTRACT = 'subtract',
+  SET = 'set',
 }

@@ -20,6 +20,8 @@ export default {
     table: {
       emptyDefault: 'Nenhum dado encontrado',
       actionsColumn: 'Ações',
+      rowNumber: '#',
+      rowNumberLabel: 'Número da linha',
     },
     notifications: {
       errorTitle: 'Erro',
@@ -160,6 +162,7 @@ export default {
     units: 'Unidades',
     storages: 'Armazenamentos',
     deliveries: 'Entregas',
+    movements: 'Movimentações',
     registrationRequests: 'Pedidos de cadastro',
     users: 'Usuários',
     groups: {
@@ -320,7 +323,7 @@ export default {
       subtitle: 'O estoque de relance: itens atômicos agrupados por produto, lotes a granel como estão',
     },
     search: {
-      placeholder: 'Buscar por produto, SKU ou código...',
+      placeholder: 'Buscar por produto ou SKU...',
     },
     table: {
       count_one: '{{count}} linha',
@@ -340,6 +343,12 @@ export default {
     rowActions: {
       produce: 'Gerar itens',
       viewItems: 'Ver itens',
+      viewExpiring: 'Ver os itens deste produto com este vencimento',
+      viewInStorage: 'Ver os itens deste produto em {{name}}',
+    },
+    filters: {
+      storage: 'Todos os armazenamentos',
+      expiresAt: 'Data de vencimento',
     },
   },
   products: {
@@ -395,7 +404,7 @@ export default {
       new: 'Gerar Itens',
     },
     search: {
-      placeholder: 'Buscar por código ou produto...',
+      placeholder: 'Buscar por código...',
     },
     filters: {
       product: 'Todos os produtos',
@@ -403,7 +412,12 @@ export default {
         all: 'Todos',
         expiring: 'Vencendo',
         expired: 'Vencidos',
+        date: 'Data',
       },
+      byProduct: 'Filtrar por produto',
+      byStorage: 'Filtrar por armazenamento',
+      storage: 'Todos os armazenamentos',
+      expiresAt: 'Data de vencimento',
     },
     table: {
       count_one: '{{count}} item',
@@ -430,6 +444,7 @@ export default {
       edit: 'Editar item',
       adjustStock: 'Ajustar quantidade',
       delete: 'Excluir item',
+      movements: 'Ver movimentações',
     },
     modals: {
       create: 'Gerar Itens',
@@ -439,6 +454,53 @@ export default {
     },
     delete: {
       confirm: 'Tirar o item "{{code}}" do estoque? Use para perdas, quebras ou vencidos.',
+    },
+  },
+
+  movements: {
+    page: {
+      title: 'Movimentações',
+      subtitle: 'Tudo o que entrou, saiu ou mudou de lugar no estoque, item por item',
+    },
+    search: {
+      placeholder: 'Buscar por código ou produto...',
+    },
+    filters: {
+      type: 'Todos os tipos',
+      product: 'Todos os produtos',
+      storage: 'Todos os armazenamentos',
+      period: 'Período',
+      dateFrom: 'Data inicial',
+      dateTo: 'Data final',
+    },
+    types: {
+      entry: 'Entrada',
+      production: 'Produção',
+      consumption: 'Consumo',
+      adjustment: 'Ajuste',
+      transfer: 'Transferência',
+      delivery: 'Entrega',
+      write_off: 'Baixa',
+    },
+    table: {
+      count_one: '{{count}} movimentação',
+      count_other: '{{count}} movimentações',
+      empty: 'Nenhuma movimentação encontrada',
+      columns: {
+        date: 'Data',
+        type: 'Tipo',
+        item: 'Item',
+        product: 'Produto',
+        quantity: 'Quantidade',
+        balance: 'Saldo do item',
+        storage: 'Armazenamento',
+        user: 'Usuário',
+      },
+      package: 'Pacote #{{id}}',
+      openItem: 'Abrir na lista de itens',
+      itemGone: 'Este item já saiu do estoque',
+      noStorage: 'Sem armazenamento',
+      to: 'para',
     },
   },
 
@@ -474,13 +536,13 @@ export default {
     rowActions: {
       deliver: 'Marcar como entregue',
       edit: 'Editar pacote',
-      delete: 'Excluir pacote',
+      delete: 'Desfazer pacote',
     },
     modals: {
       create: 'Novo Pacote de Entrega',
       update: 'Editar Pacote #{{id}}',
       deliver: 'Entregar Pacote #{{id}}',
-      delete: 'Excluir Pacote',
+      delete: 'Desfazer Pacote',
     },
     deliver: {
       confirm: 'Ao confirmar, estes itens saem do estoque:',
@@ -490,8 +552,9 @@ export default {
       submit: 'Confirmar entrega',
     },
     delete: {
-      confirmPending: 'Tem certeza que deseja excluir o pacote #{{id}}? Os itens deixam de ficar separados e continuam no estoque.',
-      confirmDelivered: 'Tem certeza que deseja excluir o pacote #{{id}} do histórico? Os itens entregues não voltam para o estoque.',
+      submit: 'Desfazer',
+      confirmPending: 'Tem certeza que deseja desfazer o pacote #{{id}}? Os itens deixam de ficar separados e continuam no estoque.',
+      confirmDelivered: 'Tem certeza que deseja desfazer o pacote #{{id}} e tirá-lo do histórico? Os itens entregues não voltam para o estoque.',
     },
   },
 
@@ -590,6 +653,7 @@ export default {
         selectPlaceholder: 'Selecione um produto',
         qtyPlaceholder: 'Quantidade',
         quantityOf: 'Quantidade de {{name}}',
+        option: '{{name}} · {{count}} {{unit}}',
         empty: 'Sem componentes: o produto não é feito a partir de outros.',
         add: 'Adicionar componente',
         remove: 'Remover componente',
@@ -608,6 +672,7 @@ export default {
       product: {
         label: 'Produto',
         placeholder: 'Selecione um produto',
+        locked: 'Gerando a partir da linha deste produto: o produto não pode ser trocado aqui.',
       },
       quantity: {
         atomicLabel: 'Quantos itens',
@@ -623,12 +688,6 @@ export default {
       storage: {
         label: 'Armazenamento',
         placeholder: 'Selecione um armazenamento (opcional)',
-      },
-      code: {
-        label: 'Código',
-        placeholder: 'Automático',
-        description: 'Deixe vazio para usar o próximo ({{example}}…).',
-        batch: '{{count}} códigos automáticos, a partir do próximo da sequência ({{example}}…).',
       },
       consume: {
         label: 'Consumir a receita do estoque',
@@ -650,6 +709,7 @@ export default {
     updateItem: {
       code: {
         label: 'Código',
+        description: 'Gerado automaticamente na criação; não pode ser alterado.',
       },
       producedAt: {
         label: 'Data de produção',
@@ -664,7 +724,6 @@ export default {
         placeholder: 'Selecione um armazenamento (opcional)',
       },
       validation: {
-        codeRequired: 'Código é obrigatório',
         dateRequired: 'Data de produção é obrigatória',
       },
     },
@@ -696,6 +755,11 @@ export default {
         positive: 'Valor deve ser maior que zero',
         max: 'Não é possível subtrair mais que o estoque atual ({{count}})',
       },
+      setWarning: {
+        title: 'Cuidado: "Definir valor" apaga o que outras pessoas registrarem ao mesmo tempo',
+        body: 'O número que você digitar substitui a quantidade inteira deste lote. Se alguém registrar uma entrada ou uma saída dele enquanto esta janela está aberta, essa movimentação some sem aviso e o estoque fica errado.',
+        advice: 'Prefira "Somar" ou "Subtrair": eles só aplicam a diferença e nunca apagam o registro de ninguém. Use "Definir valor" só para corrigir depois de contar o lote na mão.',
+      },
     },
 
     deliveryPackage: {
@@ -708,6 +772,18 @@ export default {
         empty: 'Nenhum produto adicionado.',
         free: 'Livre: {{count}} {{unit}}',
         quantityOf: 'Quantidade de {{name}}',
+        option: '{{name}} · {{count}} {{unit}}',
+        mode: {
+          fefo: 'Mais antigos primeiro',
+          manual: 'Escolher item a item',
+          fefoDescription: 'O sistema separa os itens que vencem primeiro.',
+          manualDescription: 'Escolha exatamente quais itens vão no pacote, na quantidade informada.',
+        },
+        pickLabel: 'Itens selecionados ({{selected}} de {{count}})',
+        pickPlaceholder: 'Busque pelo código',
+        pickLoading: 'Carregando itens…',
+        pickOption: '{{code}} · vence em {{date}}',
+        pickOptionNoExpiration: '{{code}} · não vence',
       },
       notes: {
         label: 'Anotações',
@@ -718,6 +794,7 @@ export default {
         quantityPositive: 'Cada produto precisa de uma quantidade maior que zero',
         integer: 'Produtos atômicos são contados por unidade: use números inteiros',
         notesMax: 'As anotações podem ter no máximo {{count}} caracteres',
+        selectionMismatch: 'Em "Escolher item a item", escolha exatamente a quantidade informada de cada produto',
       },
     },
   },
@@ -742,7 +819,7 @@ export default {
       deleteStorage: 'Não foi possível excluir o armazenamento. Tente novamente.',
       createDeliveryPackage: 'Não foi possível criar o pacote. Tente novamente.',
       updateDeliveryPackage: 'Não foi possível atualizar o pacote. Tente novamente.',
-      deleteDeliveryPackage: 'Não foi possível excluir o pacote. Tente novamente.',
+      deleteDeliveryPackage: 'Não foi possível desfazer o pacote. Tente novamente.',
       deliverDeliveryPackage: 'Não foi possível entregar o pacote.',
       deleteUser: 'Não foi possível excluir o usuário. Tente novamente.',
       approveRegistrationRequest: 'Não foi possível aprovar o pedido. Tente novamente.',
