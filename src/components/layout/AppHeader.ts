@@ -50,7 +50,7 @@ function currentTitleKey(route: ActivatedRouteSnapshot): string | undefined {
           <ol class="flex items-center gap-1.5 text-sm">
             <li class="hidden sm:flex items-center gap-1.5">
               <a
-                routerLink="/inventory"
+                routerLink="/dashboard"
                 class="rounded text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
               >
                 {{ 'sidebar.section' | t }}

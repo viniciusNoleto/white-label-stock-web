@@ -154,6 +154,7 @@ export default {
   },
 
   sidebar: {
+    dashboard: 'Painel',
     section: 'Inventário',
     stock: 'Operação',
     items: 'Itens',
@@ -457,6 +458,104 @@ export default {
     },
   },
 
+  dashboard: {
+    page: {
+      title: 'Painel',
+      subtitle: 'O que pede ação agora e como foi o período',
+      updatedAt: 'Atualizado às {{time}}',
+      refresh: 'Atualizar o painel',
+      error: 'Não foi possível carregar o painel.',
+      retry: 'Tentar de novo',
+    },
+    period: {
+      days_one: '{{count}} dia',
+      days_other: '{{count}} dias',
+    },
+    trend: {
+      vsPrevious: '{{percent}} vs. período anterior ({{previous}})',
+      noBase: 'Período anterior: {{previous}}',
+    },
+    alerts: {
+      packagesWithExpired_one: '{{count}} pacote pendente tem item que venceu depois de separado: a entrega vai falhar. Troque o item.',
+      packagesWithExpired_other: '{{count}} pacotes pendentes têm item que venceu depois de separado: a entrega vai falhar. Troque os itens.',
+      outOfStock_one: '{{count}} produto com saída no período está sem estoque livre.',
+      outOfStock_other: '{{count}} produtos com saída no período estão sem estoque livre.',
+      expired_one: '{{count}} item vencido ainda está no estoque: dê baixa.',
+      expired_other: '{{count}} itens vencidos ainda estão no estoque: dê baixa.',
+    },
+    kpis: {
+      items: 'Itens em estoque',
+      itemsDetail: '{{inStock}} de {{total}} produtos com estoque',
+      expiring: 'Vencendo em 7 dias',
+      expiringDetail_one: '{{count}} item já vencido',
+      expiringDetail_other: '{{count}} itens já vencidos',
+      pending: 'Pacotes pendentes',
+      pendingSince: 'Mais antigo: {{date}}',
+      pendingNone: 'Nenhum aguardando entrega',
+      delivered: 'Pacotes entregues',
+      losses: 'Baixas',
+      inPeriod_one: 'No último dia',
+      inPeriod_other: 'Nos últimos {{count}} dias',
+    },
+    columns: {
+      product: 'Produto',
+      quantity: 'Quantidade',
+    },
+    activity: {
+      title: 'Atividade do estoque',
+      subtitle: 'Movimentações por dia, de {{from}} a {{to}}',
+      ariaLabel: 'Gráfico de linhas com as entradas, saídas e baixas de cada um dos {{days}} dias',
+      focusHint: 'Use as setas para ver cada dia',
+      showTable: 'Ver como tabela',
+      date: 'Dia',
+      series: {
+        inflow: 'Entradas',
+        outflow: 'Saídas',
+        losses: 'Baixas',
+      },
+    },
+    restock: {
+      title: 'Reposição',
+      subtitle: 'Quanto o estoque livre aguenta no ritmo de saída dos últimos {{days}} dias',
+      empty: 'Nenhum produto teve saída no período.',
+      coverageNone: 'Acabou',
+      coverageDays: '{{days}} dias',
+      columns: {
+        free: 'Livre',
+        dailyOutflow: 'Saída/dia',
+        coverage: 'Dura',
+      },
+    },
+    expiration: {
+      title: 'Vencimentos',
+      subtitle: 'Vencidos para dar baixa e o que vence em até 7 dias para sair primeiro',
+      empty: 'Nada vencido nem vencendo nos próximos 7 dias.',
+      columns: {
+        expired: 'Vencido',
+        expiring: 'Vencendo',
+        next: 'Vence em',
+      },
+    },
+    topDelivered: {
+      title: 'Mais entregues',
+      subtitle: 'Produtos em mais pacotes nos últimos {{days}} dias',
+      empty: 'Nenhuma entrega no período.',
+      columns: {
+        packages: 'Pacotes',
+      },
+    },
+    losses: {
+      title: 'Perdas',
+      subtitle: 'Baixas dos últimos {{days}} dias por motivo e por produto',
+      empty: 'Nenhuma baixa no período.',
+      expiredShare_one: '({{count}} por vencimento)',
+      expiredShare_other: '({{count}} por vencimento)',
+      columns: {
+        writeOffs: 'Baixas',
+      },
+    },
+  },
+
   movements: {
     page: {
       title: 'Movimentações',
@@ -481,6 +580,13 @@ export default {
       transfer: 'Transferência',
       delivery: 'Entrega',
       write_off: 'Baixa',
+    },
+    reasons: {
+      expired: 'Vencimento',
+      damaged: 'Avaria',
+      lost: 'Extravio',
+      other: 'Outro',
+      none: 'Sem motivo',
     },
     table: {
       count_one: '{{count}} movimentação',
@@ -554,7 +660,6 @@ export default {
     delete: {
       submit: 'Desfazer',
       confirmPending: 'Tem certeza que deseja desfazer o pacote #{{id}}? Os itens deixam de ficar separados e continuam no estoque.',
-      confirmDelivered: 'Tem certeza que deseja desfazer o pacote #{{id}} e tirá-lo do histórico? Os itens entregues não voltam para o estoque.',
     },
   },
 
@@ -703,6 +808,7 @@ export default {
         integer: 'Itens atômicos: use um número inteiro',
         max: 'No máximo {{count}} por vez',
         dateRequired: 'Data de produção é obrigatória',
+        dateFuture: 'A data de produção não pode ser no futuro',
       },
     },
 
@@ -725,6 +831,8 @@ export default {
       },
       validation: {
         dateRequired: 'Data de produção é obrigatória',
+        dateFuture: 'A data de produção não pode ser no futuro',
+        expiresBeforeProduced: 'O vencimento não pode ser anterior à data de produção',
       },
     },
 

@@ -50,7 +50,11 @@ export function injectCreateItemsLogicData({ onSuccess }: { onSuccess: () => voi
         .moreThan(0, i18n.t('forms.createItems.validation.quantityPositive'))
         .test('integer', i18n.t('forms.createItems.validation.integer'), (value) => !product?.is_atomic || value == null || Number.isInteger(value))
         .max(max ?? Number.MAX_SAFE_INTEGER, i18n.t('forms.createItems.validation.max', { count: MAX_ITEMS_BATCH })),
-      produced_at: yup.string().default('').required(i18n.t('forms.createItems.validation.dateRequired')),
+      // A API recusa produção no futuro (produção agendada não é estoque).
+      produced_at: yup.string()
+        .default('')
+        .required(i18n.t('forms.createItems.validation.dateRequired'))
+        .test('notFuture', i18n.t('forms.createItems.validation.dateFuture'), (value) => !value || value <= todayISO()),
       storage_id: yup.number().nullable().default(null),
       consume_components: yup.boolean().default(false),
     });
@@ -157,6 +161,7 @@ export function injectCreateItemsLogicData({ onSuccess }: { onSuccess: () => voi
           class="col-span-12 sm:col-span-6"
           [label]="'forms.createItems.producedAt.label' | t"
           [description]="expirationHint()"
+          [maxDate]="today"
           [formField]="form.field.produced_at"
           withAsterisk
         />
@@ -237,6 +242,9 @@ export class CreateItemsLogicComponent {
 
   readonly logicData = input.required<ReturnType<typeof injectCreateItemsLogicData>>();
   readonly cancel = output<void>();
+
+  /** Teto da data de produção (a API recusa produção no futuro). */
+  protected readonly today = todayISO();
 
   private readonly productsQuery = createQuery({ queryFn: () => getProductsService({ query: { per_page: MAX_PER_PAGE } }) });
   private readonly storagesQuery = createQuery({ queryFn: () => getStoragesService({ query: { per_page: MAX_PER_PAGE } }) });

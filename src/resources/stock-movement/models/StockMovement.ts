@@ -1,4 +1,5 @@
 import type { EStockMovementType } from '../enums/StockMovementType';
+import type { EWriteOffReason } from '../enums/WriteOffReason';
 
 /**
  * Movimentação de um item do estoque (só leitura: a API grava em cada operação).
@@ -21,6 +22,8 @@ export interface IStockMovement {
   storage_name: string | null;
   /** Só na transferência: de onde o item saiu. */
   previous_storage_name: string | null;
+  /** Só na baixa: o motivo (`null` = baixa sem motivo). */
+  reason: EWriteOffReason | null;
   delivery_package_id: number | null;
   user_id: number | null;
   user_name: string | null;

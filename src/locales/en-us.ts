@@ -152,6 +152,7 @@ export default {
   },
 
   sidebar: {
+    dashboard: 'Dashboard',
     section: 'Inventory',
     stock: 'Operation',
     items: 'Items',
@@ -455,6 +456,104 @@ export default {
     },
   },
 
+  dashboard: {
+    page: {
+      title: 'Dashboard',
+      subtitle: 'What needs action now and how the period went',
+      updatedAt: 'Updated at {{time}}',
+      refresh: 'Refresh the dashboard',
+      error: 'Could not load the dashboard.',
+      retry: 'Try again',
+    },
+    period: {
+      days_one: '{{count}} day',
+      days_other: '{{count}} days',
+    },
+    trend: {
+      vsPrevious: '{{percent}} vs. previous period ({{previous}})',
+      noBase: 'Previous period: {{previous}}',
+    },
+    alerts: {
+      packagesWithExpired_one: '{{count}} pending package holds an item that expired after it was set aside: the delivery will fail. Swap the item.',
+      packagesWithExpired_other: '{{count}} pending packages hold items that expired after they were set aside: the delivery will fail. Swap the items.',
+      outOfStock_one: '{{count}} product with outflow in the period has no free stock.',
+      outOfStock_other: '{{count}} products with outflow in the period have no free stock.',
+      expired_one: '{{count}} expired item is still in stock: write it off.',
+      expired_other: '{{count}} expired items are still in stock: write them off.',
+    },
+    kpis: {
+      items: 'Items in stock',
+      itemsDetail: '{{inStock}} of {{total}} products in stock',
+      expiring: 'Expiring in 7 days',
+      expiringDetail_one: '{{count}} item already expired',
+      expiringDetail_other: '{{count}} items already expired',
+      pending: 'Pending packages',
+      pendingSince: 'Oldest: {{date}}',
+      pendingNone: 'None waiting for delivery',
+      delivered: 'Delivered packages',
+      losses: 'Write-offs',
+      inPeriod_one: 'In the last day',
+      inPeriod_other: 'In the last {{count}} days',
+    },
+    columns: {
+      product: 'Product',
+      quantity: 'Quantity',
+    },
+    activity: {
+      title: 'Stock activity',
+      subtitle: 'Movements per day, from {{from}} to {{to}}',
+      ariaLabel: 'Line chart with the inflow, outflow and write-offs of each of the {{days}} days',
+      focusHint: 'Use the arrow keys to see each day',
+      showTable: 'Show as table',
+      date: 'Day',
+      series: {
+        inflow: 'Inflow',
+        outflow: 'Outflow',
+        losses: 'Write-offs',
+      },
+    },
+    restock: {
+      title: 'Restock',
+      subtitle: 'How long the free stock lasts at the outflow pace of the last {{days}} days',
+      empty: 'No product had outflow in the period.',
+      coverageNone: 'Out',
+      coverageDays: '{{days}} days',
+      columns: {
+        free: 'Free',
+        dailyOutflow: 'Outflow/day',
+        coverage: 'Lasts',
+      },
+    },
+    expiration: {
+      title: 'Expiration',
+      subtitle: 'Expired stock to write off and what expires within 7 days to go out first',
+      empty: 'Nothing expired or expiring in the next 7 days.',
+      columns: {
+        expired: 'Expired',
+        expiring: 'Expiring',
+        next: 'Expires',
+      },
+    },
+    topDelivered: {
+      title: 'Most delivered',
+      subtitle: 'Products in the most packages in the last {{days}} days',
+      empty: 'No deliveries in the period.',
+      columns: {
+        packages: 'Packages',
+      },
+    },
+    losses: {
+      title: 'Losses',
+      subtitle: 'Write-offs of the last {{days}} days by reason and by product',
+      empty: 'No write-offs in the period.',
+      expiredShare_one: '({{count}} expired)',
+      expiredShare_other: '({{count}} expired)',
+      columns: {
+        writeOffs: 'Write-offs',
+      },
+    },
+  },
+
   movements: {
     page: {
       title: 'Movements',
@@ -479,6 +578,13 @@ export default {
       transfer: 'Transfer',
       delivery: 'Delivery',
       write_off: 'Write-off',
+    },
+    reasons: {
+      expired: 'Expired',
+      damaged: 'Damaged',
+      lost: 'Lost',
+      other: 'Other',
+      none: 'No reason',
     },
     table: {
       count_one: '{{count}} movement',
@@ -552,7 +658,6 @@ export default {
     delete: {
       submit: 'Undo',
       confirmPending: 'Are you sure you want to undo package #{{id}}? The items are no longer set aside and stay in the stock.',
-      confirmDelivered: 'Are you sure you want to undo package #{{id}} and remove it from the history? Delivered items do not go back to the stock.',
     },
   },
 
@@ -700,6 +805,7 @@ export default {
         integer: 'Atomic items: use a whole number',
         max: 'At most {{count}} at a time',
         dateRequired: 'Production date is required',
+        dateFuture: 'The production date cannot be in the future',
       },
     },
 
@@ -722,6 +828,8 @@ export default {
       },
       validation: {
         dateRequired: 'Production date is required',
+        dateFuture: 'The production date cannot be in the future',
+        expiresBeforeProduced: 'The expiration date cannot be before the production date',
       },
     },
 

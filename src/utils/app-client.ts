@@ -46,6 +46,11 @@ function needsBearer(url: string) {
  * (`AuthTokens`). Chamadas paralelas que recebem 401 compartilham um único
  * refresh nesta aba; entre abas/processos, a própria rota de refresh da API
  * deduplica pelo token.
+ *
+ * Emite `true` (renovou) ou `false` (sessão acabou: sem refresh_token ou a API
+ * respondeu 401). Qualquer outra falha (429 do rate limit, 409 de contenção,
+ * 503 em manutenção, 502 com a API fora do ar, rede) **não** encerra a sessão:
+ * o erro segue adiante e o refresh_token continua guardado para a próxima tentativa.
  */
 @Service()
 export class SessionRefresher {
@@ -66,7 +71,9 @@ export class SessionRefresher {
       .pipe(
         tap((response) => this.tokens.set(response.data)),
         map(() => true),
-        catchError(() => of(false)),
+        catchError((error: unknown) =>
+          error instanceof HttpErrorResponse && error.status !== 401 ? throwError(() => error) : of(false),
+        ),
         finalize(() => {
           this.refreshInFlight$ = null;
         }),
@@ -80,7 +87,9 @@ export class SessionRefresher {
 /**
  * Envia o access token (`AuthTokens`) em `Authorization: Bearer` para a API.
  * Ao receber 401, renova a sessão e repete a chamada uma única vez, já com o
- * token novo; se o refresh falhar, emite sessionExpired$.
+ * token novo; se a API recusar o refresh (401), emite sessionExpired$. Falha
+ * temporária do refresh (429, 409, 503…) chega à chamada original como o erro
+ * do próprio refresh, sem deslogar.
  */
 export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const refresher = inject(SessionRefresher);
@@ -124,7 +133,7 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
  */
 function unwrapError(error: unknown) {
   if (error instanceof HttpErrorResponse) {
-    return typeof error.error === 'object' && error.error !== null
+    return typeof error.error === 'object' && error.error !== null && 'success' in error.error
       ? error.error
       : { success: false, message: null, data: null };
   }

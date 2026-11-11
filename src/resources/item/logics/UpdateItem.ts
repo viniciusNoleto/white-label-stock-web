@@ -8,6 +8,7 @@ import { FormSelect } from '@/components/form/Select';
 import { FormTextInput } from '@/components/form/TextInput';
 import { I18n } from '@/libs/i18n';
 import { getStoragesService } from '@/resources/storage/services/getStorages';
+import { todayISO } from '@/utils/date';
 import { validatedFormState } from '@/utils/form';
 import { injectNotify } from '@/utils/notify';
 import { createMutation, createQuery } from '@/utils/query';
@@ -37,8 +38,18 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
   const notify = injectNotify();
 
   const updateItemSchema = computed(() => yup.object({
-    produced_at: yup.string().default('').required(i18n.t('forms.updateItem.validation.dateRequired')),
-    expires_at: yup.string().default(''),
+    // Mesmas regras da API: produção nunca no futuro e vencimento nunca antes da produção.
+    produced_at: yup.string()
+      .default('')
+      .required(i18n.t('forms.updateItem.validation.dateRequired'))
+      .test('notFuture', i18n.t('forms.updateItem.validation.dateFuture'), (value) => !value || value <= todayISO()),
+    expires_at: yup.string()
+      .default('')
+      .test('afterProduced', i18n.t('forms.updateItem.validation.expiresBeforeProduced'), function (value) {
+        const producedAt: string = this.parent.produced_at;
+
+        return !value || !producedAt || value >= producedAt;
+      }),
     storage_id: yup.number().nullable().default(null),
   }));
 
@@ -101,6 +112,7 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
           class="col-span-12"
           [label]="'forms.updateItem.producedAt.label' | t"
           [description]="'forms.updateItem.producedAt.description' | t"
+          [maxDate]="today"
           [formField]="form.field.produced_at"
           withAsterisk
         />
@@ -109,6 +121,7 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
           class="col-span-12"
           [label]="'forms.updateItem.expiresAt.label' | t"
           [description]="'forms.updateItem.expiresAt.description' | t"
+          [minDate]="form.state().produced_at || undefined"
           [formField]="form.field.expires_at"
         />
 
@@ -148,6 +161,9 @@ export function injectUpdateItemLogicData({ editingItemId, onSuccess }: { editin
 export class UpdateItemLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectUpdateItemLogicData>>();
   readonly cancel = output<void>();
+
+  /** Teto da data de produção (a API recusa produção no futuro). */
+  protected readonly today = todayISO();
 
   private readonly storagesQuery = createQuery({ queryFn: () => getStoragesService({ query: { per_page: MAX_PER_PAGE } }) });
 

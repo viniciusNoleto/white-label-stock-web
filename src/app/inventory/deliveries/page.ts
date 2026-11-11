@@ -293,30 +293,29 @@ export class DeliveriesPage {
 
   protected readonly rowKey = ({ item }: { item: IDeliveryPackage }) => item.id;
 
-  // Pendente: entregar, editar e excluir. Entregue: só excluir (do histórico).
-  protected readonly actions = ({ item }: { item: IDeliveryPackage }): TableAction<IDeliveryPackage>[] => [
-    ...(item.status === EDeliveryPackageStatus.PENDING
+  // Pendente: entregar, editar e desfazer. Entregue é o registro da saída: a API não deixa editar nem excluir.
+  protected readonly actions = ({ item }: { item: IDeliveryPackage }): TableAction<IDeliveryPackage>[] =>
+    item.status === EDeliveryPackageStatus.PENDING
       ? [
           {
             icon: 'lucidePackageCheck',
             label: this.i18n.t('deliveries.rowActions.deliver'),
-            variant: 'default' as const,
-            onClick: ({ item: row }: { item: IDeliveryPackage }) => this.openDeliverPackageModal(row),
+            variant: 'default',
+            onClick: ({ item: row }) => this.openDeliverPackageModal(row),
           },
           {
             icon: 'lucidePencil',
             label: this.i18n.t('deliveries.rowActions.edit'),
-            onClick: ({ item: row }: { item: IDeliveryPackage }) => this.openUpdatePackageModal(row),
+            onClick: ({ item: row }) => this.openUpdatePackageModal(row),
+          },
+          {
+            icon: 'lucideUndo2',
+            label: this.i18n.t('deliveries.rowActions.delete'),
+            variant: 'destructive',
+            onClick: ({ item: row }) => this.openDeletePackageModal(row),
           },
         ]
-      : []),
-    {
-      icon: 'lucideUndo2',
-      label: this.i18n.t('deliveries.rowActions.delete'),
-      variant: 'destructive',
-      onClick: ({ item: row }) => this.openDeletePackageModal(row),
-    },
-  ];
+      : [];
 
   protected readonly createPackageLogicData = injectCreateDeliveryPackageLogicData({
     onSuccess: () => {

@@ -9,7 +9,8 @@ src/
 │   ├── page.ts                            ← /
 │   ├── auth/login/page.ts                 ← /auth/login
 │   ├── auth/register/page.ts              ← /auth/register (pedido de cadastro)
-│   ├── inventory/layout.ts                ← casca autenticada (AppShell + <router-outlet>)
+│   ├── inventory/layout.ts                ← casca autenticada (AppShell + <router-outlet>) de `/dashboard` e `/inventory/**`
+│   ├── dashboard/page.ts                  ← painel `/dashboard` (destino após o login; `/inventory` redireciona para cá)
 │   ├── inventory/stock/page.ts            ← operação: atômicos agrupados por produto, lotes a granel por linha
 │   ├── inventory/movements/page.ts        ← histórico de movimentações dos itens (só leitura)
 │   ├── inventory/{products,items,deliveries,categories,units,storages}/page.ts

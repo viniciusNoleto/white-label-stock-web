@@ -39,6 +39,6 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly loginLogicData = injectLoginLogicData({
-    onSuccess: () => this.router.navigateByUrl('/inventory'),
+    onSuccess: () => this.router.navigateByUrl('/dashboard'),
   });
 }

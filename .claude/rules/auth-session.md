@@ -21,17 +21,17 @@
 ## Servidor do web (`src/server/`)
 
 - `api-proxy.ts`: repassa `/api/**` para `API_URL` com `Authorization`, `Accept-Language` e o corpo. **Não** repassa os cookies do web para a API nem `Set-Cookie` da API para o browser.
-- `page-session.ts` (middleware de páginas, papel do `proxy.ts` do Next): sem cookie de access mas com refresh → `POST /api/auth/token/refresh` com o refresh no corpo, grava o par novo via `Set-Cookie` antes de servir a página (e reescreve o header `cookie` do render); refresh recusado (401) → apaga os cookies e, em página protegida, 302 para `/auth/login`; sem cookie nenhum em `/inventory/**` → 302 para `/auth/login`; logado em `/auth/login` ou `/auth/register` (`GUEST_ONLY_PAGES`, confirmado via `/api/auth/me` com Bearer) → 302 para `/inventory`. API fora do ar → serve a página mesmo assim.
+- `page-session.ts` (middleware de páginas, papel do `proxy.ts` do Next): sem cookie de access mas com refresh → `POST /api/auth/token/refresh` com o refresh no corpo, grava o par novo via `Set-Cookie` antes de servir a página (e reescreve o header `cookie` do render); refresh recusado (401) → apaga os cookies e, em página protegida, 302 para `/auth/login`; sem cookie nenhum em `/dashboard` ou `/inventory/**` → 302 para `/auth/login`; logado em `/auth/login` ou `/auth/register` (`GUEST_ONLY_PAGES`, confirmado via `/api/auth/me` com Bearer) → 302 para `/dashboard`. API fora do ar → serve a página mesmo assim.
 
 ## Browser (`src/utils/app-client.ts`, `src/resources/auth/`)
 
 - `authRefreshInterceptor`: põe `Authorization: Bearer` em toda chamada `/api/**` (exceto login e refresh). 401 → um único refresh compartilhado por todas as chamadas da aba (`SessionRefresher`, grava o par novo em `AuthTokens`) → repete a chamada uma vez, já com o token novo. Rotas de auth nunca disparam refresh; sem refresh_token nem chama a API.
 - Refresh falhou → `AppEvents.sessionExpired$` → `AuthStore` encerra a sessão local (apaga tokens e usuário), avisa e vai para o login.
-- `AuthStore.user` é a fonte única do usuário logado (`is_admin` incluído); `setSession(session)` no login, `clear()` no logout. `authGuard` protege `/inventory` (`ensureUser()` — sem nenhum token nem chama a API). `adminGuard` (rotas de administração: `users`, `registration-requests`) devolve o usuário comum para `/inventory`; o grupo "Administração" do `AppSidebar` só aparece para admin.
-- Páginas do inventário são `RenderMode.Client`; páginas públicas são SSR.
+- `AuthStore.user` é a fonte única do usuário logado (`is_admin` incluído); `setSession(session)` no login, `clear()` no logout. `authGuard` protege `/dashboard` e `/inventory` (rota-pai sem caminho com o layout) (`ensureUser()` — sem nenhum token nem chama a API). `adminGuard` (rotas de administração: `users`, `registration-requests`) devolve o usuário comum para `/dashboard`; o grupo "Administração" do `AppSidebar` só aparece para admin.
+- Painel e páginas do inventário são `RenderMode.Client`; páginas públicas são SSR.
 
 ## Ao criar rotas novas
 
 - API protegida: na API, dentro do grupo `Route::middleware('auth')` de `routes/api.php`.
-- Página protegida: dentro de `inventory` em `app.routes.ts` (herda `authGuard`) e prefixo listado em `PROTECTED_PAGE_PREFIXES`.
+- Página protegida: dentro de `inventory` em `app.routes.ts` (herda `authGuard` da rota-pai) e prefixo listado em `PROTECTED_PAGE_PREFIXES`. O login leva para `/dashboard`.
 - Só admin: na API, dentro do grupo `Route::middleware('admin')`; no web, `canActivate: [adminGuard]` na rota e o link no `ADMIN_NAV_GROUP` do `AppSidebar`.

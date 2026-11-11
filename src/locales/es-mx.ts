@@ -154,6 +154,7 @@ export default {
   },
 
   sidebar: {
+    dashboard: 'Panel',
     section: 'Inventario',
     stock: 'Operación',
     items: 'Artículos',
@@ -457,6 +458,104 @@ export default {
     },
   },
 
+  dashboard: {
+    page: {
+      title: 'Panel',
+      subtitle: 'Lo que requiere acción ahora y cómo fue el periodo',
+      updatedAt: 'Actualizado a las {{time}}',
+      refresh: 'Actualizar el panel',
+      error: 'No fue posible cargar el panel.',
+      retry: 'Intentar de nuevo',
+    },
+    period: {
+      days_one: '{{count}} día',
+      days_other: '{{count}} días',
+    },
+    trend: {
+      vsPrevious: '{{percent}} vs. periodo anterior ({{previous}})',
+      noBase: 'Periodo anterior: {{previous}}',
+    },
+    alerts: {
+      packagesWithExpired_one: '{{count}} paquete pendiente tiene un artículo que venció después de separarlo: la entrega fallará. Cambia el artículo.',
+      packagesWithExpired_other: '{{count}} paquetes pendientes tienen artículos que vencieron después de separarlos: la entrega fallará. Cambia los artículos.',
+      outOfStock_one: '{{count}} producto con salida en el periodo está sin inventario libre.',
+      outOfStock_other: '{{count}} productos con salida en el periodo están sin inventario libre.',
+      expired_one: '{{count}} artículo vencido sigue en el inventario: dale de baja.',
+      expired_other: '{{count}} artículos vencidos siguen en el inventario: dales de baja.',
+    },
+    kpis: {
+      items: 'Artículos en inventario',
+      itemsDetail: '{{inStock}} de {{total}} productos con inventario',
+      expiring: 'Vencen en 7 días',
+      expiringDetail_one: '{{count}} artículo ya vencido',
+      expiringDetail_other: '{{count}} artículos ya vencidos',
+      pending: 'Paquetes pendientes',
+      pendingSince: 'Más antiguo: {{date}}',
+      pendingNone: 'Ninguno esperando entrega',
+      delivered: 'Paquetes entregados',
+      losses: 'Bajas',
+      inPeriod_one: 'En el último día',
+      inPeriod_other: 'En los últimos {{count}} días',
+    },
+    columns: {
+      product: 'Producto',
+      quantity: 'Cantidad',
+    },
+    activity: {
+      title: 'Actividad del inventario',
+      subtitle: 'Movimientos por día, del {{from}} al {{to}}',
+      ariaLabel: 'Gráfico de líneas con las entradas, salidas y bajas de cada uno de los {{days}} días',
+      focusHint: 'Usa las flechas para ver cada día',
+      showTable: 'Ver como tabla',
+      date: 'Día',
+      series: {
+        inflow: 'Entradas',
+        outflow: 'Salidas',
+        losses: 'Bajas',
+      },
+    },
+    restock: {
+      title: 'Reposición',
+      subtitle: 'Cuánto aguanta el inventario libre al ritmo de salida de los últimos {{days}} días',
+      empty: 'Ningún producto tuvo salida en el periodo.',
+      coverageNone: 'Agotado',
+      coverageDays: '{{days}} días',
+      columns: {
+        free: 'Libre',
+        dailyOutflow: 'Salida/día',
+        coverage: 'Dura',
+      },
+    },
+    expiration: {
+      title: 'Vencimientos',
+      subtitle: 'Vencidos para dar de baja y lo que vence en hasta 7 días para que salga primero',
+      empty: 'Nada vencido ni por vencer en los próximos 7 días.',
+      columns: {
+        expired: 'Vencido',
+        expiring: 'Por vencer',
+        next: 'Vence el',
+      },
+    },
+    topDelivered: {
+      title: 'Más entregados',
+      subtitle: 'Productos en más paquetes en los últimos {{days}} días',
+      empty: 'Ninguna entrega en el periodo.',
+      columns: {
+        packages: 'Paquetes',
+      },
+    },
+    losses: {
+      title: 'Pérdidas',
+      subtitle: 'Bajas de los últimos {{days}} días por motivo y por producto',
+      empty: 'Ninguna baja en el periodo.',
+      expiredShare_one: '({{count}} por vencimiento)',
+      expiredShare_other: '({{count}} por vencimiento)',
+      columns: {
+        writeOffs: 'Bajas',
+      },
+    },
+  },
+
   movements: {
     page: {
       title: 'Movimientos',
@@ -481,6 +580,13 @@ export default {
       transfer: 'Traslado',
       delivery: 'Entrega',
       write_off: 'Baja',
+    },
+    reasons: {
+      expired: 'Vencimiento',
+      damaged: 'Daño',
+      lost: 'Extravío',
+      other: 'Otro',
+      none: 'Sin motivo',
     },
     table: {
       count_one: '{{count}} movimiento',
@@ -554,7 +660,6 @@ export default {
     delete: {
       submit: 'Deshacer',
       confirmPending: '¿Seguro que deseas deshacer el paquete #{{id}}? Los artículos dejan de estar separados y siguen en el inventario.',
-      confirmDelivered: '¿Seguro que deseas deshacer el paquete #{{id}} y quitarlo del historial? Los artículos entregados no vuelven al inventario.',
     },
   },
 
@@ -702,6 +807,7 @@ export default {
         integer: 'Artículos atómicos: usa un número entero',
         max: 'Como máximo {{count}} por vez',
         dateRequired: 'La fecha de producción es obligatoria',
+        dateFuture: 'La fecha de producción no puede estar en el futuro',
       },
     },
 
@@ -724,6 +830,8 @@ export default {
       },
       validation: {
         dateRequired: 'La fecha de producción es obligatoria',
+        dateFuture: 'La fecha de producción no puede estar en el futuro',
+        expiresBeforeProduced: 'El vencimiento no puede ser anterior a la fecha de producción',
       },
     },
 

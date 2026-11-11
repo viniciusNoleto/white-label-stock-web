@@ -100,7 +100,7 @@ describe('page session middleware', () => {
   it('sends a logged user away from the login page', async () => {
     api.respond((_req, res) => res.json({ success: true, data: { user: { id: 1 } } }));
 
-    expect(await page('/auth/login', 'access_token=valid')).toMatchObject({ status: 302, location: '/inventory' });
+    expect(await page('/auth/login', 'access_token=valid')).toMatchObject({ status: 302, location: '/dashboard' });
     expect(api.received[0]).toMatchObject({ method: 'GET', url: '/api/auth/me' });
     expect(api.received[0].headers['authorization']).toBe('Bearer valid');
   });
@@ -108,7 +108,7 @@ describe('page session middleware', () => {
   it('sends a logged user away from the registration page', async () => {
     api.respond((_req, res) => res.json({ success: true, data: { user: { id: 1 } } }));
 
-    expect(await page('/auth/register', 'access_token=valid')).toMatchObject({ status: 302, location: '/inventory' });
+    expect(await page('/auth/register', 'access_token=valid')).toMatchObject({ status: 302, location: '/dashboard' });
   });
 
   it('lets a visitor open the registration page', async () => {

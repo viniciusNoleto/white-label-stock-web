@@ -5,7 +5,6 @@ import { createMutation } from '@/utils/query';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import type { IDeliveryPackage } from '../models/DeliveryPackage';
 import { deleteDeliveryPackageService } from '../services/deleteDeliveryPackage';
-import { EDeliveryPackageStatus } from '../enums/DeliveryPackageStatus';
 
 export function injectDeleteDeliveryPackageLogicData({ editingPackageId, onSuccess }: { editingPackageId: Signal<number | undefined>; onSuccess: () => void }) {
   const notify = injectNotify();
@@ -23,7 +22,10 @@ export function injectDeleteDeliveryPackageLogicData({ editingPackageId, onSucce
   return { deletePackageMutation };
 }
 
-/** Excluir nunca mexe no estoque: pendente não subtraiu nada; entregue só some do histórico. */
+/**
+ * Desfazer pacote pendente: libera os itens reservados, sem mexer no estoque. Pacote entregue é o
+ * registro da saída e a API recusa a exclusão (422), por isso a página nem oferece a ação.
+ */
 @Component({
   selector: 'app-delete-delivery-package-logic',
   imports: [FormButton, TranslatePipe],
@@ -32,11 +34,7 @@ export function injectDeleteDeliveryPackageLogicData({ editingPackageId, onSucce
 
     <div class="flex flex-col gap-6">
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        @if (deliveryPackage().status === statuses.DELIVERED) {
-          {{ 'deliveries.delete.confirmDelivered' | t: { id: deliveryPackage().id } }}
-        } @else {
-          {{ 'deliveries.delete.confirmPending' | t: { id: deliveryPackage().id } }}
-        }
+        {{ 'deliveries.delete.confirmPending' | t: { id: deliveryPackage().id } }}
       </p>
 
       <div class="flex justify-end gap-2">
@@ -65,6 +63,4 @@ export class DeleteDeliveryPackageLogicComponent {
   readonly logicData = input.required<ReturnType<typeof injectDeleteDeliveryPackageLogicData>>();
   readonly deliveryPackage = input.required<IDeliveryPackage>();
   readonly cancel = output<void>();
-
-  protected readonly statuses = EDeliveryPackageStatus;
 }

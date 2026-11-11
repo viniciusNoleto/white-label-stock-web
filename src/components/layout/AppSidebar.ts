@@ -1,10 +1,15 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, DestroyRef, inject, input, output, PLATFORM_ID, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { AuthStore } from '@/resources/auth/stores/AuthStore';
 import { TranslatePipe } from '@/utils/translate.pipe';
 import { BrandMark } from './BrandMark';
+
+/** Painel: fica solto, antes dos grupos. */
+const HOME_NAV_ITEM = { href: '/dashboard', icon: 'lucideLayoutDashboard', labelKey: 'sidebar.dashboard' } as const;
+
+type NavItem = { readonly href: string; readonly icon: string; readonly labelKey: string };
 
 /** Operação do dia a dia (estoque e expedição) separada dos cadastros de apoio. */
 const NAV_GROUPS = [
@@ -52,7 +57,7 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
  */
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, NgIcon, TranslatePipe, BrandMark],
+  imports: [RouterLink, RouterLinkActive, NgTemplateOutlet, NgIcon, TranslatePipe, BrandMark],
   host: {
     class: 'contents',
     '(document:keydown.escape)': 'open() && closed.emit()',
@@ -95,7 +100,42 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
         </button>
       </div>
 
-      <nav class="flex flex-1 flex-col gap-7 pt-6">
+      <ng-template
+        #navLink
+        let-item
+      >
+        <a
+          class="group relative flex h-10 items-center gap-3 px-5 text-[15px] text-gray-700 outline-none transition-colors hover:bg-stone-50 hover:text-gray-950 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 dark:text-gray-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
+          routerLinkActive="bg-primary-500/8! font-medium text-primary-700! dark:bg-primary-500/15! dark:text-primary-200!"
+          ariaCurrentWhenActive="page"
+          [routerLink]="item.href"
+          (click)="closed.emit()"
+        >
+          <!-- Filete reto marcando a estação ativa. -->
+          <span
+            aria-hidden="true"
+            class="absolute inset-y-0 left-0 w-[3px] bg-transparent group-aria-[current=page]:bg-primary-500"
+          ></span>
+
+          <ng-icon
+            size="18"
+            class="shrink-0 text-gray-500 group-aria-[current=page]:text-primary-600 dark:text-gray-400 dark:group-aria-[current=page]:text-primary-300"
+            [name]="item.icon"
+          />
+
+          <!-- No hover só o texto se move; ícone e fundo ficam parados. -->
+          <span class="flex-1 truncate transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
+            {{ item.labelKey | t }}
+          </span>
+        </a>
+      </ng-template>
+
+      <nav class="flex flex-1 flex-col gap-4 pt-5">
+        <ng-container
+          [ngTemplateOutlet]="navLink"
+          [ngTemplateOutletContext]="{ $implicit: homeItem }"
+        />
+
         @for (group of navGroups(); track group.labelKey) {
           <div class="flex flex-col gap-1">
             <p class="px-5 pb-1.5 text-[13px] text-gray-500 dark:text-gray-400">
@@ -103,30 +143,10 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 64rem)';
             </p>
 
             @for (item of group.items; track item.href) {
-              <a
-                class="group relative flex h-10 items-center gap-3 px-5 text-[15px] text-gray-700 outline-none transition-colors hover:bg-stone-50 hover:text-gray-950 focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 dark:text-gray-300 dark:hover:bg-neutral-800/60 dark:hover:text-white"
-                routerLinkActive="bg-primary-500/8! font-medium text-primary-700! dark:bg-primary-500/15! dark:text-primary-200!"
-                ariaCurrentWhenActive="page"
-                [routerLink]="item.href"
-                (click)="closed.emit()"
-              >
-                <!-- Filete reto marcando a estação ativa. -->
-                <span
-                  aria-hidden="true"
-                  class="absolute inset-y-0 left-0 w-[3px] bg-transparent group-aria-[current=page]:bg-primary-500"
-                ></span>
-
-                <ng-icon
-                  size="18"
-                  class="shrink-0 text-gray-500 group-aria-[current=page]:text-primary-600 dark:text-gray-400 dark:group-aria-[current=page]:text-primary-300"
-                  [name]="item.icon"
-                />
-
-                <!-- No hover só o texto se move; ícone e fundo ficam parados. -->
-                <span class="flex-1 truncate transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
-                  {{ item.labelKey | t }}
-                </span>
-              </a>
+              <ng-container
+                [ngTemplateOutlet]="navLink"
+                [ngTemplateOutletContext]="{ $implicit: item }"
+              />
             }
           </div>
         }
@@ -164,6 +184,7 @@ export class AppSidebar {
   private readonly authStore = inject(AuthStore);
 
   protected readonly navGroups = computed(() => (this.authStore.user()?.is_admin ? [...NAV_GROUPS, ADMIN_NAV_GROUP] : NAV_GROUPS));
+  protected readonly homeItem: NavItem = HOME_NAV_ITEM;
   protected readonly parcels = PARCELS;
 
   private readonly isDesktop = signal(false);

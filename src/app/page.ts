@@ -57,7 +57,7 @@ const FEATURES = [
                 appButton
                 size="lg"
                 class="px-8 has-data-[icon=inline-end]:pr-8"
-                routerLink="/inventory"
+                routerLink="/dashboard"
                 rightIcon="lucideChevronRight"
               >
                 {{ 'home.ctaPrimary' | t }}

@@ -20,62 +20,73 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/register/page').then((m) => m.RegisterPage),
   },
   {
-    path: 'inventory',
+    // Casca autenticada (AppShell) compartilhada pelo painel e pelo inventário.
+    path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./inventory/layout').then((m) => m.InventoryLayout),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'stock' },
       {
-        path: 'stock',
-        title: 'stock.page.title',
-        loadComponent: () => import('./inventory/stock/page').then((m) => m.StockPage),
+        path: 'dashboard',
+        title: 'dashboard.page.title',
+        loadComponent: () => import('./dashboard/page').then((m) => m.DashboardPage),
       },
       {
-        path: 'items',
-        title: 'items.page.title',
-        loadComponent: () => import('./inventory/items/page').then((m) => m.ItemsPage),
-      },
-      {
-        path: 'products',
-        title: 'products.page.title',
-        loadComponent: () => import('./inventory/products/page').then((m) => m.ProductsPage),
-      },
-      {
-        path: 'deliveries',
-        title: 'deliveries.page.title',
-        loadComponent: () => import('./inventory/deliveries/page').then((m) => m.DeliveriesPage),
-      },
-      {
-        path: 'movements',
-        title: 'movements.page.title',
-        loadComponent: () => import('./inventory/movements/page').then((m) => m.MovementsPage),
-      },
-      {
-        path: 'categories',
-        title: 'categories.page.title',
-        loadComponent: () => import('./inventory/categories/page').then((m) => m.CategoriesPage),
-      },
-      {
-        path: 'units',
-        title: 'units.page.title',
-        loadComponent: () => import('./inventory/units/page').then((m) => m.UnitsPage),
-      },
-      {
-        path: 'storages',
-        title: 'storages.page.title',
-        loadComponent: () => import('./inventory/storages/page').then((m) => m.StoragesPage),
-      },
-      {
-        path: 'registration-requests',
-        title: 'registrationRequests.page.title',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./inventory/registration-requests/page').then((m) => m.RegistrationRequestsPage),
-      },
-      {
-        path: 'users',
-        title: 'users.page.title',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./inventory/users/page').then((m) => m.UsersPage),
+        path: 'inventory',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: '/dashboard' },
+          {
+            path: 'stock',
+            title: 'stock.page.title',
+            loadComponent: () => import('./inventory/stock/page').then((m) => m.StockPage),
+          },
+          {
+            path: 'items',
+            title: 'items.page.title',
+            loadComponent: () => import('./inventory/items/page').then((m) => m.ItemsPage),
+          },
+          {
+            path: 'products',
+            title: 'products.page.title',
+            loadComponent: () => import('./inventory/products/page').then((m) => m.ProductsPage),
+          },
+          {
+            path: 'deliveries',
+            title: 'deliveries.page.title',
+            loadComponent: () => import('./inventory/deliveries/page').then((m) => m.DeliveriesPage),
+          },
+          {
+            path: 'movements',
+            title: 'movements.page.title',
+            loadComponent: () => import('./inventory/movements/page').then((m) => m.MovementsPage),
+          },
+          {
+            path: 'categories',
+            title: 'categories.page.title',
+            loadComponent: () => import('./inventory/categories/page').then((m) => m.CategoriesPage),
+          },
+          {
+            path: 'units',
+            title: 'units.page.title',
+            loadComponent: () => import('./inventory/units/page').then((m) => m.UnitsPage),
+          },
+          {
+            path: 'storages',
+            title: 'storages.page.title',
+            loadComponent: () => import('./inventory/storages/page').then((m) => m.StoragesPage),
+          },
+          {
+            path: 'registration-requests',
+            title: 'registrationRequests.page.title',
+            canActivate: [adminGuard],
+            loadComponent: () => import('./inventory/registration-requests/page').then((m) => m.RegistrationRequestsPage),
+          },
+          {
+            path: 'users',
+            title: 'users.page.title',
+            canActivate: [adminGuard],
+            loadComponent: () => import('./inventory/users/page').then((m) => m.UsersPage),
+          },
+        ],
       },
     ],
   },

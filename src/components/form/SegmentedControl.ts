@@ -24,7 +24,7 @@ import { FormControlBase } from './types';
       <hlm-toggle-group
         type="single"
         variant="outline"
-        class="w-full"
+        class="w-full bg-background dark:bg-input/30"
         [id]="inputId()"
         [nullable]="false"
         [disabled]="disabled()"

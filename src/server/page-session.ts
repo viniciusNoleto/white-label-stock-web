@@ -6,7 +6,7 @@ import { serializeAuthCookie } from '../shared/utils/auth-cookie';
 import { apiUrl } from './utils/api';
 import { parseCookieHeader, serializeCookieHeader } from './utils/cookies';
 
-const PROTECTED_PAGE_PREFIXES = ['/inventory'];
+const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/inventory'];
 
 const GUEST_ONLY_PAGES = ['/auth/login', '/auth/register'];
 
@@ -68,7 +68,7 @@ export async function pageSession(req: Request, res: Response, next: NextFunctio
     if (accessToken) {
       // Já logado tentando abrir o login: vai direto para o app.
       if (GUEST_ONLY_PAGES.includes(req.path) && await hasLoggedUser(accessToken)) {
-        return res.redirect(302, '/inventory');
+        return res.redirect(302, '/dashboard');
       }
 
       return next();

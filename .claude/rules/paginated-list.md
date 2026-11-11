@@ -6,7 +6,7 @@
 - O `queryFn` lê `page()` e `filters()` no momento da busca; a query **não** reage sozinha a eles — a lista só busca de novo via `refetch()`.
 - Trocar de página: `page.set(n)` **e** `refetch()`.
 - Filtros: `debouncedEffect(this.filters, () => { page.set(1); refetch(); }, 500)` — passe o signal inteiro de filtros, não campos.
-- **Toda** listagem do sistema é paginada (na API e na página). `per_page` = `DEFAULT_PER_PAGE` (`8`, em `@/shared/constants/pagination`) — fixo por enquanto; nunca escreva o número na página.
+- **Toda** listagem do sistema é paginada (na API e na página). Exceção: o painel (`/dashboard`), cujas listas são curtas e fixas (top 8) e vêm prontas de `GET /api/dashboard`. `per_page` = `DEFAULT_PER_PAGE` (`8`, em `@/shared/constants/pagination`) — fixo por enquanto; nunca escreva o número na página.
 - Opções de select (carregar tudo de uma vez): `per_page: MAX_PER_PAGE` (`100`, o teto da API).
 - Endpoint paginado devolve `{ items, meta }`: leia `data.items` / `data.meta`.
 

@@ -79,7 +79,7 @@ test('admin approves a request and the new user signs in', async ({ page, reques
   await newcomer.getByLabel('E-mail').fill(someone.email);
   await newcomer.getByLabel(/Senha/).fill(someone.password);
   await newcomer.getByRole('button', { name: 'Entrar' }).click();
-  await expect(newcomer).toHaveURL(/\/inventory\/stock$/);
+  await expect(newcomer).toHaveURL(/\/dashboard$/);
   await expect(newcomer.getByRole('link', { name: 'Usuários' })).toHaveCount(0);
   await context.close();
 });
@@ -147,10 +147,10 @@ test.describe('regular user', () => {
     await expect(page.getByRole('link', { name: 'Pedidos de cadastro' })).toHaveCount(0);
 
     await page.goto('/inventory/users');
-    await expect(page).toHaveURL(/\/inventory\/stock$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
 
     await page.goto('/inventory/registration-requests');
-    await expect(page).toHaveURL(/\/inventory\/stock$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
 
     const { cookies } = await context.storageState();
     const token = cookies.find((cookie) => cookie.name === 'access_token')!.value;

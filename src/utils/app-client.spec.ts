@@ -148,6 +148,39 @@ describe('AppClient + authRefreshInterceptor', () => {
     expect(expired).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    [429, 'Too Many Requests'],
+    [409, 'Conflict'],
+    [503, 'Service Unavailable'],
+    [502, 'Bad Gateway'],
+  ])('keeps the session when the refresh fails temporarily (%i)', async (status, statusText) => {
+    const expired = vi.fn();
+    events.sessionExpired$.subscribe(expired);
+    const busy = { success: false, message: { 'pt-br': 'Aguarde', 'es-mx': 'Espera', 'en-us': 'Wait' }, data: null };
+
+    const result = firstValueFrom(client.get('/api/units'));
+
+    http.expectOne('/api/units').flush(unauthorized, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne('/api/auth/token/refresh').flush(busy, { status, statusText });
+
+    await expect(result).rejects.toEqual(busy);
+    expect(expired).not.toHaveBeenCalled();
+    expect(cookie('refresh_token')).toBe('refresh-1');
+  });
+
+  it('keeps the session when the refresh hits a network error', async () => {
+    const expired = vi.fn();
+    events.sessionExpired$.subscribe(expired);
+
+    const result = firstValueFrom(client.get('/api/units'));
+
+    http.expectOne('/api/units').flush(unauthorized, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne('/api/auth/token/refresh').error(new ProgressEvent('error'));
+
+    await expect(result).rejects.toMatchObject({ success: false, message: null });
+    expect(expired).not.toHaveBeenCalled();
+  });
+
   it('never refreshes for the login request itself', async () => {
     const result = firstValueFrom(client.post('/api/auth/login', { body: {} }));
 
